@@ -112,6 +112,14 @@
             NotifyStateChanged();
         }
 
+        public void Reset()
+        {
+            SetVerified(false);
+            SetAdmin(false);
+            SetPassword(false);
+            SetAppTheme("bg-default text-dark");
+        }
+
         public event Action? OnChange;
 
         private void NotifyStateChanged() => OnChange?.Invoke();

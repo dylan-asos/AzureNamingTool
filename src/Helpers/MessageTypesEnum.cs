@@ -2,7 +2,7 @@
 {
     public enum MessageTypesEnum
     {
-        SUCCESS,
+        Success,
         INFORMATION,
         WARNING,
         ERROR

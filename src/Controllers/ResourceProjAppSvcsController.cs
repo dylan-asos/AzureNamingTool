@@ -1,184 +1,136 @@
-﻿using AzureNamingTool.Models;
+﻿using AzureNamingTool.Attributes;
 using AzureNamingTool.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using AzureNamingTool.Models;
 using AzureNamingTool.Services;
-using AzureNamingTool.Attributes;
+using Microsoft.AspNetCore.Mvc;
 
+namespace AzureNamingTool.Controllers;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
-namespace AzureNamingTool.Controllers
+[Route("api/[controller]")]
+[ApiController]
+[ApiKey]
+public class ResourceProjAppSvcsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ApiKey]
-    public class ResourceProjAppSvcsController : ControllerBase
+    private readonly CacheHelper _cacheHelper;
+    private readonly ResourceProjAppSvcService _resourceProjAppSvcService;
+    private AdminLogService _adminLogService;
+
+    public ResourceProjAppSvcsController(ResourceProjAppSvcService resourceProjAppSvcService, CacheHelper cacheHelper, AdminLogService adminLogService)
     {
-        // GET: api/<ResourceProjAppSvcsController>
-        /// <summary>
-        /// This function will return the projects/apps/services data. 
-        /// </summary>
-        /// <returns>json - Current projects/apps/servicse data</returns>
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        _resourceProjAppSvcService = resourceProjAppSvcService;
+        _cacheHelper = cacheHelper;
+        _adminLogService = adminLogService;
+    }
+
+    // GET: api/<ResourceProjAppSvcsController>
+    /// <summary>
+    ///     This function will return the projects/apps/services data.
+    /// </summary>
+    /// <returns>json - Current projects/apps/servicse data</returns>
+    [HttpGet]
+    public IActionResult Get()
+    {
+        var serviceResponse = _resourceProjAppSvcService.GetItems();
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await ResourceProjAppSvcService.GetItems();
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // GET api/<ResourceProjAppSvcsController>/5
-        /// <summary>
-        /// This function will return the specifed project/app/service data.
-        /// </summary>
-        /// <param name="id">int - Project/App/Service id</param>
-        /// <returns>json - Project/App/Service data</returns>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // GET api/<ResourceProjAppSvcsController>/5
+    /// <summary>
+    ///     This function will return the specifed project/app/service data.
+    /// </summary>
+    /// <param name="id">int - Project/App/Service id</param>
+    /// <returns>json - Project/App/Service data</returns>
+    [HttpGet("{id}")]
+    public IActionResult Get(int id)
+    {
+        var serviceResponse = _resourceProjAppSvcService.GetItem(id);
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await ResourceProjAppSvcService.GetItem(id);
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // POST api/<ResourceProjAppSvcsController>
-        /// <summary>
-        /// This function will create/update the specified project/app/service data.
-        /// </summary>
-        /// <param name="item">ResourceProjAppSvc (json) - Project/App/Service data</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] ResourceProjAppSvc item)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // POST api/<ResourceProjAppSvcsController>
+    /// <summary>
+    ///     This function will create/update the specified project/app/service data.
+    /// </summary>
+    /// <param name="item">ResourceProjAppSvc (json) - Project/App/Service data</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    public IActionResult Post([FromBody] ResourceProjAppSvc item)
+    {
+        var serviceResponse = _resourceProjAppSvcService.PostItem(item);
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            _adminLogService.PostItem(new AdminLogMessage
             {
-                serviceResponse = await ResourceProjAppSvcService.PostItem(item);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Project/App/Service (" + item.Name + ") added/updated." });
-                    CacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+                Source = "API", Title = "INFORMATION",
+                Message = "Resource Project/App/Service (" + item.Name + ") added/updated."
+            });
+            _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // POST api/<ResourceProjAppSvcsController>
-        /// <summary>
-        /// This function will update all projects/apps/services data.
-        /// </summary>
-        /// <param name="items">List - ResourceProjAppSvc (json) - All projects/apps/services data</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PostConfig([FromBody] List<ResourceProjAppSvc> items)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // POST api/<ResourceProjAppSvcsController>
+    /// <summary>
+    ///     This function will update all projects/apps/services data.
+    /// </summary>
+    /// <param name="items">List - ResourceProjAppSvc (json) - All projects/apps/services data</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PostConfig([FromBody] List<ResourceProjAppSvc> items)
+    {
+        var serviceResponse = _resourceProjAppSvcService.PostConfig(items);
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await ResourceProjAppSvcService.PostConfig(items);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Projects/Apps/Services added/updated." });
-                    CacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            _adminLogService.PostItem(new AdminLogMessage
+                {Source = "API", Title = "INFORMATION", Message = "Resource Projects/Apps/Services added/updated."});
+            _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // DELETE api/<ResourceProjAppSvcsController>/5
-        /// <summary>
-        /// This function will delete the specifed project/app/service data.
-        /// </summary>
-        /// <param name="id">int - Project/App?service id</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // DELETE api/<ResourceProjAppSvcsController>/5
+    /// <summary>
+    ///     This function will delete the specifed project/app/service data.
+    /// </summary>
+    /// <param name="id">int - Project/App?service id</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
+    {
+        var serviceResponse = _resourceProjAppSvcService.GetItem(id);
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            var item = (ResourceProjAppSvc) serviceResponse.ResponseObject!;
+            serviceResponse = _resourceProjAppSvcService.DeleteItem(id);
+            if (serviceResponse.Success)
             {
-                // Get the item details
-                serviceResponse = await ResourceProjAppSvcService.GetItem(id);
-                if (serviceResponse.Success)
+                _adminLogService.PostItem(new AdminLogMessage
                 {
-                    ResourceProjAppSvc item = (ResourceProjAppSvc)serviceResponse.ResponseObject!;
-                    serviceResponse = await ResourceProjAppSvcService.DeleteItem(id);
-                    if (serviceResponse.Success)
-                    {
-                        AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Project/App/Service (" + item.Name + ") deleted." });
-                        CacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-                        return Ok("Resource Project/App/Service (" + item.Name + ") deleted.");
-                    }
-                    else
-                    {
-                        return BadRequest(serviceResponse.ResponseObject);
-                    }
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
+                    Source = "API", Title = "INFORMATION",
+                    Message = "Resource Project/App/Service (" + item.Name + ") deleted."
+                });
+                _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
+                return Ok("Resource Project/App/Service (" + item.Name + ") deleted.");
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+
+            return BadRequest(serviceResponse.ResponseObject);
         }
+
+        return BadRequest(serviceResponse.ResponseObject);
     }
 }

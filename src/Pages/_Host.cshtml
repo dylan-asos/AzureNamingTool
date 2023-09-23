@@ -2,20 +2,32 @@
 @namespace AzureNamingTool.Pages
 @using AzureNamingTool.Helpers;
 @using AzureNamingTool.Models;
+@using AzureNamingTool.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject StateContainer state
+@inject ConfigurationHelper ConfigurationHelper
+@inject ResourceComponentService ResourceComponentService
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     Layout = "_Layout";
 
-    // Verify the site configration files are present
-    ConfigurationHelper.VerifyConfiguration(state);
+    // Verify the site configuration files are present
+    ConfigurationHelper.VerifyConfiguration();
+    
+    // Sync configuration data
+    if (!state.ConfigurationDataSynced)
+    {
+        ResourceComponentService.SyncConfigurationData();
+        state.SetConfigurationDataSynced(true);
+    }
+    
     ConfigurationHelper.VerifySecurity(state);
 
     var identityProviderDetails = new IdentityProviderDetails();
     // Check if there is an HttpContext object
-    if (GeneralHelper.IsNotNull(this.HttpContext))
+    if (HttpContext!= null)
     {
-        if (GeneralHelper.IsNotNull(this.HttpContext.Request.Headers))
+        if (HttpContext.Request.Headers!= null)
         {
             // Get the Identity provider, if using Azure App Service Authentication
             if (this.HttpContext.Request.Headers.ContainsKey("X-MS-CLIENT-PRINCIPAL-IDP"))
@@ -30,11 +42,11 @@
         {
             string headername = ConfigurationHelper.GetAppSetting("IdentityHeaderName", true);
             // Check if the IdentityHeaderName header is present
-            if(GeneralHelper.IsNotNull(this.HttpContext))
+            if(this.HttpContext!= null)
             {
-                if(GeneralHelper.IsNotNull(this.HttpContext.Request))
+                if(this.HttpContext.Request!= null)
                 {
-                    if (GeneralHelper.IsNotNull(this.HttpContext.Request.Headers))
+                    if (this.HttpContext.Request.Headers!= null)
                     {
                         if (this.HttpContext.Request.Headers.ContainsKey(headername))
                         {
@@ -153,14 +165,8 @@
 
     function checkboxConfirmChange(checkbox, message) {
         if (checkbox.checked) {
-            var confirmBox = confirm(message);
-
-            if (confirmBox == true) {
-                checkbox.checked = true;
-            }
-            else {
-                checkbox.checked = false;
-            };
+            const confirmBox = confirm(message);
+            checkbox.checked = confirmBox === true;
         }
     }
 </script>

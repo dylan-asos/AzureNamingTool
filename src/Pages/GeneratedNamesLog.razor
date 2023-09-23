@@ -16,6 +16,12 @@
 @inject IToastService toastService
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject GeneralHelper GeneralHelper
+@inject ConfigurationHelper ConfigurationHelper
+@inject GeneratedNamesService GeneratedNamesService
+@inject AdminLogService AdminLogService
+@inject CacheHelper CacheHelper
+@inject LogHelper LogHelper 
 
 <PageTitle>Azure Naming Tool - Generated Names Log</PageTitle>
 <div class="card  @theme.ThemeStyle">
@@ -148,7 +154,7 @@
                                             @name.ResourceName
                                         </td>
                                         <td class="align-top">
-                                            @if (GeneralHelper.IsNotNull(name.ResourceTypeName))
+                                            @if (name.ResourceTypeName != null)
                                             {
                                                 @name.ResourceTypeName
                                             }
@@ -201,19 +207,19 @@
         {
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
-            await LoadData();
+            LoadData();
             duplicatenamesallowed = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("DuplicateNamesAllowed"));
             StateHasChanged();
         }
     }
 
-    private async Task LoadData()
+    private void LoadData()
     {
         ServiceResponse serviceResponse = new();
-        serviceResponse = await GeneratedNamesService.GetItems();
+        serviceResponse = GeneratedNamesService.GetItems();
         if (serviceResponse.Success)
         {
-            if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+            if (serviceResponse.ResponseObject != null)
             {
                 lstNameRequests = (List<GeneratedName>)serviceResponse.ResponseObject!;
                 dataLoaded = true;
@@ -242,23 +248,23 @@
         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will delete the Generated Name and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
         if (confirm)
         {
-            serviceResponse = await GeneratedNamesService.GetItem(Convert.ToInt32(id));
+            serviceResponse = GeneratedNamesService.GetItem(Convert.ToInt32(id));
             if (serviceResponse.Success)
             {
-                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                if (serviceResponse.ResponseObject != null)
                 {
                     GeneratedName generatedname = (GeneratedName)serviceResponse.ResponseObject!;
-                    if (GeneralHelper.IsNotNull(generatedname))
+                    if (generatedname != null)
                     {
-                        serviceResponse = await GeneratedNamesService.DeleteItem(Convert.ToInt32(generatedname.Id));
+                        serviceResponse = GeneratedNamesService.DeleteItem(Convert.ToInt32(generatedname.Id));
                         if (serviceResponse.Success)
                         {
-                            message.Type = MessageTypesEnum.SUCCESS;
+                            message.Type = MessageTypesEnum.Success;
                             message.Message = "Generated name deleted!";
                             toastService.ShowSuccess(message.Message);
                             AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Generated Name (" + generatedname.ResourceName + ") deleted." });
                             CacheHelper.InvalidateCacheObject("GeneratedName");
-                            await LoadData();
+                            LoadData();
                             state.SetNavReload(true);
                         }
                         else
@@ -296,10 +302,10 @@
         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will purge the Generated Names Log and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
         if (confirm)
         {
-            await LogHelper.PurgeGeneratedNames();
+            LogHelper.PurgeGeneratedNames();
             toastService.ShowSuccess("Generated Log purged!");
             AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Generated Names log purged." });
-            await LoadData();
+            LoadData();
             StateHasChanged();
         }
     }
@@ -311,9 +317,7 @@
 
     public bool IsVisible(GeneratedName name)
     {
-        bool visible = true;
-        if (name.CreatedOn < startdate)
-            visible = false;
+        var visible = !(name.CreatedOn < startdate);
 
         if (name.CreatedOn > (enddate + new TimeSpan(23, 59, 59)))
             visible = false;

@@ -1,316 +1,287 @@
-﻿using AzureNamingTool.Helpers;
+﻿using System.Text.Json;
+using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
-using System.Net.WebSockets;
-using System.Security.AccessControl;
 
-namespace AzureNamingTool.Services
+namespace AzureNamingTool.Services;
+
+public class ResourceComponentService
 {
-    public class ResourceComponentService
+    private readonly FileReader _fileReader;
+    private readonly FileWriter _fileWriter;
+    private readonly GeneralHelper _generalHelper;
+    private readonly FileSystemHelper _fileSystemHelper;
+
+    public ResourceComponentService(
+        GeneralHelper generalHelper,
+        FileReader fileReader,
+        FileWriter fileWriter,
+        FileSystemHelper fileSystemHelper)
     {
+        _generalHelper = generalHelper;
+        _fileReader = fileReader;
+        _fileWriter = fileWriter;
+        _fileSystemHelper = fileSystemHelper;
+    }
 
-        public static async Task<ServiceResponse> GetItems(bool admin)
+    public ServiceResponse GetItems(bool admin)
+    {
+        ServiceResponse serviceResponse = new();
+
+        var items = _fileReader.GetList<ResourceComponent>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (!admin)
             {
-                var items = await ConfigurationHelper.GetList<ResourceComponent>();
-                if (GeneralHelper.IsNotNull(items))
+                serviceResponse.ResponseObject = items.Where(x => x.Enabled).OrderBy(y => y.SortOrder).ToList();
+            }
+            else
+            {
+                serviceResponse.ResponseObject =
+                    items.OrderBy(y => y.SortOrder).ThenByDescending(y => y.Enabled).ToList();
+            }
+
+            serviceResponse.Success = true;
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Components not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse GetItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceComponent>();
+        if (items != null)
+        {
+            var item = items.Find(x => x.Id == id);
+            if (item != null)
+            {
+                serviceResponse.ResponseObject = item;
+                serviceResponse.Success = true;
+            }
+            else
+            {
+                serviceResponse.ResponseObject = "Resource Component not found!";
+            }
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Component not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostItem(ResourceComponent item)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceComponent>();
+        if (items != null)
+        {
+            if (items != null)
+            {
+                // Set the new id
+                if (item.Id == 0)
                 {
-                    if (!admin)
+                    item.Id = items.Count + 1;
+                }
+
+                var position = 1;
+                items = items.OrderBy(x => x.SortOrder).ToList();
+
+                if (item.SortOrder == 0)
+                {
+                    item.SortOrder = items.Count + 1;
+                }
+
+                // Determine new item id
+                if (items.Count > 0)
+                {
+                    // Check if the item already exists
+                    if (items.Exists(x => x.Id == item.Id))
                     {
-                        serviceResponse.ResponseObject = items.Where(x => x.Enabled == true).OrderBy(y => y.SortOrder).ToList();
+                        // Remove the updated item from the list
+                        var existingitem = items.Find(x => x.Id == item.Id);
+                        if (existingitem != null)
+                        {
+                            var index = items.IndexOf(existingitem);
+                            items.RemoveAt(index);
+                        }
+                    }
+
+                    // Reset the sort order of the list
+                    foreach (var thisitem in items.OrderBy(x => x.SortOrder).ThenByDescending(x => x.Enabled)
+                                 .ToList())
+                    {
+                        thisitem.SortOrder = position;
+                        position += 1;
+                    }
+
+                    // Check for the new sort order
+                    if (items.Exists(x => x.SortOrder == item.SortOrder))
+                    {
+                        // Insert the new item
+                        items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!),
+                            item);
                     }
                     else
                     {
-                        serviceResponse.ResponseObject = items.OrderBy(y => y.SortOrder).OrderByDescending(y => y.Enabled).ToList();
-                    }
-                    serviceResponse.Success = true;
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Components not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> GetItem(int id)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceComponent>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    var item = items.Find(x => x.Id == id);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        serviceResponse.ResponseObject = item;
-                        serviceResponse.Success = true;
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = "Resource Component not found!";
-                    }
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Component not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> PostItem(ResourceComponent item)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceComponent>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    if (GeneralHelper.IsNotNull(items))
-                    {
-                        // Set the new id
-                        if (item.Id == 0)
-                        {
-                            item.Id = items.Count + 1;
-                        }
-
-                        int position = 1;
-                        items = items.OrderBy(x => x.SortOrder).ToList();
-
-                        if (item.SortOrder == 0)
-                        {
-                            item.SortOrder = items.Count + 1;
-                        }
-
-                        // Determine new item id
-                        if (items.Count > 0)
-                        {
-                            // Check if the item already exists
-                            if (items.Exists(x => x.Id == item.Id))
-                            {
-                                // Remove the updated item from the list
-                                var existingitem = items.Find(x => x.Id == item.Id);
-                                if (GeneralHelper.IsNotNull(existingitem))
-                                {
-                                    int index = items.IndexOf(existingitem);
-                                    items.RemoveAt(index);
-                                }
-                            }
-
-                            // Reset the sort order of the list
-                            foreach (ResourceComponent thisitem in items.OrderBy(x => x.SortOrder).OrderByDescending(x => x.Enabled).ToList())
-                            {
-                                thisitem.SortOrder = position;
-                                position += 1;
-                            }
-
-                            // Check for the new sort order
-                            if (items.Exists(x => x.SortOrder == item.SortOrder))
-                            {
-                                // Insert the new item
-                                items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!), item);
-                            }
-                            else
-                            {
-                                // Put the item at the end
-                                items.Add(item);
-                            }
-                        }
-                        else
-                        {
-                            item.Id = 1;
-                            item.SortOrder = 1;
-                            items.Add(item);
-                        }
-
-                        position = 1;
-                        foreach (ResourceComponent thisitem in items.OrderBy(x => x.SortOrder).OrderByDescending(x => x.Enabled).ToList())
-                        {
-                            thisitem.SortOrder = position;
-                            thisitem.Id = position;
-                            position += 1;
-                        }
-
-                        // Write items to file
-                        await ConfigurationHelper.WriteList<ResourceComponent>(items);
-                        serviceResponse.Success = true;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> DeleteItem(int id)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceComponent>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    // Get the specified item
-                    var item = items.Find(x => x.Id == id && x.IsCustom == true);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        // Delete any resource type settings for the component
-                        List<string> currentvalues = new();
-                        serviceResponse = await ResourceTypeService.GetItems();
-                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
-                        {
-                            List<Models.ResourceType> resourceTypes = (List<Models.ResourceType>)serviceResponse.ResponseObject!;
-                            if (GeneralHelper.IsNotNull(resourceTypes))
-                            {
-                                foreach (Models.ResourceType currenttype in resourceTypes)
-                                {
-                                    currentvalues = new List<string>(currenttype.Optional.Split(','));
-                                    if (currentvalues.Contains(GeneralHelper.NormalizeName(item.Name, false)))
-                                    {
-                                        currentvalues.Remove(GeneralHelper.NormalizeName(item.Name, false));
-                                        currenttype.Optional = String.Join(",", currentvalues.ToArray());
-                                    }
-
-                                    currentvalues = new List<string>(currenttype.Exclude.Split(','));
-                                    if (currentvalues.Contains(GeneralHelper.NormalizeName(item.Name, false)))
-                                    {
-                                        currentvalues.Remove(GeneralHelper.NormalizeName(item.Name, false));
-                                        currenttype.Exclude = String.Join(",", currentvalues.ToArray());
-                                    }
-                                    await ResourceTypeService.PostItem(currenttype);
-                                }
-
-                                // Delete any custom components for this resource component
-                                var components = await ConfigurationHelper.GetList<CustomComponent>();
-                                if (GeneralHelper.IsNotNull(components))
-                                {
-                                    components.RemoveAll(x => x.ParentComponent == GeneralHelper.NormalizeName(item.Name, true));
-                                    await ConfigurationHelper.WriteList<CustomComponent>(components);
-
-                                    // Remove the item from the collection
-                                    items.Remove(item);
-
-                                    // Update all the sort order values to reflect the removal
-                                    int position = 1;
-                                    foreach (ResourceComponent thisitem in items.OrderBy(x => x.SortOrder).ToList())
-                                    {
-                                        thisitem.SortOrder = position;
-                                        thisitem.Id = position;
-                                        position += 1;
-                                    }
-
-                                    // Write items to file
-                                    await ConfigurationHelper.WriteList<ResourceComponent>(items);
-                                    serviceResponse.Success = true;
-                                }
-                                else
-                                {
-                                    serviceResponse.ResponseObject = "Resource Components not found!";
-                                }
-                            }
-                            else
-                            {
-                                serviceResponse.ResponseObject = "Resource Types not found!";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = "Resource Component not found!";
+                        // Put the item at the end
+                        items.Add(item);
                     }
                 }
                 else
                 {
-                    serviceResponse.ResponseObject = "Resource Components not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> PostConfig(List<ResourceComponent> items)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                string[] componentnames = new string[8] { "ResourceEnvironment", "ResourceInstance", "ResourceLocation", "ResourceOrg", "ResourceProjAppSvc", "ResourceType", "ResourceUnitDept", "ResourceFunction" };
-                var newitems = new List<ResourceComponent>();
-
-                // Examine the current items
-                foreach (ResourceComponent item in items)
-                {
-                    // Check if the item is valid
-                    if (!componentnames.Contains(item.Name))
-                    {
-                        item.IsCustom = true;
-                    }
-                    // Add the item to the update list
-                    newitems.Add(item);
+                    item.Id = 1;
+                    item.SortOrder = 1;
+                    items.Add(item);
                 }
 
-                // Make sure all the component names are present
-                foreach (string name in componentnames)
+                position = 1;
+                foreach (var thisitem in items.OrderBy(x => x.SortOrder).ThenByDescending(x => x.Enabled).ToList())
                 {
-                    if (!newitems.Exists(x => x.Name == name))
-                    {
-                        // Create a component object 
-                        ResourceComponent newitem = new()
-                        {
-                            Name = name,
-                            Enabled = false
-                        };
-                        newitems.Add(newitem);
-                    }
-                }
-
-                // Determine new item ids
-                int i = 1;
-
-                foreach (ResourceComponent item in newitems.OrderByDescending(x => x.Enabled).OrderBy(x => x.SortOrder))
-                {
-                    item.Id = i;
-                    item.SortOrder = i;
-                    i += 1;
+                    thisitem.SortOrder = position;
+                    thisitem.Id = position;
+                    position += 1;
                 }
 
                 // Write items to file
-                await ConfigurationHelper.WriteList<ResourceComponent>(newitems);
+                _fileWriter.WriteList(items);
                 serviceResponse.Success = true;
             }
-            catch (Exception ex)
+        }
+
+
+        return serviceResponse;
+    }
+    
+    public ServiceResponse PostConfig(List<ResourceComponent> items)
+    {
+        ServiceResponse serviceResponse = new();
+
+        var componentnames = new string[8]
+        {
+            "ResourceEnvironment", "ResourceInstance", "ResourceLocation", "ResourceOrg", "ResourceProjAppSvc",
+            "ResourceType", "ResourceUnitDept", "ResourceFunction"
+        };
+        var newitems = new List<ResourceComponent>();
+
+        // Examine the current items
+        foreach (var item in items)
+        {
+            // Check if the item is valid
+            if (!componentnames.Contains(item.Name))
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
+                item.IsCustom = true;
             }
-            return serviceResponse;
+
+            // Add the item to the update list
+            newitems.Add(item);
+        }
+
+        // Make sure all the component names are present
+        foreach (var name in componentnames)
+        {
+            if (!newitems.Exists(x => x.Name == name))
+            {
+                // Create a component object 
+                ResourceComponent newitem = new()
+                {
+                    Name = name,
+                    Enabled = false
+                };
+                newitems.Add(newitem);
+            }
+        }
+
+        // Determine new item ids
+        var i = 1;
+
+        foreach (var item in newitems.OrderByDescending(x => x.Enabled).ThenBy(x => x.SortOrder))
+        {
+            item.Id = i;
+            item.SortOrder = i;
+            i += 1;
+        }
+
+        // Write items to file
+        _fileWriter.WriteList(newitems);
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    /// <summary>
+    ///     This function is used to sync default configuration data with the user's local version
+    /// </summary>
+    /// <param name="type">string - Type of configuration data to sync</param>
+    public void SyncConfigurationData()
+    {
+        var update = false;
+
+        var serviceResponse = GetItems(true);
+        if (!serviceResponse.Success) 
+            return;
+        
+        List<ResourceComponent> currentComponents = serviceResponse.ResponseObject!;
+        // Get the default component data
+        List<ResourceComponent> defaultComponents = new();
+        var data = _fileSystemHelper.ReadFile(FileNames.ResourceComponent, "repository/");
+        if (string.IsNullOrEmpty(data)) 
+            return;
+                
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        if (!string.IsNullOrEmpty(data))
+        {
+            defaultComponents =
+                JsonSerializer.Deserialize<List<ResourceComponent>>(data, options)!;
+        }
+
+        // Loop over the existing components to verify the data is complete
+        foreach (var currentComponent in currentComponents)
+        {
+            // Create a new component for any updates
+            var newComponent = currentComponent;
+                        
+            // Get the matching default component for the current component
+            var defaultComponent = defaultComponents.Find(x => x.Name == currentComponent.Name);
+                        
+            // Check the data to see if it's been configured
+            if (string.IsNullOrEmpty(currentComponent.MinLength))
+            {
+                newComponent.MinLength = defaultComponent != null 
+                    ? defaultComponent.MinLength 
+                    : "1";
+
+                update = true;
+            }
+
+            // Check the data to see if it's been configured
+            if (string.IsNullOrEmpty(currentComponent.MaxLength))
+            {
+                newComponent.MaxLength = defaultComponent != null 
+                    ? defaultComponent.MaxLength 
+                    : "10";
+                
+                update = true;
+            }
+
+            if (update)
+            {
+                PostItem(newComponent);
+            }
         }
     }
 }

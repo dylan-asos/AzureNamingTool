@@ -13,6 +13,16 @@
 @inject IToastService toastService
 @inject NavigationManager NavigationManager
 @inject ProtectedLocalStorage storage
+@inject GeneralHelper GeneralHelper
+@inject ValidationHelper ValidationHelper 
+@inject ServicesHelper ServicesHelper
+@inject ConfigurationHelper ConfigurationHelper
+@inject AdminService AdminService
+@inject AdminUserService AdminUserService
+@inject AdminLogService AdminLogService
+@inject CacheHelper CacheHelper
+@inject FileSystemHelper FileSystemHelper
+@inject SiteConfiguration SiteConfiguration
 
 <PageTitle>Azure Naming Tool - Admin</PageTitle>
 <div class="card  @theme.ThemeStyle">
@@ -67,7 +77,7 @@
                                     </div>
                                 </div>
                             }
-                            @if ((currentuser == "GlobalAdmin") && (GeneralHelper.IsNotNull(environmentvariables)))
+                            @if ((currentuser == "GlobalAdmin") && (environmentvariables!= null))
                             {
                                 <div class="card mb-3" style="width:auto;">
                                     <div class="card-header bg-default text-dark">
@@ -234,7 +244,7 @@
                                                 <span class="oi oi-plus" aria-hidden="true"></span> Add Admin User
                                             </button>
                                         </div>
-                                        @if (GeneralHelper.IsNotNull(servicesData.AdminUsers))
+                                        @if (servicesData.AdminUsers!= null)
                                         {
                                             @if (servicesData.AdminUsers.Count > 0)
                                             {
@@ -247,7 +257,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            @if (GeneralHelper.IsNotNull(servicesData.AdminUsers))
+                                                            @if (servicesData.AdminUsers!= null)
                                                             {
                                                                 @foreach (var item in @servicesData.AdminUsers)
                                                                 {
@@ -446,7 +456,7 @@
     private string currentgenerationwebhook = String.Empty;
     private string versionalert = String.Empty;
     private string appversion = String.Empty;
-    private SiteConfiguration config = ConfigurationHelper.GetConfigurationData();
+
     private string currentuser = String.Empty;
     private List<KeyValuePair<string, string>> environmentvariables = new();
     private string releasenotesurl = String.Empty;
@@ -457,28 +467,28 @@
         if (firstRender)
         {
             // Get the version
-            if (GeneralHelper.IsNotNull(Assembly.GetEntryAssembly()))
+            if (Assembly.GetEntryAssembly() != null)
             {
                 appversion = Assembly.GetEntryAssembly()!.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
                 releasenotesurl = "https://github.com/mspnp/AzureNamingTool/wiki/v" + appversion;
             }
 
-            servicesData = await ServicesHelper.LoadServicesData(servicesData, true);
+            servicesData = ServicesHelper.LoadServicesData(servicesData, true);
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
             if (admin)
             {
-                currentapikey = GeneralHelper.DecryptString(config.APIKey!, config.SALTKey!);
+                currentapikey = GeneralHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
                 // Determine if the version notification has been dismissed
                 var resultVersionAlert = await session.GetAsync<bool>("versionalert-" + appversion + "-shown");
                 versionalertshown = resultVersionAlert.Success ? resultVersionAlert.Value : false;
-                versionalert = ConfigurationHelper.GetVersionAlert(true).Result;
+                versionalert = ConfigurationHelper.GetVersionAlert(true);
                 duplicatenamesallowed = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("DuplicateNamesAllowed"));
                 connectivitycheckenabled = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("ConnectivityCheckEnabled"));
                 resourcetypeeditingallowed = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("ResourceTypeEditingAllowed"));
                 currentgenerationwebhook = ConfigurationHelper.GetAppSetting("GenerationWebhook", true);
                 currentidentityheadername = ConfigurationHelper.GetAppSetting("IdentityHeaderName", true);
-                if (GeneralHelper.IsNotNull(identityProviderDetails))
+                if (identityProviderDetails != null)
                 {
                     if (!String.IsNullOrEmpty(identityProviderDetails.CurrentIdentityProvider))
                     {
@@ -509,13 +519,13 @@
         {
             case "login":
                 // Check the password
-                if (currentpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
+                if (currentpassword == GeneralHelper.DecryptString(SiteConfiguration.AdminPassword!, SiteConfiguration.SaltKey!))
                 {
                     state.SetAdmin(true);
                     await session.SetAsync("admin", true);
                     await session.SetAsync("currentuser", "GlobalAdmin");
                     // Load the current API Key
-                    currentapikey = GeneralHelper.DecryptString(config.APIKey!, config.SALTKey!);
+                    currentapikey = GeneralHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
                     message.Type = MessageTypesEnum.INFORMATION;
                     message.Header = "INFORMATION";
                     message.Message = "Global Admin logged in.";
@@ -544,10 +554,10 @@
                 if (confirm)
                 {
                     // Set the new Global admin password
-                    serviceResponse = await AdminService.UpdatePassword(newpassword);
+                    serviceResponse = AdminService.UpdatePassword(newpassword);
                     if (serviceResponse.Success)
                     {
-                        message.Type = MessageTypesEnum.SUCCESS;
+                        message.Type = MessageTypesEnum.Success;
                         message.Header = "SUCCESS";
                         message.Message = "Global Admin Password updated!";
                     }
@@ -567,10 +577,10 @@
                 confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the Identity Header Name.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                 if (confirm)
                 {
-                    serviceResponse = await AdminService.UpdateIdentityHeaderName(currentidentityheadername);
+                    serviceResponse = AdminService.UpdateIdentityHeaderName(currentidentityheadername);
                     if (serviceResponse.Success)
                     {
-                        message.Type = MessageTypesEnum.SUCCESS;
+                        message.Type = MessageTypesEnum.Success;
                         message.Header = "SUCCESS";
                         message.Message = "Identity Header Name updated!";
                     }
@@ -590,10 +600,10 @@
                 confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the API Key.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                 if (confirm)
                 {
-                    serviceResponse = await AdminService.UpdateAPIKey(currentapikey);
+                    serviceResponse = AdminService.UpdateApiKey(currentapikey);
                     if (serviceResponse.Success)
                     {
-                        message.Type = MessageTypesEnum.SUCCESS;
+                        message.Type = MessageTypesEnum.Success;
                         message.Header = "SUCCESS";
                         message.Message = "API Key updated!";
                     }
@@ -613,13 +623,13 @@
                 confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will generate a new API Key.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                 if (confirm)
                 {
-                    serviceResponse = await AdminService.GenerateAPIKey();
+                    serviceResponse = AdminService.GenerateApiKey();
                     if (serviceResponse.Success)
                     {
-                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                        if (serviceResponse.ResponseObject != null)
                         {
                             currentapikey = serviceResponse.ResponseObject!;
-                            message.Type = MessageTypesEnum.SUCCESS;
+                            message.Type = MessageTypesEnum.Success;
                             message.Header = "SUCCESS";
                             message.Message = "API Key updated!";
                         }
@@ -657,7 +667,7 @@
                         }
                     }
                     ConfigurationHelper.SetAppSetting("GenerationWebhook", currentgenerationwebhook, true);
-                    message.Type = MessageTypesEnum.SUCCESS;
+                    message.Type = MessageTypesEnum.Success;
                     message.Header = "SUCCESS";
                     message.Message = "Generation Webhook configuration saved!";
                 }
@@ -668,7 +678,7 @@
                 break;
             case "clearcache":
                 CacheHelper.ClearAllCache();
-                message.Type = MessageTypesEnum.SUCCESS;
+                message.Type = MessageTypesEnum.Success;
                 message.Header = "SUCCESS";
                 message.Message = "Cache cleared!";
                 break;
@@ -678,7 +688,7 @@
                 displaymessage = false;
                 break;
             case "samplepost":
-                string webhookdata = await FileSystemHelper.ReadFile("samplewebhookdata.json", "");
+                string webhookdata = FileSystemHelper.ReadFile("samplewebhookdata.json", "");
                 ModalHelper.ShowInformationModal(Modal!, theme, "bg-navcolor", "Sample Post", "<p>This is a sample Generation Webhook post.</p><code style=\"display: block; white-space: pre-wrap;\">" + webhookdata + "</code>", "", admin);
                 displaymessage = false;
                 break;
@@ -686,7 +696,7 @@
                 bool added = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Admin User", "<p>Add an Admin User.</p>", id, "AdminUser", admin, "");
                 if (added)
                 {
-                    servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                    servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                     state.SetNavReload(true);
                     StateHasChanged();
                 }
@@ -699,10 +709,10 @@
                 confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will delete the Admin User.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                 if (confirm)
                 {
-                    serviceResponse = await AdminUserService.DeleteItem(Convert.ToInt32(id));
+                    serviceResponse = AdminUserService.DeleteItem(Convert.ToInt32(id));
                     if (serviceResponse.Success)
                     {
-                        message.Type = MessageTypesEnum.SUCCESS;
+                        message.Type = MessageTypesEnum.Success;
                         message.Message = "Admin User deleted!";
                     }
                     else
@@ -719,9 +729,7 @@
                 break;
         }
 
-        config = ConfigurationHelper.GetConfigurationData();
-
-        if ((GeneralHelper.IsNotNull(message.Message)) && (displaymessage))
+        if ((message.Message != null) && (displaymessage))
         {
             if (!String.IsNullOrEmpty(message.Message))
             {
@@ -730,7 +738,7 @@
                     case MessageTypesEnum.INFORMATION:
                         toastService.ShowInfo(message.Message);
                         break;
-                    case MessageTypesEnum.SUCCESS:
+                    case MessageTypesEnum.Success:
                         toastService.ShowSuccess(message.Message);
                         break;
                     case MessageTypesEnum.WARNING:
@@ -745,7 +753,7 @@
         }
 
 
-        servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+        servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
         state.SetNavReload(true);
         StateHasChanged();
 
@@ -794,14 +802,14 @@
         }
     }
 
-    private async void SettingChanged(ChangeEventArgs e, string setting)
+    private void SettingChanged(ChangeEventArgs e, string setting)
     {
         message = new ResponseMessage();
         message.Header = "INFORMATION";
         message.Type = MessageTypesEnum.INFORMATION;
         try
         {
-            if (GeneralHelper.IsNotNull(e.Value))
+            if (e.Value != null)
             {
                 switch (setting)
                 {
@@ -828,7 +836,7 @@
 
                         break;
                     case "resourcetypeeditingallowed":
-                        if (GeneralHelper.IsNotNull(e.Value))
+                        if (e.Value != null)
                         {
                             ConfigurationHelper.SetAppSetting("ResourceTypeEditingAllowed", e.Value!.ToString() ?? "");
                             message.Message = "Resource Type Editing Allowed setting updated to " + e.Value?.ToString()!.ToUpper() ?? "" + "!";
@@ -839,7 +847,7 @@
                         }
                         break;
                 }
-                message.Type = MessageTypesEnum.SUCCESS;
+                message.Type = MessageTypesEnum.Success;
                 message.Header = "SUCCESS";
             }
             else
@@ -855,14 +863,14 @@
             message.Header = "ERROR";
         }
 
-        if (GeneralHelper.IsNotNull(message.Message))
+        if (message.Message != null)
         {
             switch (message.Type)
             {
                 case MessageTypesEnum.INFORMATION:
                     toastService.ShowInfo(message.Message);
                     break;
-                case MessageTypesEnum.SUCCESS:
+                case MessageTypesEnum.Success:
                     toastService.ShowSuccess(message.Message);
                     break;
                 case MessageTypesEnum.WARNING:
@@ -875,7 +883,7 @@
             AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
         }
 
-        servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+        servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
         state.SetNavReload(true);
         StateHasChanged();
     }

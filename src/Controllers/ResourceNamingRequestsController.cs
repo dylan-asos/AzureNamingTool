@@ -1,123 +1,87 @@
-﻿using AzureNamingTool.Models;
+﻿using AzureNamingTool.Attributes;
 using AzureNamingTool.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Text;
-using System.Collections;
-using System.Threading;
+using AzureNamingTool.Models;
 using AzureNamingTool.Services;
-using AzureNamingTool.Attributes;
+using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace AzureNamingTool.Controllers;
 
-namespace AzureNamingTool.Controllers
+[Route("api/[controller]")]
+[ApiController]
+[ApiKey]
+public class ResourceNamingRequestsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ApiKey]
-    public class ResourceNamingRequestsController : ControllerBase
+    private readonly ResourceTypeService _resourceTypeService;
+    private readonly ResourceNamingRequestService _resourceNamingRequestService;
+
+    public ResourceNamingRequestsController(ResourceTypeService resourceTypeService, ResourceNamingRequestService resourceNamingRequestService)
     {
-        // POST api/<ResourceNamingRequestsController>
-        /// <summary>
-        /// This function will generate a resoure type name for specifed component values. This function requires full definition for all components. It is recommended to use the RequestName API function for name generation.   
-        /// </summary>
-        /// <param name="request">ResourceNameRequestWithComponents (json) - Resource Name Request data</param>
-        /// <returns>string - Name generation response</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> RequestNameWithComponents([FromBody] ResourceNameRequestWithComponents request)
+        _resourceTypeService = resourceTypeService;
+        _resourceNamingRequestService = resourceNamingRequestService;
+    }
+    
+    // POST api/<ResourceNamingRequestsController>
+    /// <summary>
+    ///     This function will generate a resoure type name for specifed component values. This function requires full
+    ///     definition for all components. It is recommended to use the RequestName API function for name generation.
+    /// </summary>
+    /// <param name="request">ResourceNameRequestWithComponents (json) - Resource Name Request data</param>
+    /// <returns>string - Name generation response</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult RequestNameWithComponents([FromBody] ResourceNameRequestWithComponents request)
+    {
+        var resourceNameRequestResponse = _resourceNamingRequestService.RequestNameWithComponents(request);
+        if (resourceNameRequestResponse.Success)
         {
-            try
-            {
-                ResourceNameResponse resourceNameRequestResponse = await ResourceNamingRequestService.RequestNameWithComponents(request);
-                if (resourceNameRequestResponse.Success)
-                {
-                    return Ok(resourceNameRequestResponse);
-                }
-                else
-                {
-                    return BadRequest(resourceNameRequestResponse);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex.Message);
-            }
+            return Ok(resourceNameRequestResponse);
         }
 
-        // POST api/<ResourceNamingRequestsController>
-        /// <summary>
-        /// This function will generate a resoure type name for specifed component values, using a simple data format.  
-        /// </summary>
-        /// <param name="request">ResourceNameRequest (json) - Resource Name Request data</param>
-        /// <returns>string - Name generation response</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> RequestName([FromBody] ResourceNameRequest request)
+        return BadRequest(resourceNameRequestResponse);
+    }
+
+    // POST api/<ResourceNamingRequestsController>
+    /// <summary>
+    ///     This function will generate a resoure type name for specifed component values, using a simple data format.
+    /// </summary>
+    /// <param name="request">ResourceNameRequest (json) - Resource Name Request data</param>
+    /// <returns>string - Name generation response</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public async Task<IActionResult> RequestName([FromBody] ResourceNameRequest request)
+    {
+        request.CreatedBy = "API";
+        var resourceNameRequestResponse = await _resourceNamingRequestService.RequestName(request);
+        if (resourceNameRequestResponse.Success)
         {
-            try
-            {
-                request.CreatedBy = "API";
-                ResourceNameResponse resourceNameRequestResponse = await ResourceNamingRequestService.RequestName(request);
-                if (resourceNameRequestResponse.Success)
-                {
-                    return Ok(resourceNameRequestResponse);
-                }
-                else
-                {
-                    return BadRequest(resourceNameRequestResponse);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex.Message);
-            }
+            return Ok(resourceNameRequestResponse);
         }
 
-        // POST api/<ResourceNamingRequestsController>
-        /// <summary>
-        /// This function will validate the name for the specified resource type. NOTE: This function does not validate using the tool configuration, only the regex for the specified resource type. Use the RequestName function to validate using the tool configuration. 
-        /// </summary>
-        /// <param name="validateNameRequest">ValidateNameRequest (json) - Validate Name Request data</param>
-        /// <returns>ValidateNameResponse - Name validation response</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> ValidateName([FromBody] ValidateNameRequest validateNameRequest)
+        return BadRequest(resourceNameRequestResponse);
+    }
+
+    // POST api/<ResourceNamingRequestsController>
+    /// <summary>
+    ///     This function will validate the name for the specified resource type. NOTE: This function does not validate using
+    ///     the tool configuration, only the regex for the specified resource type. Use the RequestName function to validate
+    ///     using the tool configuration.
+    /// </summary>
+    /// <param name="validateNameRequest">ValidateNameRequest (json) - Validate Name Request data</param>
+    /// <returns>ValidateNameResponse - Name validation response</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult ValidateName([FromBody] ValidateNameRequest validateNameRequest)
+    {
+        var serviceResponse = _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
+        if (!serviceResponse.Success) 
+            return BadRequest("There was a problem validating the name.");
+        
+        if (serviceResponse.ResponseObject != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get the current delimiter
-                serviceResponse = await ResourceTypeService.ValidateResourceTypeName(validateNameRequest);
-                if (serviceResponse.Success)
-                {
-                    if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
-                    {
-                        ValidateNameResponse validateNameResponse = (ValidateNameResponse)serviceResponse.ResponseObject!;
-                        return Ok(validateNameResponse);
-                    }
-                    else
-                    {
-                        return BadRequest("There was a problem validating the name.");
-                    }
-                }
-                else
-                {
-                    return BadRequest("There was a problem validating the name.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex.Message);
-            }
+            var validateNameResponse = (ValidateNameResponse) serviceResponse.ResponseObject!;
+            return Ok(validateNameResponse);
         }
+
+        return BadRequest("There was a problem validating the name.");
     }
 }

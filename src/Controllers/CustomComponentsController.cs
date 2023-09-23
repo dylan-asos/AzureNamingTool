@@ -1,307 +1,240 @@
-﻿using AzureNamingTool.Models;
+﻿using AzureNamingTool.Attributes;
 using AzureNamingTool.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using AzureNamingTool.Models;
 using AzureNamingTool.Services;
-using AzureNamingTool.Attributes;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace AzureNamingTool.Controllers;
 
-namespace AzureNamingTool.Controllers
+[Route("api/[controller]")]
+[ApiController]
+[ApiKey]
+public class CustomComponentsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ApiKey]
-    public class CustomComponentsController : ControllerBase
+    private readonly CacheHelper _cacheHelper;
+    private readonly CustomComponentService _customComponentService;
+    private readonly GeneralHelper _generalHelper;
+    private readonly ResourceComponentService _resourceComponentService;
+    private readonly AdminLogService _adminLogService;
+
+    public CustomComponentsController(
+        CustomComponentService customComponentService,
+        GeneralHelper generalHelper,
+        CacheHelper cacheHelper,
+        ResourceComponentService resourceComponentService, AdminLogService adminLogService)
     {
-        // GET: api/<CustomComponentsController>
-        /// <summary>
-        /// This function will return the custom components data. 
-        /// </summary>
-        /// <returns>json - Current custom components data</returns>
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        _customComponentService = customComponentService;
+        _generalHelper = generalHelper;
+        _cacheHelper = cacheHelper;
+        _resourceComponentService = resourceComponentService;
+        _adminLogService = adminLogService;
+    }
+
+    // GET: api/<CustomComponentsController>
+    /// <summary>
+    ///     This function will return the custom components data.
+    /// </summary>
+    /// <returns>json - Current custom components data</returns>
+    [HttpGet]
+    public IActionResult Get()
+    {
+        var serviceResponse = _customComponentService.GetItems();
+        
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await CustomComponentService.GetItems();
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // GET api/<CustomComponentsController>/sample
-        /// <summary>
-        /// This function will return the custom components data for the specifc parent component type.
-        /// </summary>
-        /// <param name="parenttype">string - Parent Component Type Name</param>
-        /// <returns>json - Current custom components data</returns>
-        [Route("[action]/{parenttype}")]
-        [HttpGet]
-        public async Task<IActionResult> GetByParentType(string parenttype)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // GET api/<CustomComponentsController>/sample
+    /// <summary>
+    ///     This function will return the custom components data for the specifc parent component type.
+    /// </summary>
+    /// <param name="parenttype">string - Parent Component Type Name</param>
+    /// <returns>json - Current custom components data</returns>
+    [Route("[action]/{parenttype}")]
+    [HttpGet]
+    public IActionResult GetByParentType(string parenttype)
+    {
+        var serviceResponse = _customComponentService.GetItemsByParentType(_generalHelper.NormalizeName(parenttype, true));
+        
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await CustomComponentService.GetItemsByParentType(GeneralHelper.NormalizeName(parenttype, true));
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // GET api/<CustomComponentsController>/5
-        /// <summary>
-        /// This function will return the specifed custom component data.
-        /// </summary>
-        /// <param name="id">int - Custom Component id</param>
-        /// <returns>json - Custom component data</returns>
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> Get(int id)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // GET api/<CustomComponentsController>/5
+    /// <summary>
+    ///     This function will return the specifed custom component data.
+    /// </summary>
+    /// <param name="id">int - Custom Component id</param>
+    /// <returns>json - Custom component data</returns>
+    [HttpGet("{id:int}")]
+    public IActionResult Get(int id)
+    {
+        var serviceResponse =
+            // Get list of items
+            _customComponentService.GetItem(id);
+        
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await CustomComponentService.GetItem(id);
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // POST api/<CustomComponentsController>
-        /// <summary>
-        /// This function will create/update the specified custom component data.
-        /// </summary>
-        /// <param name="item">CustomComponent (json) - Custom component data</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] CustomComponent item)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await CustomComponentService.PostItem(item);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") updated." });
-                    CacheHelper.InvalidateCacheObject("CustomComponent");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+        return BadRequest(serviceResponse.ResponseObject);
+    }
 
-        // POST api/<CustomComponentsController>
-        /// <summary>
-        /// This function will update all custom components data.
-        /// </summary>
-        /// <param name="items">List-CustomComponent (json) - All custom components data. (Legacy functionality).</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PostConfig([FromBody] List<CustomComponent> items)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await CustomComponentService.PostConfig(items);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Custom Components updated." });
-                    CacheHelper.InvalidateCacheObject("CustomComponent");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+    // POST api/<CustomComponentsController>
+    /// <summary>
+    ///     This function will create/update the specified custom component data.
+    /// </summary>
+    /// <param name="item">CustomComponent (json) - Custom component data</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    public IActionResult Post([FromBody] CustomComponent item)
+    {
+        var serviceResponse = _customComponentService.PostItem(item);
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") updated."});
+        _cacheHelper.InvalidateCacheObject("CustomComponent");
+        
+        return Ok(serviceResponse.ResponseObject);
+    }
 
-        // POST api/<CustomComponentsController>
-        /// <summary>
-        /// This function will update all custom components data.
-        /// </summary>
-        /// <param name="config">CustomComponmentConfig (json) - Full custom components data with parent component data.</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PostConfigWithParentData([FromBody] CustomComponmentConfig config)
+    // POST api/<CustomComponentsController>
+    /// <summary>
+    ///     This function will update all custom components data.
+    /// </summary>
+    /// <param name="items">List-CustomComponent (json) - All custom components data. (Legacy functionality).</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PostConfig([FromBody] List<CustomComponent> items)
+    {
+        var serviceResponse = _customComponentService.PostConfig(items);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Custom Components updated."});
+        _cacheHelper.InvalidateCacheObject("CustomComponent");
+        return Ok(serviceResponse.ResponseObject);
+    }
+
+    // POST api/<CustomComponentsController>
+    /// <summary>
+    ///     This function will update all custom components data.
+    /// </summary>
+    /// <param name="config">CustomComponmentConfig (json) - Full custom components data with parent component data.</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PostConfigWithParentData([FromBody] CustomComponmentConfig config)
+    {
+        List<ResourceComponent> currentresourcecomponents = new();
+        List<CustomComponent> newcustomcomponents = new();
+        // Get the current resource components
+        var serviceResponse = _resourceComponentService.GetItems(true);
+
+        if (!serviceResponse.Success) 
+        return BadRequest(serviceResponse.ResponseObject);
+        
+        if (serviceResponse.ResponseObject != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            currentresourcecomponents = serviceResponse.ResponseObject!;
+
+            // Loop through the posted components
+            if (config.ParentComponents!= null)
             {
-                List<ResourceComponent> currentresourcecomponents = new();
-                List<CustomComponent> newcustomcomponents = new();
-                // Get the current resource components
-                serviceResponse = await ResourceComponentService.GetItems(true);
-                if (serviceResponse.Success)
+                foreach (var thisparentcomponent in config.ParentComponents)
                 {
-                    if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                    // Check if the posted component exists in the current components
+                    if (!currentresourcecomponents.Exists(x => x.Name == thisparentcomponent.Name))
                     {
-                        currentresourcecomponents = serviceResponse.ResponseObject!;
-
-                        // Loop through the posted components
-                        if (GeneralHelper.IsNotNull(config.ParentComponents))
+                        // Add the custom component
+                        ResourceComponent newcustomcomponent = new()
                         {
-                            foreach (ResourceComponent thisparentcomponent in config.ParentComponents)
-                            {
-                                // Check if the posted component exists in the current components
-                                if (!currentresourcecomponents.Exists(x => x.Name == thisparentcomponent.Name))
-                                {
-                                    // Add the custom component
-                                    ResourceComponent newcustomcomponent = new()
-                                    {
-                                        Name = thisparentcomponent.Name,
-                                        DisplayName = thisparentcomponent.Name,
-                                        IsCustom = true
-                                    };
-                                    serviceResponse = await ResourceComponentService.PostItem(newcustomcomponent);
+                            Name = thisparentcomponent.Name,
+                            DisplayName = thisparentcomponent.Name,
+                            IsCustom = true
+                        };
+                        serviceResponse = _resourceComponentService.PostItem(newcustomcomponent);
 
-                                    if (serviceResponse.Success)
-                                    {
-                                        // Add the new custom component to the list
-                                        currentresourcecomponents.Add(newcustomcomponent);
-                                    }
-                                    else
-                                    {
-                                        return BadRequest(serviceResponse.ResponseObject);
-                                    }
-                                }
-                            }
+                        if (serviceResponse.Success)
+                        {
+                            // Add the new custom component to the list
+                            currentresourcecomponents.Add(newcustomcomponent);
+                        }
+                        else
+                        {
+                            return BadRequest(serviceResponse.ResponseObject);
                         }
                     }
-
-                    if (GeneralHelper.IsNotNull(config.CustomComponents))
-                    {
-                        if (config.CustomComponents.Count > 0)
-                        {
-                            // Loop through custom components to make sure the parent exists
-                            foreach (CustomComponent thiscustomcomponent in config.CustomComponents)
-                            {
-                                if (currentresourcecomponents.Where(x => GeneralHelper.NormalizeName(x.Name, true) == thiscustomcomponent.ParentComponent).Any())
-                                {
-                                    newcustomcomponents.Add(thiscustomcomponent);
-                                }
-                            }
-
-                            // Update the custom component options
-                            serviceResponse = await CustomComponentService.PostConfig(newcustomcomponents);
-                            if (!serviceResponse.Success)
-                            {
-                                return BadRequest(serviceResponse.ResponseObject);
-                            }
-                        }
-                    }
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Custom Components updated." });
-                    CacheHelper.InvalidateCacheObject("CustomComponent");
-                    return Ok("Custom Component configuration updated!");
                 }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
             }
         }
 
-        // DELETE api/<CustomComponentsController>/5
-        /// <summary>
-        /// This function will delete the specifed custom component data.
-        /// </summary>
-        /// <param name="id">int - Custom component id</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        if (config.CustomComponents!= null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (config.CustomComponents.Count > 0)
             {
-                // Get the item details
-                serviceResponse = await CustomComponentService.GetItem(id);
-                if (serviceResponse.Success)
+                // Loop through custom components to make sure the parent exists
+                foreach (var thiscustomcomponent in config.CustomComponents)
                 {
-                    CustomComponent item = (CustomComponent)serviceResponse.ResponseObject!;
-                    serviceResponse = await CustomComponentService.DeleteItem(id);
-                    if (serviceResponse.Success)
+                    if (currentresourcecomponents.Any(x =>
+                            _generalHelper.NormalizeName(x.Name, true) == thiscustomcomponent.ParentComponent))
                     {
-                        AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") deleted." });
-                        CacheHelper.InvalidateCacheObject("GeneratedName");
-                        return Ok("Custom Component (" + item.Name + ") deleted.");
-                    }
-                    else
-                    {
-                        return BadRequest(serviceResponse.ResponseObject);
+                        newcustomcomponents.Add(thiscustomcomponent);
                     }
                 }
-                else
+
+                // Update the custom component options
+                serviceResponse = _customComponentService.PostConfig(newcustomcomponents);
+                if (!serviceResponse.Success)
                 {
                     return BadRequest(serviceResponse.ResponseObject);
                 }
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
         }
+
+        _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Custom Components updated."});
+        _cacheHelper.InvalidateCacheObject("CustomComponent");
+        return Ok("Custom Component configuration updated!");
+
+    }
+
+    // DELETE api/<CustomComponentsController>/5
+    /// <summary>
+    ///     This function will delete the specifed custom component data.
+    /// </summary>
+    /// <param name="id">int - Custom component id</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
+    {
+        var serviceResponse = _customComponentService.GetItem(id);
+
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        var item = (CustomComponent) serviceResponse.ResponseObject!;
+        serviceResponse = _customComponentService.DeleteItem(id);
+
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") deleted."});
+        _cacheHelper.InvalidateCacheObject("GeneratedName");
+        return Ok("Custom Component (" + item.Name + ") deleted.");
     }
 }

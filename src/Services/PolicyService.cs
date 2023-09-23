@@ -1,132 +1,141 @@
 ﻿using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
-using Microsoft.AspNetCore.Mvc;
 
-namespace AzureNamingTool.Services
+namespace AzureNamingTool.Services;
+
+public class PolicyService
 {
-    public class PolicyService
-    {
-        public static async Task<ServiceResponse> GetPolicy()
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                var delimiter = '-';
-                var nameComponents = await Helpers.ConfigurationHelper.GetList<ResourceComponent>();
-                var resourceTypes = await Helpers.ConfigurationHelper.GetList<ResourceType>();
-                var unitDepts = await Helpers.ConfigurationHelper.GetList<ResourceUnitDept>();
-                var environments = await Helpers.ConfigurationHelper.GetList<ResourceEnvironment>();
-                var locations = await Helpers.ConfigurationHelper.GetList<ResourceLocation>();
-                var orgs = await Helpers.ConfigurationHelper.GetList<ResourceOrg>();
-                var Functions = await Helpers.ConfigurationHelper.GetList<ResourceFunction>();
-                var projectAppSvcs = await Helpers.ConfigurationHelper.GetList<ResourceProjAppSvc>();
+    private readonly FileReader _fileReader;
 
-                List<String> validations = new();
-                var maxSortOrder = 0;
-                if (GeneralHelper.IsNotNull(nameComponents))
+    public PolicyService(
+        FileReader reader)
+    {
+        _fileReader = reader;
+    }
+
+    public ServiceResponse GetPolicy()
+    {
+        ServiceResponse serviceResponse = new();
+
+        var delimiter = '-';
+        var nameComponents = _fileReader.GetList<ResourceComponent>();
+        var resourceTypes = _fileReader.GetList<ResourceType>();
+        var unitDepts = _fileReader.GetList<ResourceUnitDept>();
+        var environments = _fileReader.GetList<ResourceEnvironment>();
+        var locations = _fileReader.GetList<ResourceLocation>();
+        var orgs = _fileReader.GetList<ResourceOrg>();
+        var functions = _fileReader.GetList<ResourceFunction>();
+        var projectAppSvcs = _fileReader.GetList<ResourceProjAppSvc>();
+
+        List<string> validations = new();
+        var maxSortOrder = 0;
+        if (nameComponents != null)
+        {
+            foreach (var nameComponent in nameComponents)
+            {
+                var name = (string) nameComponent.Name;
+                var isEnabled = nameComponent.Enabled;
+                var sortOrder = nameComponent.SortOrder;
+                maxSortOrder = sortOrder - 1;
+                if (isEnabled)
                 {
-                    foreach (var nameComponent in nameComponents)
+                    switch (name)
                     {
-                        var name = (String)nameComponent.Name;
-                        var isEnabled = (bool)nameComponent.Enabled;
-                        var sortOrder = (int)nameComponent.SortOrder;
-                        maxSortOrder = sortOrder - 1;
-                        if (isEnabled)
-                        {
-                            switch (name)
+                        case "ResourceType":
+                            if (resourceTypes != null)
                             {
-                                case "ResourceType":
-                                    if (GeneralHelper.IsNotNull(resourceTypes))
-                                    {
-                                        AddValidations(resourceTypes, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                case "ResourceUnitDept":
-                                    if (GeneralHelper.IsNotNull(unitDepts))
-                                    {
-                                        AddValidations(unitDepts, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                case "ResourceEnvironment":
-                                    if (GeneralHelper.IsNotNull(environments))
-                                    {
-                                        AddValidations(environments, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                case "ResourceLocation":
-                                    if (GeneralHelper.IsNotNull(locations))
-                                    {
-                                        AddValidations(locations, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                case "ResourceOrgs":
-                                    if (GeneralHelper.IsNotNull(orgs))
-                                    {
-                                        AddValidations(orgs, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                case "ResourceFunctions":
-                                    if (GeneralHelper.IsNotNull(Functions))
-                                    {
-                                        AddValidations(Functions, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                case "ResourceProjAppSvcs":
-                                    if (GeneralHelper.IsNotNull(projectAppSvcs))
-                                    {
-                                        AddValidations(projectAppSvcs, validations, delimiter, sortOrder);
-                                    }
-                                    break;
-                                default:
-                                    break;
+                                AddValidations(resourceTypes, validations, delimiter, sortOrder);
                             }
-                        }
+
+                            break;
+                        case "ResourceUnitDept":
+                            if (unitDepts != null)
+                            {
+                                AddValidations(unitDepts, validations, delimiter, sortOrder);
+                            }
+
+                            break;
+                        case "ResourceEnvironment":
+                            if (environments != null)
+                            {
+                                AddValidations(environments, validations, delimiter, sortOrder);
+                            }
+
+                            break;
+                        case "ResourceLocation":
+                            if (locations != null)
+                            {
+                                AddValidations(locations, validations, delimiter, sortOrder);
+                            }
+
+                            break;
+                        case "ResourceOrgs":
+                            if (orgs != null)
+                            {
+                                AddValidations(orgs, validations, delimiter, sortOrder);
+                            }
+
+                            break;
+                        case "ResourceFunctions":
+                            if (functions != null)
+                            {
+                                AddValidations(functions, validations, delimiter, sortOrder);
+                            }
+
+                            break;
+                        case "ResourceProjAppSvcs":
+                            if (projectAppSvcs != null)
+                            {
+                                AddValidations(projectAppSvcs, validations, delimiter, sortOrder);
+                            }
+
+                            break;
                     }
                 }
-
-                var property = new PolicyProperty("Name Validation", "This policy enables you to restrict the name can be specified when deploying a Azure Resource.");
-                property.PolicyRule = PolicyRuleFactory.GetNameValidationRules(validations.Select(x => new PolicyRule(x, delimiter)).ToList(), delimiter);
-                PolicyDefinition definition = new(property);
-
-                //serviceResponse.ResponseObject = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(definition.ToString())).ToArray();
-                serviceResponse.ResponseObject = definition;
-                serviceResponse.Success = true;
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
         }
 
-        private static void AddValidations(dynamic list, List<string> validations, Char delimiter, int level)
-        {
-            if (validations.Count == 0)
+        var property = new PolicyProperty("Name Validation",
+            "This policy enables you to restrict the name can be specified when deploying a Azure Resource.")
             {
-                foreach (var item in list)
+                PolicyRule = PolicyRuleFactory.GetNameValidationRules(validations.Select(x => new PolicyRule(x, delimiter)).ToList(),
+                    delimiter)
+            };
+        PolicyDefinition definition = new(property);
+
+        //serviceResponse.ResponseObject = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(definition.ToString())).ToArray();
+        serviceResponse.ResponseObject = definition;
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    private static void AddValidations(dynamic list, List<string> validations, char delimiter, int level)
+    {
+        if (validations.Count == 0)
+        {
+            foreach (var item in list)
+            {
+                if (item.ShortName.Trim() != string.Empty)
                 {
-                    if (item.ShortName.Trim() !=  String.Empty)
-                    {
-                        var key = $"{item.ShortName}{delimiter}*";
-                        if (!validations.Contains(key))
-                            validations.Add(key);
-                    }
+                    var key = $"{item.ShortName}{delimiter}*";
+                    if (!validations.Contains(key))
+                        validations.Add(key);
                 }
             }
-            else
+        }
+        else
+        {
+            foreach (var item in list)
             {
-                foreach (var item in list)
+                if (item.ShortName.Trim() != string.Empty)
                 {
-                    if (item.ShortName.Trim() !=  String.Empty)
+                    foreach (var validation in validations
+                                 .Where(x => x.Count(p => p.ToString().Contains(delimiter)) == level - 1).ToList())
                     {
-                        foreach (var validation in validations.Where(x => x.Count(p => p.ToString().Contains(delimiter)) == level - 1).ToList())
-                        {
-                            var key = $"{validation.Replace("*", "")}{item.ShortName}{delimiter}*";
-                            if (!validations.Contains(key))
-                                validations.Add(key);
-                        }
+                        var key = $"{validation.Replace("*", "")}{item.ShortName}{delimiter}*";
+                        if (!validations.Contains(key))
+                            validations.Add(key);
                     }
                 }
             }

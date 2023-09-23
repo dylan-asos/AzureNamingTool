@@ -1,265 +1,242 @@
 ﻿using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
 
-namespace AzureNamingTool.Services
+namespace AzureNamingTool.Services;
+
+public class ResourceFunctionService
 {
-    public class ResourceFunctionService
+    private readonly FileReader _fileReader;
+    private readonly FileWriter _fileWriter;
+    
+    public ResourceFunctionService(
+        FileReader reader, 
+        FileWriter fileWriter)
     {
-        public static async Task<ServiceResponse> GetItems()
+        _fileReader = reader;
+        _fileWriter = fileWriter;
+    }
+
+
+
+    public ServiceResponse GetItems()
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceFunction>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            serviceResponse.ResponseObject = items.OrderBy(x => x.SortOrder).ToList();
+            serviceResponse.Success = true;
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Functions not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse GetItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceFunction>();
+        if (items != null)
+        {
+            var item = items.Find(x => x.Id == id);
+            if (item != null)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceFunction>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    serviceResponse.ResponseObject = items.OrderBy(x => x.SortOrder).ToList();
-                    serviceResponse.Success = true;
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Functions not found!";
-                }
+                serviceResponse.ResponseObject = item;
+                serviceResponse.Success = true;
             }
-            catch (Exception ex)
+            else
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
+                serviceResponse.ResponseObject = "Resource Function not found!";
             }
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Functions not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostItem(ResourceFunction item)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Make sure the new item short name only contains letters/numbers
+        if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
+        {
+            serviceResponse.Success = false;
+            serviceResponse.ResponseObject = "Short name must be alphanumeric.";
             return serviceResponse;
         }
 
-        public static async Task<ServiceResponse> GetItem(int id)
+        // Force lowercase on the shortname
+        item.ShortName = item.ShortName.ToLower();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceFunction>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            // Set the new id
+            if (item.Id == 0)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceFunction>();
-                if (GeneralHelper.IsNotNull(items))
+                if (items.Count > 0)
                 {
-                    var item = items.Find(x => x.Id == id);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        serviceResponse.ResponseObject = item;
-                        serviceResponse.Success = true;
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = "Resource Function not found!";
-                    }
+                    item.Id = items.Max(t => t.Id) + 1;
                 }
                 else
                 {
-                    serviceResponse.ResponseObject = "Resource Functions not found!";
+                    item.Id = 1;
                 }
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
 
-        public static async Task<ServiceResponse> PostItem(ResourceFunction item)
-        {
-            ServiceResponse serviceResponse = new();
-            try
+            var position = 1;
+            items = items.OrderBy(x => x.SortOrder).ToList();
+
+            if (item.SortOrder == 0)
             {
-                // Make sure the new item short name only contains letters/numbers
-                if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
+                item.SortOrder = items.Count + 1;
+            }
+
+            // Determine new item id
+            if (items.Count > 0)
+            {
+                // Check if the item already exists
+                if (items.Exists(x => x.Id == item.Id))
                 {
-                    serviceResponse.Success = false;
-                    serviceResponse.ResponseObject = "Short name must be alphanumeric.";
-                    return serviceResponse;
+                    // Remove the updated item from the list
+                    var existingitem = items.Find(x => x.Id == item.Id);
+                    if (existingitem != null)
+                    {
+                        var index = items.IndexOf(existingitem);
+                        items.RemoveAt(index);
+                    }
                 }
 
-                // Force lowercase on the shortname
-                item.ShortName = item.ShortName.ToLower();
-
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceFunction>();
-                if (GeneralHelper.IsNotNull(items))
+                // Reset the sort order of the list
+                foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
                 {
-                    // Set the new id
-                    if (item.Id == 0)
-                    {
-                        if (items.Count > 0)
-                        {
-                            item.Id = items.Max(t => t.Id) + 1;
-                        }
-                        else
-                        {
-                            item.Id = 1;
-                        }
-                    }
+                    thisitem.SortOrder = position;
+                    position += 1;
+                }
 
-                    int position = 1;
-                    items = items.OrderBy(x => x.SortOrder).ToList();
-
-                    if (item.SortOrder == 0)
-                    {
-                        item.SortOrder = items.Count + 1;
-                    }
-
-                    // Determine new item id
-                    if (items.Count > 0)
-                    {
-                        // Check if the item already exists
-                        if (items.Exists(x => x.Id == item.Id))
-                        {
-                            // Remove the updated item from the list
-                            var existingitem = items.Find(x => x.Id == item.Id);
-                            if (GeneralHelper.IsNotNull(existingitem))
-                            {
-                                int index = items.IndexOf(existingitem);
-                                items.RemoveAt(index);
-                            }
-                        }
-
-                        // Reset the sort order of the list
-                        foreach (ResourceFunction thisitem in items.OrderBy(x => x.SortOrder).ToList())
-                        {
-                            thisitem.SortOrder = position;
-                            position += 1;
-                        }
-
-                        // Check for the new sort order
-                        if (items.Exists(x => x.SortOrder == item.SortOrder))
-                        {
-                            // Remove the updated item from the list
-                            items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!), item);
-                        }
-                        else
-                        {
-                            // Put the item at the end
-                            items.Add(item);
-                        }
-                    }
-                    else
-                    {
-                        item.Id = 1;
-                        item.SortOrder = 1;
-                        items.Add(item);
-                    }
-
-                    position = 1;
-                    foreach (ResourceFunction thisitem in items.OrderBy(x => x.SortOrder).ToList())
-                    {
-                        thisitem.SortOrder = position;
-                        position += 1;
-                    }
-
-                    // Write items to file
-                    await ConfigurationHelper.WriteList<ResourceFunction>(items);
-                    serviceResponse.ResponseObject = "Resource Function added/updated!";
-                    serviceResponse.Success = true;
+                // Check for the new sort order
+                if (items.Exists(x => x.SortOrder == item.SortOrder))
+                {
+                    // Remove the updated item from the list
+                    items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!), item);
                 }
                 else
                 {
-                    serviceResponse.ResponseObject = "Resource Functions not found!";
+                    // Put the item at the end
+                    items.Add(item);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
+                item.Id = 1;
+                item.SortOrder = 1;
+                items.Add(item);
             }
-            return serviceResponse;
+
+            position = 1;
+            foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
+            {
+                thisitem.SortOrder = position;
+                position += 1;
+            }
+
+            // Write items to file
+            _fileWriter.WriteList(items);
+            serviceResponse.ResponseObject = "Resource Function added/updated!";
+            serviceResponse.Success = true;
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Functions not found!";
         }
 
-        public static async Task<ServiceResponse> DeleteItem(int id)
+        return serviceResponse;
+    }
+
+    public ServiceResponse DeleteItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceFunction>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            // Get the specified item
+            var item = items.Find(x => x.Id == id);
+            if (item != null)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceFunction>();
-                if (GeneralHelper.IsNotNull(items))
+                // Remove the item from the collection
+                items.Remove(item);
+
+                // Update all the sort order values to reflect the removal
+                var position = 1;
+                foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
                 {
-                    // Get the specified item
-                    var item = items.Find(x => x.Id == id);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        // Remove the item from the collection
-                        items.Remove(item);
-
-                        // Update all the sort order values to reflect the removal
-                        int position = 1;
-                        foreach (ResourceFunction thisitem in items.OrderBy(x => x.SortOrder).ToList())
-                        {
-                            thisitem.SortOrder = position;
-                            position += 1;
-                        }
-
-                        // Write items to file
-                        await ConfigurationHelper.WriteList<ResourceFunction>(items);
-                        serviceResponse.Success = true;
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = "Resource Function not found!";
-                    }
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Functions not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> PostConfig(List<ResourceFunction> items)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var newitems = new List<ResourceFunction>();
-                int i = 1;
-
-                // Determine new item id
-                foreach (ResourceFunction item in items)
-                {
-                    // Make sure the new item short name only contains letters/numbers
-                    if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
-                    {
-                        serviceResponse.Success = false;
-                        serviceResponse.ResponseObject = "Short name must be alphanumeric.";
-                        return serviceResponse;
-                    }
-
-                    // Force lowercase on the shortname
-                    item.ShortName = item.ShortName.ToLower();
-
-                    item.Id = i;
-                    item.SortOrder = i;
-                    newitems.Add(item);
-                    i += 1;
+                    thisitem.SortOrder = position;
+                    position += 1;
                 }
 
                 // Write items to file
-                await ConfigurationHelper.WriteList<ResourceFunction>(newitems);
+                _fileWriter.WriteList(items);
                 serviceResponse.Success = true;
             }
-            catch (Exception ex)
+            else
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
+                serviceResponse.ResponseObject = "Resource Function not found!";
             }
-            return serviceResponse;
         }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Functions not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostConfig(List<ResourceFunction> items)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var newitems = new List<ResourceFunction>();
+        var i = 1;
+
+        // Determine new item id
+        foreach (var item in items)
+        {
+            // Make sure the new item short name only contains letters/numbers
+            if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
+            {
+                serviceResponse.Success = false;
+                serviceResponse.ResponseObject = "Short name must be alphanumeric.";
+                return serviceResponse;
+            }
+
+            // Force lowercase on the shortname
+            item.ShortName = item.ShortName.ToLower();
+
+            item.Id = i;
+            item.SortOrder = i;
+            newitems.Add(item);
+            i += 1;
+        }
+
+        // Write items to file
+        _fileWriter.WriteList(newitems);
+        serviceResponse.Success = true;
+
+        return serviceResponse;
     }
 }

@@ -6,6 +6,9 @@
 @inject ILogger<NavMenu> Logger
 @inject ProtectedLocalStorage storage
 @inject NavigationManager NavigationManager
+@inject ServicesHelper ServicesHelper
+@inject ConfigurationHelper ConfigurationHelper
+@inject GithubConnectivityChecker ConnectivityChecker
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -62,7 +65,7 @@
             </NavLink>
         </div>
 
-        @if (GeneralHelper.IsNotNull(PageType))
+        @if (PageType != null)
         {
             @if (PageType.ToString() == "AzureNamingTool.Pages.Configuration")
             {
@@ -77,7 +80,7 @@
                         <div class="nav-item px-3">
                             <a class="text-decoration-none nav-link" @onclick='(() => OnConfigNavClick("ResourceDelimiter"))' @onclick:preventDefault href="">Delimiters</a>
                         </div>
-                        @if (GeneralHelper.IsNotNull(servicesData.ResourceComponents))
+                        @if (servicesData.ResourceComponents != null)
                         {
                             @foreach (ResourceComponent resourceComponent in servicesData.ResourceComponents.OrderBy(x => x.Name))
                             {
@@ -169,9 +172,9 @@
         admin = (bool)result.Value;
         if (firstRender)
         {
-            if (await ConfigurationHelper.VerifyConnectivity())
+            if (await ConnectivityChecker.VerifyConnectivity())
             {
-                servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                 try
                 {
                     result = await storage.GetAsync<bool>("newsenabled");
@@ -191,9 +194,9 @@
         }
         else
         {
-            if ((GeneralHelper.IsNotNull(servicesData)) || (state._reloadnav))
+            if ((servicesData != null) || (state._reloadnav))
             {
-                servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                 state.SetNavReload(false);
             }
         }
@@ -211,7 +214,7 @@
 
     private async void NewsChanged(ChangeEventArgs e)
     {
-        if (GeneralHelper.IsNotNull(e.Value))
+        if (e.Value != null)
         {
             newsenabled = (bool)e.Value;
             await storage.SetAsync("newsenabled", newsenabled);

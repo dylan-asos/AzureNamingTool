@@ -29,7 +29,7 @@ namespace AzureNamingTool.Models
             var list = policyGroups.Where(x => x.Key.StartsWith($"{level},{startIndex}")).ToList();
             foreach (var levelConditions in list)
             {
-                if (GeneralHelper.IsNotNull(levelConditions))
+                if (levelConditions!= null)
                 {
                     var header = "{\"allOf\": [";
                     var mainCondition = GetMainCondition(levelConditions.ToList());

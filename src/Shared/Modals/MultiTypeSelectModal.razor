@@ -5,6 +5,9 @@
 @inject IToastService toastService
 @inject StateContainer state
 @inject IJSRuntime JsRuntime
+@inject ResourceTypeService ResourceTypeService
+@inject ServicesHelper ServicesHelper
+@inject AdminLogService AdminLogService 
 
 <div class="modal fade show d-block" tabindex="-1" role="dialog">
     <div class="modal-backdrop fade show" @onclick="Save"></div>
@@ -105,25 +108,24 @@
     private List<string> categories = new();
     public string filterData { get; set; } = String.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        await SetServicesData();
+        SetServicesData();
+        return Task.CompletedTask;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (servicesData == null)
-        {
-            await SetServicesData();
-        }
+        SetServicesData();
+        return Task.CompletedTask;
     }
 
-    private async Task SetServicesData()
+    private void SetServicesData()
     {
         try
         {
-            servicesData = await ServicesHelper.LoadServicesData(servicesData, false);
-            if (GeneralHelper.IsNotNull(servicesData))
+            servicesData = ServicesHelper.LoadServicesData(servicesData, false);
+            if (servicesData != null)
             {
                 List<ResourceType> filteredtypes = new List<ResourceType>();
                 // Filter out the types w/o the scope

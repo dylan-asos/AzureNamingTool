@@ -11,26 +11,27 @@ namespace AzureNamingTool.Attributes
     {
         public void OnResourceExecuting(ResourceExecutingContext context)
         {
+            var adminLogService = (AdminLogService)context.HttpContext.RequestServices.GetService(typeof(AdminLogService))!;
+            
             try
             {
-
                 var minRequestRateFeature = context.HttpContext.Features.Get<IHttpMinRequestBodyDataRateFeature>();
                 var minResponseRateFeature = context.HttpContext.Features.Get<IHttpMinResponseDataRateFeature>();
                 //Default Bytes/s = 240, Default TimeOut = 5s
 
-                if (GeneralHelper.IsNotNull(minRequestRateFeature))
+                if (minRequestRateFeature != null)
                 {
                     minRequestRateFeature.MinDataRate = new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
                 }
 
-                if (GeneralHelper.IsNotNull(minResponseRateFeature))
+                if (minResponseRateFeature != null)
                 {
                     minResponseRateFeature.MinDataRate = new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
                 }
             }
             catch (Exception ex)
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
+                adminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
             }
         }
 

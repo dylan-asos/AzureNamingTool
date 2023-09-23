@@ -1,184 +1,133 @@
-﻿using AzureNamingTool.Models;
+﻿using AzureNamingTool.Attributes;
 using AzureNamingTool.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using AzureNamingTool.Models;
 using AzureNamingTool.Services;
-using AzureNamingTool.Attributes;
+using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace AzureNamingTool.Controllers
+namespace AzureNamingTool.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[ApiKey]
+public class ResourceUnitDeptsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ApiKey]
-    public class ResourceUnitDeptsController : ControllerBase
+    private readonly ResourceUnitDeptService _resourceUnitDeptService;
+    private readonly CacheHelper _cacheHelper;
+    private AdminLogService _adminLogService;
+
+    public ResourceUnitDeptsController(ResourceUnitDeptService resourceUnitDeptService, CacheHelper cacheHelper, AdminLogService adminLogService)
     {
-        // GET: api/<ResourceUnitDeptsController>
-        /// <summary>
-        /// This function will return the units/depts data. 
-        /// </summary>
-        /// <returns>json - Current units/depts data</returns>
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        _resourceUnitDeptService = resourceUnitDeptService;
+        _cacheHelper = cacheHelper;
+        _adminLogService = adminLogService;
+    }
+
+    // GET: api/<ResourceUnitDeptsController>
+    /// <summary>
+    ///     This function will return the units/depts data.
+    /// </summary>
+    /// <returns>json - Current units/depts data</returns>
+    [HttpGet]
+    public IActionResult Get()
+    {
+        var serviceResponse = _resourceUnitDeptService.GetItems();
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await ResourceUnitDeptService.GetItems();
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // GET api/<ResourceUnitDeptsController>/5
-        /// <summary>
-        /// This function will return the specifed unit/dept data.
-        /// </summary>
-        /// <param name="id">int - Unit/Dept id</param>
-        /// <returns>json - Unit/Dept data</returns>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // GET api/<ResourceUnitDeptsController>/5
+    /// <summary>
+    ///     This function will return the specifed unit/dept data.
+    /// </summary>
+    /// <param name="id">int - Unit/Dept id</param>
+    /// <returns>json - Unit/Dept data</returns>
+    [HttpGet("{id}")]
+    public IActionResult Get(int id)
+    {
+        var serviceResponse = _resourceUnitDeptService.GetItem(id);
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await ResourceUnitDeptService.GetItem(id);
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // POST api/<ResourceUnitDeptsController>
-        /// <summary>
-        /// This function will create/update the specified unit/dept data.
-        /// </summary>
-        /// <param name="item">ResourceUnitDept (json) - Unit/Dept data</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] ResourceUnitDept item)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await ResourceUnitDeptService.PostItem(item);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Unit/Department (" + item.Name + ") added/updated." });
-                    CacheHelper.InvalidateCacheObject("ResourceUnitDept");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+        return BadRequest(serviceResponse.ResponseObject);
+    }
 
-        // POST api/<ResourceUnitDeptsController>
-        /// <summary>
-        /// This function will update all units/depts data.
-        /// </summary>
-        /// <param name="items">List - ResourceUnitDept (json) - All units/depts data</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PostConfig([FromBody] List<ResourceUnitDept> items)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await ResourceUnitDeptService.PostConfig(items);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Units/Departments added/updated." });
-                    CacheHelper.InvalidateCacheObject("ResourceUnitDept");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+    // POST api/<ResourceUnitDeptsController>
+    /// <summary>
+    ///     This function will create/update the specified unit/dept data.
+    /// </summary>
+    /// <param name="item">ResourceUnitDept (json) - Unit/Dept data</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    public IActionResult Post([FromBody] ResourceUnitDept item)
+    {
+        var serviceResponse = _resourceUnitDeptService.PostItem(item);
 
-        // DELETE api/<ResourceUnitDeptsController>/5
-        /// <summary>
-        /// This function will delete the specifed unit/dept data.
-        /// </summary>
-        /// <param name="id">int - Unit/Dept id</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get the item details
-                serviceResponse = await ResourceUnitDeptService.GetItem(id);
-                if (serviceResponse.Success)
-                {
-                    ResourceUnitDept item = (ResourceUnitDept)serviceResponse.ResponseObject!;
-                    serviceResponse = await ResourceUnitDeptService.DeleteItem(id);
-                    if (serviceResponse.Success)
-                    {
-                        AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Unit/Department (" + item.Name + ") deleted." });
-                        CacheHelper.InvalidateCacheObject("ResourceUnitDept");
-                        return Ok("Resource Unit/Department (" + item.Name + ") deleted.");
-                    }
-                    else
-                    {
-                        return BadRequest(serviceResponse.ResponseObject);
-                    }
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+            Source = "API", Title = "INFORMATION",
+            Message = "Resource Unit/Department (" + item.Name + ") added/updated."
+        });
+        _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
+        return Ok(serviceResponse.ResponseObject);
+
+    }
+
+    // POST api/<ResourceUnitDeptsController>
+    /// <summary>
+    ///     This function will update all units/depts data.
+    /// </summary>
+    /// <param name="items">List - ResourceUnitDept (json) - All units/depts data</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PostConfig([FromBody] List<ResourceUnitDept> items)
+    {
+        var serviceResponse = _resourceUnitDeptService.PostConfig(items);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Units/Departments added/updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
+        return Ok(serviceResponse.ResponseObject);
+    }
+
+    // DELETE api/<ResourceUnitDeptsController>/5
+    /// <summary>
+    ///     This function will delete the specifed unit/dept data.
+    /// </summary>
+    /// <param name="id">int - Unit/Dept id</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
+    {
+        var serviceResponse = _resourceUnitDeptService.GetItem(id);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        var item = (ResourceUnitDept) serviceResponse.ResponseObject!;
+        serviceResponse = _resourceUnitDeptService.DeleteItem(id);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+        {
+            Source = "API", Title = "INFORMATION",
+            Message = "Resource Unit/Department (" + item.Name + ") deleted."
+        });
+        
+        _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
+        return Ok("Resource Unit/Department (" + item.Name + ") deleted.");
     }
 }

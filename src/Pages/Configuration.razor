@@ -18,6 +18,26 @@
 @inject IToastService toastService
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject GeneralHelper GeneralHelper
+@inject ResourceComponentService ResourceComponentService
+@inject ResourceEnvironmentService ResourceEnvironmentService
+@inject ResourceLocationService ResourceLocationService 
+@inject ResourceProjAppSvcService ResourceProjAppSvcService 
+@inject ResourceFunctionService ResourceFunctionService 
+@inject ResourceOrgService ResourceOrgService
+@inject ResourceUnitDeptService ResourceUnitDeptService 
+@inject CustomComponentService CustomComponentService
+@inject ResourceTypeService ResourceTypeService
+@inject ServicesHelper ServicesHelper
+@inject ConfigurationHelper ConfigurationHelper
+@inject FileSystemHelper FileSystemHelper
+@inject AdminLogService AdminLogService
+@inject ResourceDelimiterService ResourceDelimiterService 
+@inject ImportExportService ImportExportService 
+@inject CacheHelper CacheHelper 
+@inject PolicyService PolicyService 
+@inject GithubConnectivityChecker ConnectivityChecker
+@inject ResourceComponentDeleter ResourceComponentDeleter
 
 <PageTitle>Azure Naming Tool - Configuration</PageTitle>
 <div class="card @theme!.ThemeStyle">
@@ -36,7 +56,7 @@
         <div class="mb-3">This page contains the inputs to customize the Azure Naming Tool configuration.</div>
         @if (admin)
         {
-            @if ((!ConfigurationHelper.VerifyConnectivity().Result) && (!connectivityalertshown))
+            @if ((!ConnectivityChecker.VerifyConnectivity().Result) && (!connectivityalertshown))
             {
                 <div>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -151,7 +171,7 @@
         else
         {
             <div class="mb-3">
-                @if (GeneralHelper.IsNotNull(servicesData))
+                @if (servicesData != null)
                 {
                     <h4>Base Configuration</h4>
 
@@ -316,7 +336,7 @@
 
                 }
 
-                @if (GeneralHelper.IsNotNull(servicesData!.ResourceDelimiters))
+                @if (servicesData!.ResourceDelimiters != null)
                 {
                     <div class="card">
                         <h5 class="card-header text-white bg-secondary text-white">
@@ -456,7 +476,7 @@
                         <div class="collapse card card-body @theme.ThemeStyle" id="customcomponents">
                             @foreach (ResourceComponent customComponent in servicesData.ResourceComponents!.Where(x => x.IsCustom == true))
                             {
-                                @if ((GeneralHelper.IsNotNull(servicesData.CustomComponents!.Where(x => x.ParentComponent == GeneralHelper.NormalizeName(customComponent.Name, true)))) && (customComponent.Name != "ResourceInstance"))
+                                @if (servicesData.CustomComponents!.Where(x => x.ParentComponent == GeneralHelper.NormalizeName(customComponent.Name, true)) != null && (customComponent.Name != "ResourceInstance"))
                                 {
                                     <div class="card mb-3">
                                         <div class="card card-header bg-default text-dark" style="font-weight:bold;">
@@ -600,7 +620,7 @@
                     switch (resourceComponent.Name)
                     {
                         case "ResourceEnvironment":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceEnvironments))
+                            @if (servicesData.ResourceEnvironments != null)
                             {
                                 <div class="card">
                                     <h5 class="card-header bg-secondary text-white">
@@ -741,7 +761,7 @@
                             }
                             break;
                         case "ResourceFunction":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceFunctions))
+                            @if (servicesData.ResourceFunctions != null)
                             {
                                 <div class="card">
                                     <h5 class="card-header text-white bg-secondary text-white">
@@ -883,7 +903,7 @@
                             }
                             break;
                         case "ResourceLocation":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceLocations))
+                            @if (servicesData.ResourceLocations != null)
                             {
                                 <div class="card">
                                     <h5 class="card-header text-white bg-secondary text-white">
@@ -955,37 +975,6 @@
                                         </div>
                                         @if (admin)
                                         {
-                                            @* <div class="card">
-                    <div class="card card-header bg-default" style="font-weight:bold;">
-                    New Location
-                    </div>
-                    <div class="card card-body">
-                    <p>Add a new Location.</p>
-                    <table class="table table-striped">
-                    <tbody>
-                    <tr>
-                    <td>Name</td>
-                    <td>
-                    <input class="form-control" type="text" value="@newLocationName" @onchange="@((ui) => { SetFormValue("newLocationName",(string)ui.Value);})" />
-                    </td>
-                    </tr>
-                    <tr>
-                    <td>Short Name</td>
-                    <td>
-                    <input class="form-control" type="text" value="@newLocationShortName" @onchange="@((ui) => { SetFormValue("newLocationShortName",(string)ui.Value);})" />
-                    </td>
-                    </tr>
-                    <tr>
-                    <td colspan="2">
-                    <button type="button" class="btn btn-success" @onclick="@(e => FormAction("ResourceLocation",0,"add"))" title="Add">
-                    <span class="oi oi-plus" aria-hidden="true"></span>
-                    </button>
-                    </td>
-                    </tr>
-                    </tbody>
-                    </table>
-                    </div>
-                    </div>*@
                                             <div class="card mb-3">
                                                 <div class="card-header bg-default text-dark">
                                                     <a class="text-decoration-none text-dark" data-bs-toggle="collapse" style="display:block;font-weight:bold;" href="#locationsconfig" role="button" aria-expanded="false" aria-controls="locationsconfig">
@@ -1008,7 +997,7 @@
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    @if (ConfigurationHelper.VerifyConnectivity().Result)
+                                                    @if (connectedOk)
                                                     {
                                                         <div class="card  w-auto mb-3">
                                                             <div class="card card-header bg-default text-dark" style="font-weight:bold;">
@@ -1091,7 +1080,7 @@
                             }
                             break;
                         case "ResourceOrg":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceOrgs))
+                            @if (servicesData.ResourceOrgs != null)
                             {
                                 <div class="card">
                                     <h5 class="card-header text-white bg-secondary text-white">
@@ -1233,7 +1222,7 @@
                             }
                             break;
                         case "ResourceProjAppSvc":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceProjAppSvcs))
+                            @if (servicesData.ResourceProjAppSvcs != null)
                             {
                                 <div class="card">
                                     <h5 class="card-header text-white bg-secondary text-white">
@@ -1374,7 +1363,7 @@
                             }
                             break;
                         case "ResourceType":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceTypes))
+                            @if (servicesData.ResourceTypes != null)
                             {
                                 <div class="card">
                                     <h5 class="card-header text-white bg-secondary text-white">
@@ -1390,7 +1379,7 @@
                                             <div class="card card-body @theme.ThemeStyle">
                                                 <p>The current Resource Types.</p>
                                                 <p>
-                                                    Use the filters below to jump to a specifc resource type.
+                                                    Use the filters below to jump to a specific resource type.
                                                 </p>
                                                 <p>
                                                     <select @onchange="OnCategoryChanged" class="form-control @theme.ThemeStyle">
@@ -1541,7 +1530,7 @@
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    @if (ConfigurationHelper.VerifyConnectivity().Result)
+                                                    @if (connectedOk)
                                                     {
                                                         <div class="card  w-auto mb-3">
                                                             <div class="card card-header bg-default text-dark" style="font-weight:bold;">
@@ -1628,7 +1617,7 @@
                             }
                             break;
                         case "ResourceUnitDept":
-                            @if (GeneralHelper.IsNotNull(servicesData.ResourceUnitDepts))
+                            @if (servicesData.ResourceUnitDepts!= null)
                             {
                                 <div class="card">
                                     <h5 class="card-header text-white bg-secondary text-white">
@@ -1929,8 +1918,15 @@
     private bool includeAdmin = false;
     private string currentuser = String.Empty;
 
+    private bool connectedOk;
+    
     private ResponseMessage message = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        connectedOk = await ConnectivityChecker.VerifyConnectivity();
+    }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         currentuser = await IdentityHelper.GetCurrentUser(session);
@@ -1938,7 +1934,7 @@
         {
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
-            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
 
             // Get the list of categories
             categories = ResourceTypeService.GetTypeCategories(servicesData.ResourceTypes!);
@@ -1958,7 +1954,7 @@
                 versionalertshown = resultVersionAlert.Success ? resultVersionAlert.Value : false;
                 if (!versionalertshown)
                 {
-                    versionalert = ConfigurationHelper.GetVersionAlert().Result;
+                    versionalert = ConfigurationHelper.GetVersionAlert();
                     if (String.IsNullOrEmpty(versionalert))
                     {
                         versionalertshown = true;
@@ -1970,7 +1966,7 @@
                 configurationfilealertshown = resultConfigurationFileAlert.Success ? resultConfigurationFileAlert.Value : false;
 
                 // Check connectivity
-                if (await ConfigurationHelper.VerifyConnectivity())
+                if (await ConnectivityChecker.VerifyConnectivity())
                 {
                     if (!configurationfilealertshown)
                     {
@@ -1994,9 +1990,9 @@
         }
         else
         {
-            if (!GeneralHelper.IsNotNull(servicesData))
+            if (!(servicesData != null))
             {
-                servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
             }
         }
     }
@@ -2020,7 +2016,7 @@
 
     private async Task FormAction(string type, long id, string action, string parentcomponent = "")
     {
-        if (GeneralHelper.IsNotNull(servicesData))
+        if (servicesData != null)
         {
             message = new ResponseMessage();
             bool confirm = false;
@@ -2031,7 +2027,7 @@
                     HideCloseButton = true,
                     UseCustomLayout = true
                 };
-            if (GeneralHelper.IsNotNull(Modal))
+            if (Modal != null)
             {
                 var workingmodal = Modal.Show<WorkingModal>("Working", workingmodaloptions);
                 try
@@ -2067,17 +2063,17 @@
                             {
                                 case "up":
                                     resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceComponent))
+                                    if (resourceComponent != null)
                                     {
                                         // Get the component in the list
                                         if (resourceComponent.SortOrder > 1)
                                         {
                                             resourceComponent.SortOrder += -1;
                                         }
-                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceComponent.Name + " moved up!";
                                         }
                                         else
@@ -2094,16 +2090,16 @@
                                     break;
                                 case "down":
                                     resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceComponent))
+                                    if (resourceComponent != null)
                                     {
                                         if (resourceComponent.SortOrder <= servicesData.ResourceComponents.Count)
                                         {
                                             resourceComponent.SortOrder += 1;
                                         }
-                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceComponent.Name + " moved down!";
                                         }
                                         else
@@ -2120,14 +2116,14 @@
                                     break;
                                 case "enable":
                                     resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceComponent))
+                                    if (resourceComponent != null)
                                     {
                                         resourceComponent.Enabled = true;
                                         resourceComponent.SortOrder = servicesData.ResourceComponents.Count + 1;
-                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceComponent.Name + " enabled!";
                                         }
                                         else
@@ -2144,13 +2140,13 @@
                                     break;
                                 case "disable":
                                     resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceComponent))
+                                    if (resourceComponent != null)
                                     {
                                         resourceComponent.Enabled = false;
-                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceComponent.Name + " disabled!";
                                         }
                                         else
@@ -2171,19 +2167,19 @@
                                     confirm = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Component", "<p>Add a Component.</p>", (int)id, "ResourceComponent", admin, "");
                                     if (confirm)
                                     {
-                                        servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                        servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                         state.SetNavReload(true);
                                         StateHasChanged();
                                     }
                                     break;
                                 case "edit":
                                     resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceComponent))
+                                    if (resourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Component", "Edit the Component.", (int)id, "ResourceComponent", !resourceComponent.IsCustom);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2198,12 +2194,12 @@
                                     if (confirm)
                                     {
                                         resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceComponent))
+                                        if (resourceComponent != null)
                                         {
-                                            serviceResponse = await ResourceComponentService.DeleteItem(Convert.ToInt32(resourceComponent.Id));
+                                            serviceResponse = ResourceComponentDeleter.DeleteItem(Convert.ToInt32(resourceComponent.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceComponent.Name + " deleted!";
                                                 state.SetNavReload(true);
                                             }
@@ -2221,13 +2217,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceComponentService.GetItems(true);
+                                    serviceResponse = ResourceComponentService.GetItems(true);
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var componentjson = serviceResponse.ResponseObject!;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("componentsconfig.json", JsonSerializer.Serialize(componentjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -2238,9 +2234,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Components Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourcecomponents.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceComponent))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Components configuration reset!";
                                         }
                                         else
@@ -2251,15 +2247,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newTypeConfig))
+                                    if (newTypeConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Components Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceComponentService.PostConfig(JsonSerializer.Deserialize<List<ResourceComponent>>(newTypeConfig, options)!);
+                                            serviceResponse = ResourceComponentService.PostConfig(JsonSerializer.Deserialize<List<ResourceComponent>>(newTypeConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Resource Components config update succeeded!";
                                             }
                                             else
@@ -2273,10 +2269,10 @@
 
                                     break;
                             }
-                            serviceResponse = await ResourceComponentService.GetItems(admin);
+                            serviceResponse = ResourceComponentService.GetItems(admin);
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceComponents = (List<ResourceComponent>)serviceResponse.ResponseObject!;
                                 }
@@ -2288,13 +2284,13 @@
                             {
                                 case "enable":
                                     resourceDelimiter = servicesData.ResourceDelimiters!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceDelimiter))
+                                    if (resourceDelimiter != null)
                                     {
                                         resourceDelimiter.Enabled = true;
-                                        serviceResponse = await ResourceDelimiterService.PostItem(resourceDelimiter);
+                                        serviceResponse = ResourceDelimiterService.PostItem(resourceDelimiter);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceDelimiter.Name + " enabled!";
                                         }
                                         else
@@ -2310,13 +2306,13 @@
                                     break;
                                 case "disable":
                                     resourceDelimiter = servicesData.ResourceDelimiters!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceDelimiter))
+                                    if (resourceDelimiter != null)
                                     {
                                         resourceDelimiter.Enabled = false;
-                                        serviceResponse = await ResourceDelimiterService.PostItem(resourceDelimiter);
+                                        serviceResponse = ResourceDelimiterService.PostItem(resourceDelimiter);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceDelimiter.Name + " disabled!";
                                         }
                                         else
@@ -2332,13 +2328,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceDelimiterService.GetItems(admin);
+                                    serviceResponse = ResourceDelimiterService.GetItems(admin);
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var delimiterjson = serviceResponse.ResponseObject!;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("delimitersconfig.json", JsonSerializer.Serialize(delimiterjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -2346,15 +2342,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newDelimiterConfig))
+                                    if (newDelimiterConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Delimiters Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceDelimiterService.PostConfig(JsonSerializer.Deserialize<List<ResourceDelimiter>>(newDelimiterConfig, options)!);
+                                            serviceResponse = ResourceDelimiterService.PostConfig(JsonSerializer.Deserialize<List<ResourceDelimiter>>(newDelimiterConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Resource Delimiters config update succeeded!";
                                             }
                                             else
@@ -2370,9 +2366,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the reset Delimiters Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourcedelimiters.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceDelimiter))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Delimiters configuration reset!";
                                         }
                                         else
@@ -2383,10 +2379,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceDelimiterService.GetItems(admin);
+                            serviceResponse = ResourceDelimiterService.GetItems(admin);
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceDelimiters = (List<ResourceDelimiter>)serviceResponse.ResponseObject!;
                                 }
@@ -2399,16 +2395,16 @@
                                 case "up":
                                     // Get the component in the list
                                     resourceEnvironment = servicesData.ResourceEnvironments!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceEnvironment))
+                                    if (resourceEnvironment != null)
                                     {
                                         if (resourceEnvironment.SortOrder > 1)
                                         {
                                             resourceEnvironment.SortOrder += -1;
                                         }
-                                        serviceResponse = await ResourceEnvironmentService.PostItem(resourceEnvironment);
+                                        serviceResponse = ResourceEnvironmentService.PostItem(resourceEnvironment);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceEnvironment.Name + " moved up!";
                                         }
                                         else
@@ -2425,16 +2421,16 @@
                                     break;
                                 case "down":
                                     resourceEnvironment = servicesData.ResourceEnvironments!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceEnvironment))
+                                    if (resourceEnvironment != null)
                                     {
                                         if (resourceEnvironment.SortOrder <= servicesData.ResourceEnvironments.Count)
                                         {
                                             resourceEnvironment.SortOrder += 1;
                                         }
-                                        serviceResponse = await ResourceEnvironmentService.PostItem(resourceEnvironment);
+                                        serviceResponse = ResourceEnvironmentService.PostItem(resourceEnvironment);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceEnvironment.Name + " moved down!";
                                         }
                                         else
@@ -2450,12 +2446,12 @@
                                     }
                                     break;
                                 case "edit":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Environment", "<p>Edit the Environment.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceEnvironment", false);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2470,12 +2466,12 @@
                                     if (confirm)
                                     {
                                         resourceEnvironment = servicesData.ResourceEnvironments!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceEnvironment))
+                                        if (resourceEnvironment != null)
                                         {
-                                            serviceResponse = await ResourceEnvironmentService.DeleteItem(Convert.ToInt32(resourceEnvironment.Id));
+                                            serviceResponse = ResourceEnvironmentService.DeleteItem(Convert.ToInt32(resourceEnvironment.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceEnvironment.Name + " deleted!";
                                             }
                                             else
@@ -2492,12 +2488,12 @@
                                     }
                                     break;
                                 case "add":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Environment", "<p>Add an Environment.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceEnvironment", admin, "");
                                         if (response)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2508,13 +2504,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceEnvironmentService.GetItems();
+                                    serviceResponse = ResourceEnvironmentService.GetItems();
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var environmentjson = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("environmentsconfig.json", JsonSerializer.Serialize(environmentjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -2525,9 +2521,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Environments Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourceenvironments.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceEnvironment))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Environments configuration reset!";
                                         }
                                         else
@@ -2538,15 +2534,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newEnvironmentConfig))
+                                    if (newEnvironmentConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Environments Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceEnvironmentService.PostConfig(JsonSerializer.Deserialize<List<ResourceEnvironment>>(newEnvironmentConfig, options)!);
+                                            serviceResponse = ResourceEnvironmentService.PostConfig(JsonSerializer.Deserialize<List<ResourceEnvironment>>(newEnvironmentConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Resource Environments config update succeeded!";
                                                 newEnvironmentConfig = String.Empty;
                                             }
@@ -2560,10 +2556,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceEnvironmentService.GetItems();
+                            serviceResponse = ResourceEnvironmentService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceEnvironments = (List<ResourceEnvironment>)serviceResponse.ResponseObject!;
                                 }
@@ -2576,16 +2572,16 @@
                                 case "up":
                                     // Get the component in the list
                                     resourceFunction = servicesData.ResourceFunctions!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceFunction))
+                                    if (resourceFunction != null)
                                     {
                                         if (resourceFunction.SortOrder > 1)
                                         {
                                             resourceFunction.SortOrder += -1;
                                         }
-                                        serviceResponse = await ResourceFunctionService.PostItem(resourceFunction);
+                                        serviceResponse = ResourceFunctionService.PostItem(resourceFunction);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceFunction.Name + " moved up!";
                                         }
                                         else
@@ -2602,16 +2598,16 @@
                                     break;
                                 case "down":
                                     resourceFunction = servicesData.ResourceFunctions!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceFunction))
+                                    if (resourceFunction != null)
                                     {
                                         if (resourceFunction.SortOrder <= servicesData.ResourceFunctions!.Count)
                                         {
                                             resourceFunction.SortOrder += 1;
                                         }
-                                        serviceResponse = await ResourceFunctionService.PostItem(resourceFunction);
+                                        serviceResponse = ResourceFunctionService.PostItem(resourceFunction);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceFunction.Name + " moved down!";
                                         }
                                         else
@@ -2627,12 +2623,12 @@
                                     }
                                     break;
                                 case "edit":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Function", "<p>Edit the Function.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceFunction", false);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2647,12 +2643,12 @@
                                     if (confirm)
                                     {
                                         resourceFunction = servicesData.ResourceFunctions!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceFunction))
+                                        if (resourceFunction != null)
                                         {
-                                            serviceResponse = await ResourceFunctionService.DeleteItem(Convert.ToInt32(resourceFunction.Id));
+                                            serviceResponse = ResourceFunctionService.DeleteItem(Convert.ToInt32(resourceFunction.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceFunction.Name + " deleted!";
                                             }
                                             else
@@ -2669,12 +2665,12 @@
                                     }
                                     break;
                                 case "add":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Function", "<p>Add a Function.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceFunction", admin, "");
                                         if (response)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2685,13 +2681,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceFunctionService.GetItems();
+                                    serviceResponse = ResourceFunctionService.GetItems();
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var functionjon = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("functionsconfig.json", JsonSerializer.Serialize(functionjon).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -2702,9 +2698,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Functions Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourcefunctions.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceFunction))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Functions configuration reset!";
                                         }
                                         else
@@ -2715,15 +2711,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newFunctionConfig))
+                                    if (newFunctionConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Functions Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceFunctionService.PostConfig(JsonSerializer.Deserialize<List<ResourceFunction>>(newFunctionConfig, options)!);
+                                            serviceResponse = ResourceFunctionService.PostConfig(JsonSerializer.Deserialize<List<ResourceFunction>>(newFunctionConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Functions configuration update succeeded!";
                                                 newFunctionConfig = String.Empty;
                                             }
@@ -2737,10 +2733,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceFunctionService.GetItems();
+                            serviceResponse = ResourceFunctionService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceFunctions = (List<ResourceFunction>)serviceResponse.ResponseObject!;
                                 }
@@ -2752,13 +2748,13 @@
                             {
                                 case "enable":
                                     resourceLocation = servicesData.ResourceLocations!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceLocation))
+                                    if (resourceLocation != null)
                                     {
                                         resourceLocation.Enabled = true;
-                                        serviceResponse = await ResourceLocationService.PostItem(resourceLocation);
+                                        serviceResponse = ResourceLocationService.PostItem(resourceLocation);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceLocation.Name + " enabled!";
                                         }
                                         else
@@ -2775,13 +2771,13 @@
                                     break;
                                 case "disable":
                                     resourceLocation = servicesData.ResourceLocations!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceLocation))
+                                    if (resourceLocation != null)
                                     {
                                         resourceLocation.Enabled = false;
-                                        serviceResponse = await ResourceLocationService.PostItem(resourceLocation);
+                                        serviceResponse = ResourceLocationService.PostItem(resourceLocation);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceLocation.Name + " disabled!";
                                         }
                                         else
@@ -2797,12 +2793,12 @@
                                     }
                                     break;
                                 case "edit":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Location", "<p>Edit the Location.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceLocation", true);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2817,12 +2813,12 @@
                                     if (confirm)
                                     {
                                         resourceLocation = servicesData.ResourceLocations!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceLocation))
+                                        if (resourceLocation != null)
                                         {
-                                            serviceResponse = await ResourceLocationService.DeleteItem(Convert.ToInt32(resourceLocation.Id));
+                                            serviceResponse = ResourceLocationService.DeleteItem(Convert.ToInt32(resourceLocation.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceLocation.Name + " deleted!";
                                             }
                                             else
@@ -2839,9 +2835,9 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceLocationService.GetItems();
+                                    serviceResponse = ResourceLocationService.GetItems();
                                     var locationjson = serviceResponse.ResponseObject;
-                                    if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                    if (BlazorDownloadFileService != null)
                                     {
                                         await BlazorDownloadFileService.DownloadFileFromText("locationsconfig.json", JsonSerializer.Serialize(locationjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                     }
@@ -2853,7 +2849,7 @@
                                         serviceResponse = await ResourceLocationService.RefreshResourceLocations(refreshlocationshortnames);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Locations configuration refreshed!";
                                         }
                                         else
@@ -2868,9 +2864,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Locations Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourcelocations.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceLocation))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Locations configuration reset!";
                                         }
                                         else
@@ -2881,15 +2877,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newLocationConfig))
+                                    if (newLocationConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Locations Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceLocationService.PostConfig(JsonSerializer.Deserialize<List<AzureNamingTool.Models.ResourceLocation>>(newLocationConfig, options)!);
+                                            serviceResponse = ResourceLocationService.PostConfig(JsonSerializer.Deserialize<List<AzureNamingTool.Models.ResourceLocation>>(newLocationConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Resource Locations config update succeeded!";
                                                 newLocationConfig = String.Empty;
                                             }
@@ -2903,10 +2899,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceLocationService.GetItems();
+                            serviceResponse = ResourceLocationService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceLocations = (List<AzureNamingTool.Models.ResourceLocation>)serviceResponse.ResponseObject!;
                                 }
@@ -2919,16 +2915,16 @@
                                 case "up":
                                     // Get the component in the list
                                     resourceOrg = servicesData.ResourceOrgs!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceOrg))
+                                    if (resourceOrg != null)
                                     {
                                         if (resourceOrg.SortOrder > 1)
                                         {
                                             resourceOrg.SortOrder += -1;
                                         }
-                                        serviceResponse = await ResourceOrgService.PostItem(resourceOrg);
+                                        serviceResponse = ResourceOrgService.PostItem(resourceOrg);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceOrg.Name + " moved up!";
                                         }
                                         else
@@ -2945,16 +2941,16 @@
                                     break;
                                 case "down":
                                     resourceOrg = servicesData.ResourceOrgs!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceOrg))
+                                    if (resourceOrg != null)
                                     {
                                         if (resourceOrg.SortOrder <= servicesData.ResourceOrgs.Count)
                                         {
                                             resourceOrg.SortOrder += 1;
                                         }
-                                        serviceResponse = await ResourceOrgService.PostItem(resourceOrg);
+                                        serviceResponse = ResourceOrgService.PostItem(resourceOrg);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceOrg.Name + " moved down!";
                                         }
                                         else
@@ -2970,12 +2966,12 @@
                                     }
                                     break;
                                 case "edit":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Org", "<p>Edit the Org.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceOrg", false);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2990,12 +2986,12 @@
                                     if (confirm)
                                     {
                                         resourceOrg = servicesData.ResourceOrgs!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceOrg))
+                                        if (resourceOrg != null)
                                         {
-                                            serviceResponse = await ResourceOrgService.DeleteItem(Convert.ToInt32(resourceOrg.Id));
+                                            serviceResponse = ResourceOrgService.DeleteItem(Convert.ToInt32(resourceOrg.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceOrg.Name + " deleted!";
                                             }
                                             else
@@ -3012,12 +3008,12 @@
                                     }
                                     break;
                                 case "add":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Org", "<p>Add an Org.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceOrg", admin, "");
                                         if (response)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3028,13 +3024,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceOrgService.GetItems();
+                                    serviceResponse = ResourceOrgService.GetItems();
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var orgjson = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("orgsconfig.json", JsonSerializer.Serialize(orgjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -3045,9 +3041,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Orgs Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourceorgs.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceOrg))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Orgs configuration reset!";
                                         }
                                         else
@@ -3058,15 +3054,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newOrgConfig))
+                                    if (newOrgConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Orgs Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceOrgService.PostConfig(JsonSerializer.Deserialize<List<ResourceOrg>>(newOrgConfig, options)!);
+                                            serviceResponse = ResourceOrgService.PostConfig(JsonSerializer.Deserialize<List<ResourceOrg>>(newOrgConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Resource Orgs config update succeeded!";
                                                 newOrgConfig = String.Empty;
                                             }
@@ -3080,10 +3076,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceOrgService.GetItems();
+                            serviceResponse = ResourceOrgService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceOrgs = (List<ResourceOrg>)serviceResponse.ResponseObject!;
                                 }
@@ -3096,16 +3092,16 @@
                                 case "up":
                                     // Get the component in the list
                                     resourceProjAppSvc = servicesData.ResourceProjAppSvcs!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceProjAppSvc))
+                                    if (resourceProjAppSvc != null)
                                     {
                                         if (resourceProjAppSvc.SortOrder > 1)
                                         {
                                             resourceProjAppSvc.SortOrder += -1;
                                         }
-                                        serviceResponse = await ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
+                                        serviceResponse = ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceProjAppSvc.Name + " moved up!";
                                         }
                                         else
@@ -3122,16 +3118,16 @@
                                     break;
                                 case "down":
                                     resourceProjAppSvc = servicesData.ResourceProjAppSvcs!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceProjAppSvc))
+                                    if (resourceProjAppSvc != null)
                                     {
                                         if (resourceProjAppSvc.SortOrder <= servicesData.ResourceProjAppSvcs.Count)
                                         {
                                             resourceProjAppSvc.SortOrder += 1;
                                         }
-                                        serviceResponse = await ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
+                                        serviceResponse = ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceProjAppSvc.Name + " moved down!";
                                         }
                                         else
@@ -3147,12 +3143,12 @@
                                     }
                                     break;
                                 case "edit":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Org", "<p>Edit the Project/App/Service.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceProjAppSvc", false);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3167,12 +3163,12 @@
                                     if (confirm)
                                     {
                                         resourceProjAppSvc = servicesData.ResourceProjAppSvcs!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceProjAppSvc))
+                                        if (resourceProjAppSvc != null)
                                         {
-                                            serviceResponse = await ResourceProjAppSvcService.DeleteItem(Convert.ToInt32(resourceProjAppSvc.Id));
+                                            serviceResponse = ResourceProjAppSvcService.DeleteItem(Convert.ToInt32(resourceProjAppSvc.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceProjAppSvc.Name + " deleted!";
                                             }
                                             else
@@ -3189,12 +3185,12 @@
                                     }
                                     break;
                                 case "add":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Project/App/Service", "<p>Add an Project/App/Service.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceProjAppSvc", admin, "");
                                         if (response)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3205,13 +3201,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceProjAppSvcService.GetItems();
+                                    serviceResponse = ResourceProjAppSvcService.GetItems();
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var projappsvcjson = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("projappsvcsconfig.json", JsonSerializer.Serialize(projappsvcjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -3222,9 +3218,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Projects/Apps/Services Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourceprojappsvcs.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceProjAppSvc))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Projects/Apps/Services configuration reset!";
                                         }
                                         else
@@ -3235,15 +3231,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newProjAppSvcConfig))
+                                    if (newProjAppSvcConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Projects/Apps/Services Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceProjAppSvcService.PostConfig(JsonSerializer.Deserialize<List<ResourceProjAppSvc>>(newProjAppSvcConfig, options)!);
+                                            serviceResponse = ResourceProjAppSvcService.PostConfig(JsonSerializer.Deserialize<List<ResourceProjAppSvc>>(newProjAppSvcConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "ProjAppSvcs configuration update succeeded!";
                                                 newProjAppSvcConfig = String.Empty;
                                             }
@@ -3257,10 +3253,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceProjAppSvcService.GetItems();
+                            serviceResponse = ResourceProjAppSvcService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceProjAppSvcs = (List<ResourceProjAppSvc>)serviceResponse.ResponseObject!;
                                 }
@@ -3272,13 +3268,13 @@
                             {
                                 case "enable":
                                     resourceType = servicesData.ResourceTypes!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceType))
+                                    if (resourceType != null)
                                     {
                                         resourceType.Enabled = true;
-                                        serviceResponse = await ResourceTypeService.PostItem(resourceType);
+                                        serviceResponse = ResourceTypeService.PostItem(resourceType);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceType.Resource + " enabled!";
                                         }
                                         else
@@ -3295,13 +3291,13 @@
                                     break;
                                 case "disable":
                                     resourceType = servicesData.ResourceTypes!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceType))
+                                    if (resourceType != null)
                                     {
                                         resourceType.Enabled = false;
-                                        serviceResponse = await ResourceTypeService.PostItem(resourceType);
+                                        serviceResponse = ResourceTypeService.PostItem(resourceType);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceType.Resource + " disabled!";
                                         }
                                         else
@@ -3318,12 +3314,12 @@
                                     break;
                                 case "edit":
                                     resourceType = servicesData.ResourceTypes!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceType))
+                                    if (resourceType != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Resource Type", "<p>Edit the Resource Type.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + resourceType.LengthMin + "-" + resourceType.LengthMax + " characters.</li></ul>", (int)id, "ResourceType", true);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3334,13 +3330,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceTypeService.GetItems();
+                                    serviceResponse = ResourceTypeService.GetItems();
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var typejson = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("typesconfig.json", JsonSerializer.Serialize(typejson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -3354,7 +3350,7 @@
                                         serviceResponse = await ResourceTypeService.RefreshResourceTypes(refreshtypeshortnames);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Types configuration refreshed!";
                                         }
                                         else
@@ -3369,9 +3365,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Types Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourcetypes.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceType))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Types configuration reset!";
                                         }
                                         else
@@ -3382,15 +3378,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newTypeConfig))
+                                    if (newTypeConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Types Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceTypeService.PostConfig(JsonSerializer.Deserialize<List<ResourceType>>(newTypeConfig, options)!);
+                                            serviceResponse = ResourceTypeService.PostConfig(JsonSerializer.Deserialize<List<ResourceType>>(newTypeConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Types configuration update succeeded!";
                                                 newTypeConfig = String.Empty;
                                             }
@@ -3404,10 +3400,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceTypeService.GetItems();
+                            serviceResponse = ResourceTypeService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceTypes = (List<ResourceType>)serviceResponse.ResponseObject!;
                                 }
@@ -3420,16 +3416,16 @@
                                 case "up":
                                     // Get the component in the list
                                     resourceUnitDept = servicesData.ResourceUnitDepts!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceUnitDept))
+                                    if (resourceUnitDept != null)
                                     {
                                         if (resourceUnitDept.SortOrder > 1)
                                         {
                                             resourceUnitDept.SortOrder += -1;
                                         }
-                                        serviceResponse = await ResourceUnitDeptService.PostItem(resourceUnitDept);
+                                        serviceResponse = ResourceUnitDeptService.PostItem(resourceUnitDept);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceUnitDept.Name + " moved up!";
                                         }
                                         else
@@ -3446,16 +3442,16 @@
                                     break;
                                 case "down":
                                     resourceUnitDept = servicesData.ResourceUnitDepts!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(resourceUnitDept))
+                                    if (resourceUnitDept != null)
                                     {
                                         if (resourceUnitDept.SortOrder <= servicesData.ResourceUnitDepts.Count)
                                         {
                                             resourceUnitDept.SortOrder += 1;
                                         }
-                                        serviceResponse = await ResourceUnitDeptService.PostItem(resourceUnitDept);
+                                        serviceResponse = ResourceUnitDeptService.PostItem(resourceUnitDept);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = resourceUnitDept.Name + " moved down!";
                                         }
                                         else
@@ -3471,12 +3467,12 @@
                                     }
                                     break;
                                 case "edit":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Unit/Dept", "<p>Edit the Unit/Dept.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceUnitDept", false);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3492,12 +3488,12 @@
                                     if (confirm)
                                     {
                                         resourceUnitDept = servicesData.ResourceUnitDepts!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(resourceUnitDept))
+                                        if (resourceUnitDept != null)
                                         {
-                                            serviceResponse = await ResourceUnitDeptService.DeleteItem(Convert.ToInt32(resourceUnitDept.Id));
+                                            serviceResponse = ResourceUnitDeptService.DeleteItem(Convert.ToInt32(resourceUnitDept.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceUnitDept.Name + " deleted!";
                                             }
                                             else
@@ -3514,12 +3510,12 @@
                                     }
                                     break;
                                 case "add":
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Unit/Dept", "<p>Add a Unit/Dept.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceUnitDept", admin, "");
                                         if (response)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3530,13 +3526,13 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = await ResourceUnitDeptService.GetItems();
+                                    serviceResponse = ResourceUnitDeptService.GetItems();
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var unitdeptjson = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("unitdeptsconfig.json", JsonSerializer.Serialize(unitdeptjson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -3547,9 +3543,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Units/Depts Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("resourceunitdepts.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.ResourceUnitDept))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Units/Depts configuration reset!";
                                         }
                                         else
@@ -3560,15 +3556,15 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newUnitDeptConfig))
+                                    if (newUnitDeptConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Units/Depts Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = await ResourceUnitDeptService.PostConfig(JsonSerializer.Deserialize<List<ResourceUnitDept>>(newUnitDeptConfig, options)!);
+                                            serviceResponse = ResourceUnitDeptService.PostConfig(JsonSerializer.Deserialize<List<ResourceUnitDept>>(newUnitDeptConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Units/Depts configuration update succeeded!";
                                                 newFunctionConfig = String.Empty;
                                             }
@@ -3582,10 +3578,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await ResourceUnitDeptService.GetItems();
+                            serviceResponse = ResourceUnitDeptService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.ResourceUnitDepts = (List<ResourceUnitDept>)serviceResponse.ResponseObject!;
                                 }
@@ -3598,16 +3594,16 @@
                                 case "up":
                                     // Get the component in the list
                                     customComponent = servicesData.CustomComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(customComponent))
+                                    if (customComponent != null)
                                     {
                                         if (customComponent.SortOrder > 1)
                                         {
                                             customComponent.SortOrder += -1;
                                         }
-                                        serviceResponse = await CustomComponentService.PostItem(customComponent);
+                                        serviceResponse = CustomComponentService.PostItem(customComponent);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = customComponent.Name + " moved up!";
                                         }
                                         else
@@ -3624,16 +3620,16 @@
                                     break;
                                 case "down":
                                     customComponent = servicesData.CustomComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(customComponent))
+                                    if (customComponent != null)
                                     {
                                         if (customComponent.SortOrder <= servicesData.CustomComponents.Count)
                                         {
                                             customComponent.SortOrder += 1;
                                         }
-                                        serviceResponse = await CustomComponentService.PostItem(customComponent);
+                                        serviceResponse = CustomComponentService.PostItem(customComponent);
                                         if (serviceResponse.Success)
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = customComponent.Name + " moved down!";
                                         }
                                         else
@@ -3650,12 +3646,12 @@
                                     break;
                                 case "add":
                                     // Get the component in the list
-                                    if (GeneralHelper.IsNotNull(thisresourceComponent))
+                                    if (thisresourceComponent != null)
                                     {
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Custom Component", "<p>Add a Custom Component.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "CustomComponent", admin, parentcomponent);
                                         if (response)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3668,12 +3664,12 @@
                                 case "edit":
                                     // Get the component in the list
                                     customComponent = servicesData.CustomComponents!.Find(x => x.Id == id)!;
-                                    if (GeneralHelper.IsNotNull(customComponent))
+                                    if (customComponent != null)
                                     {
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Custom Component", "<p>Edit the Custom Component.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "CustomComponent", false, customComponent.ParentComponent);
                                         if (confirm)
                                         {
-                                            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                                            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3688,12 +3684,12 @@
                                     if (confirm)
                                     {
                                         customComponent = servicesData.CustomComponents!.Find(x => x.Id == id)!;
-                                        if (GeneralHelper.IsNotNull(customComponent))
+                                        if (customComponent != null)
                                         {
-                                            serviceResponse = await CustomComponentService.DeleteItem(Convert.ToInt32(customComponent.Id));
+                                            serviceResponse = CustomComponentService.DeleteItem(Convert.ToInt32(customComponent.Id));
                                             if (serviceResponse.Success)
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = customComponent.Name + " deleted!";
                                             }
                                             else
@@ -3713,21 +3709,21 @@
                                     bool valid = false;
                                     CustomComponmentConfig customcomponentconfigexport = new();
                                     // Get the custom components
-                                    serviceResponse = await ResourceComponentService.GetItems(true);
+                                    serviceResponse = ResourceComponentService.GetItems(true);
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             List<ResourceComponent> components = serviceResponse.ResponseObject!;
-                                            if (GeneralHelper.IsNotNull(components))
+                                            if (components != null)
                                             {
                                                 customcomponentconfigexport.ParentComponents = components.Where(x => x.IsCustom == true).ToList();
 
                                                 // Get the custom component options
-                                                serviceResponse = await CustomComponentService.GetItems();
+                                                serviceResponse = CustomComponentService.GetItems();
                                                 if (serviceResponse.Success)
                                                 {
-                                                    if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                                    if (serviceResponse.ResponseObject != null)
                                                     {
                                                         customcomponentconfigexport.CustomComponents = serviceResponse.ResponseObject!;
                                                         valid = true;
@@ -3738,9 +3734,9 @@
                                     }
                                     if (valid)
                                     {
-                                        if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                        if (BlazorDownloadFileService != null)
                                         {
-                                            await BlazorDownloadFileService.DownloadFileFromText("customcomponents.json", JsonSerializer.Serialize(customcomponentconfigexport).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
+                                            await BlazorDownloadFileService.DownloadFileFromText(FileNames.CustomComponent, JsonSerializer.Serialize(customcomponentconfigexport).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                         }
                                     }
                                     else
@@ -3754,9 +3750,9 @@
                                     confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will reset the current Custom Components Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                     if (confirm)
                                     {
-                                        if (FileSystemHelper.ResetConfiguration("customcomponents.json"))
+                                        if (FileSystemHelper.ResetConfiguration(FileNames.CustomComponent))
                                         {
-                                            message.Type = MessageTypesEnum.SUCCESS;
+                                            message.Type = MessageTypesEnum.Success;
                                             message.Message = "Custom Components configuration reset!";
                                         }
                                         else
@@ -3767,7 +3763,7 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newCustomComponentConfig))
+                                    if (newCustomComponentConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Custom Components Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
@@ -3775,17 +3771,17 @@
                                             List<ResourceComponent> currentresourcecomponents = new();
                                             List<CustomComponent> newcustomcomponents = new();
                                             // Get the current resource components
-                                            serviceResponse = await ResourceComponentService.GetItems(true);
+                                            serviceResponse = ResourceComponentService.GetItems(true);
                                             if (serviceResponse.Success)
                                             {
-                                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                                if (serviceResponse.ResponseObject != null)
                                                 {
                                                     currentresourcecomponents = serviceResponse.ResponseObject!;
                                                     // Format the posted configuration
                                                     try
                                                     {
                                                         CustomComponmentConfig customcomponentconfigupdate = JsonSerializer.Deserialize<CustomComponmentConfig>(newCustomComponentConfig, options)!;
-                                                        if (GeneralHelper.IsNotNull(customcomponentconfigupdate))
+                                                        if (customcomponentconfigupdate != null)
                                                         {
                                                             // Check if the configuration contains resource components
                                                             if (customcomponentconfigupdate.ParentComponents!.Count > 0)
@@ -3804,7 +3800,7 @@
                                                                                 IsCustom = true,
                                                                                 IsFreeText = thisparentcomponent.IsFreeText
                                                                             };
-                                                                        serviceResponse = await ResourceComponentService.PostItem(newcustomcomponent);
+                                                                        serviceResponse = ResourceComponentService.PostItem(newcustomcomponent);
                                                                         // Add the new custom component to the list
                                                                         currentresourcecomponents.Add(newcustomcomponent);
                                                                     }
@@ -3822,7 +3818,7 @@
                                                                 }
 
                                                                 // Update the custom component options
-                                                                serviceResponse = await CustomComponentService.PostConfig(newcustomcomponents);
+                                                                serviceResponse = CustomComponentService.PostConfig(newcustomcomponents);
                                                             }
                                                         }
                                                     }
@@ -3830,12 +3826,12 @@
                                                     {
                                                         // User is likely trying to import just components.
                                                         List<CustomComponent> customComponents = JsonSerializer.Deserialize<List<CustomComponent>>(newCustomComponentConfig, options)!;
-                                                        if (GeneralHelper.IsNotNull(customComponents))
+                                                        if (customComponents != null)
                                                         {
                                                             // Loop through custom components to make sure the parent exists
                                                             foreach (CustomComponent thiscustomcomponent in customComponents)
                                                             {
-                                                                if (GeneralHelper.IsNotNull(currentresourcecomponents))
+                                                                if (currentresourcecomponents != null)
                                                                 {
                                                                     if (currentresourcecomponents.Where(x => GeneralHelper.NormalizeName(x.Name, true) == thiscustomcomponent.ParentComponent).Count() > 0)
                                                                     {
@@ -3844,7 +3840,7 @@
                                                                 }
                                                             }
                                                             // Update the custom component options
-                                                            serviceResponse = await CustomComponentService.PostConfig(newcustomcomponents);
+                                                            serviceResponse = CustomComponentService.PostConfig(newcustomcomponents);
                                                         }
                                                     }
                                                 }
@@ -3852,7 +3848,7 @@
                                             if (serviceResponse.Success)
                                             {
 
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Custom Components configuration update succeeded!";
                                                 newFunctionConfig = String.Empty;
                                             }
@@ -3866,10 +3862,10 @@
                                     }
                                     break;
                             }
-                            serviceResponse = await CustomComponentService.GetItems();
+                            serviceResponse = CustomComponentService.GetItems();
                             if (serviceResponse.Success)
                             {
-                                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                if (serviceResponse.ResponseObject != null)
                                 {
                                     servicesData.CustomComponents = (List<CustomComponent>)serviceResponse.ResponseObject!;
                                 }
@@ -3879,13 +3875,13 @@
                             switch (action)
                             {
                                 case "download":
-                                    serviceResponse = await ImportExportService.ExportConfig(includeAdmin);
+                                    serviceResponse = ImportExportService.ExportConfig(includeAdmin);
                                     if (serviceResponse.Success)
                                     {
-                                        if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                                        if (serviceResponse.ResponseObject != null)
                                         {
                                             var globaljson = serviceResponse.ResponseObject;
-                                            if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                            if (BlazorDownloadFileService != null)
                                             {
                                                 await BlazorDownloadFileService.DownloadFileFromText("globalconfig.json", JsonSerializer.Serialize(globaljson).ToString(), System.Text.Encoding.UTF8, "application/octet-stream");
                                             }
@@ -3901,7 +3897,7 @@
                                         {
                                             if (ConfigurationHelper.ResetSiteConfiguration())
                                             {
-                                                message.Type = MessageTypesEnum.SUCCESS;
+                                                message.Type = MessageTypesEnum.Success;
                                                 message.Message = "Global configuration reset!";
                                             }
                                             else
@@ -3913,7 +3909,7 @@
                                     }
                                     break;
                                 case "update":
-                                    if (GeneralHelper.IsNotNull(newGlobalConfig))
+                                    if (newGlobalConfig != null)
                                     {
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Global Configuration and cannot be undone!!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
@@ -3924,7 +3920,7 @@
                                                 serviceResponse = await ImportExportService.PostConfig(JsonSerializer.Deserialize<ConfigurationData>(newGlobalConfig, options)!);
                                                 if (serviceResponse.Success)
                                                 {
-                                                    message.Type = MessageTypesEnum.SUCCESS;
+                                                    message.Type = MessageTypesEnum.Success;
                                                     message.Message = "Global config update succeeded!";
                                                     newGlobalConfig = String.Empty;
                                                 }
@@ -3944,7 +3940,7 @@
                             switch (action)
                             {
                                 case "download":
-                                    serviceResponse = await PolicyService.GetPolicy();
+                                    serviceResponse = PolicyService.GetPolicy();
                                     var policyjson = serviceResponse.ResponseObject;
 
                                     var stream = new MemoryStream();
@@ -3954,7 +3950,7 @@
                                     stream.Position = 0;
 
                                     string policyString = Encoding.Default.GetString(stream.ToArray());
-                                    if (GeneralHelper.IsNotNull(BlazorDownloadFileService))
+                                    if (BlazorDownloadFileService != null)
                                     {
                                         await BlazorDownloadFileService.DownloadFileFromText("namePolicyDefinition.json", policyString, System.Text.Encoding.UTF8, "application/json");
                                     }
@@ -3965,7 +3961,7 @@
 
                     // Reset cache items
                     CacheHelper.InvalidateCacheObject(type);
-                    servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+                    servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
                 }
                 catch (Exception ex)
                 {
@@ -3989,7 +3985,7 @@
                         case MessageTypesEnum.INFORMATION:
                             toastService.ShowInfo(message.Message);
                             break;
-                        case MessageTypesEnum.SUCCESS:
+                        case MessageTypesEnum.Success:
                             toastService.ShowSuccess(message.Message);
                             break;
                         case MessageTypesEnum.WARNING:
@@ -4012,7 +4008,7 @@
         }
         else
         {
-            servicesData = await ServicesHelper.LoadServicesData(servicesData, admin);
+            servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
             toastService.ShowError("There was an error with teh request. Please try again");
         }
     }
@@ -4096,7 +4092,6 @@
     private void OnCategoryChanged(ChangeEventArgs e)
     {
         selectedResourceTypeCategory = e.Value!.ToString()!;
-
     }
 
     private async void OnTypeChanged(ChangeEventArgs e)
@@ -4124,7 +4119,7 @@
 
     private void OnRefreshLocationsCheckboxClicked(ChangeEventArgs e)
     {
-        if (GeneralHelper.IsNotNull(e.Value))
+        if (e.Value != null)
         {
             refreshlocationshortnames = bool.Parse(e.Value.ToString()!);
             if (refreshlocationshortnames)
@@ -4136,7 +4131,7 @@
 
     private void OnRefreshTypesCheckboxClicked(ChangeEventArgs e)
     {
-        if (GeneralHelper.IsNotNull(e.Value))
+        if (e.Value != null)
         {
             refreshtypeshortnames = bool.Parse(e.Value.ToString()!);
             if (refreshtypeshortnames)

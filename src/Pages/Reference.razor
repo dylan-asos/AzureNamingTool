@@ -8,6 +8,10 @@
 @inject NavigationManager NavigationManager
 @inject StateContainer state
 @inject IToastService toastService
+@inject GeneralHelper GeneralHelper
+@inject ResourceTypeService ResourceTypeService
+@inject ServicesHelper ServicesHelper
+@inject AdminLogService AdminLogService 
 
 <PageTitle>Azure Naming Tool - Reference</PageTitle>
 
@@ -366,25 +370,25 @@
     private string[] filteredscopes = new string[] { "resource group", "resource group & region", "region", "global", "subscription", "tenant" };
     private List<string> categories = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        await SetServicesData();
+        SetServicesData();
+        return Task.CompletedTask;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (servicesData == null)
-        {
-            await SetServicesData();
-        }
+
+        SetServicesData();
+        return Task.CompletedTask;
     }
 
-    private async Task SetServicesData()
+    private void SetServicesData()
     {
         try
         {
-            servicesData = await ServicesHelper.LoadServicesData(servicesData, false);
-            if (GeneralHelper.IsNotNull(servicesData))
+            servicesData = ServicesHelper.LoadServicesData(servicesData, false);
+            if (servicesData != null)
             {
                 resourceDelimiter = (ResourceDelimiter)servicesData.ResourceDelimiters![0];
 

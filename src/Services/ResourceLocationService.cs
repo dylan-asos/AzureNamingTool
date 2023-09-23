@@ -1,309 +1,287 @@
-﻿using AzureNamingTool.Helpers;
+﻿using System.Text.Json;
+using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
-using System.Text.Json;
 
-namespace AzureNamingTool.Services
+namespace AzureNamingTool.Services;
+
+public class ResourceLocationService
 {
-    public class ResourceLocationService
+    private readonly CacheHelper _cacheHelper;
+    private readonly ConfigurationHelper _configurationHelper;
+    private readonly FileSystemHelper _fileSystemHelper;
+    private readonly AdminLogService _adminLogService;
+    private readonly FileReader _fileReader;
+    private readonly FileWriter _fileWriter;
+    private readonly HttpContentDownloader _httpContentDownloader;
+
+    public ResourceLocationService(
+        CacheHelper cacheHelper,
+        ConfigurationHelper configurationHelper,
+        FileSystemHelper fileSystemHelper, 
+        AdminLogService adminLogService, 
+        FileReader fileReader, FileWriter fileWriter, HttpContentDownloader httpContentDownloader)
     {
-        public static async Task<ServiceResponse> GetItems(bool admin = true)
+        _cacheHelper = cacheHelper;
+        _configurationHelper = configurationHelper;
+        _fileSystemHelper = fileSystemHelper;
+        _adminLogService = adminLogService;
+        _fileReader = fileReader;
+        _fileWriter = fileWriter;
+        _httpContentDownloader = httpContentDownloader;
+    }
+    
+    public ServiceResponse GetItems(bool admin = true)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceLocation>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (!admin)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceLocation>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    if (!admin)
-                    {
-                        serviceResponse.ResponseObject = items.Where(x => x.Enabled == true).OrderBy(x => x.Name).ToList();
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = items.OrderBy(x => x.Name).ToList();
-                    }
-                    serviceResponse.Success = true;
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Locations not found!";
-                }
+                serviceResponse.ResponseObject = items.Where(x => x.Enabled).OrderBy(x => x.Name).ToList();
             }
-            catch (Exception ex)
+            else
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
+                serviceResponse.ResponseObject = items.OrderBy(x => x.Name).ToList();
             }
-            return serviceResponse;
+
+            serviceResponse.Success = true;
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Locations not found!";
         }
 
-        public static async Task<ServiceResponse> GetItem(int id)
+        return serviceResponse;
+    }
+
+    public ServiceResponse GetItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceLocation>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            var item = items.Find(x => x.Id == id);
+            if (item != null)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceLocation>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    var item = items.Find(x => x.Id == id);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        serviceResponse.ResponseObject = item;
-                        serviceResponse.Success = true;
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = "Resource Location not found!";
-                    }
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Locations not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> PostItem(ResourceLocation item)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Make sure the new item short name only contains letters/numbers
-                if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
-                {
-                    serviceResponse.Success = false;
-                    serviceResponse.ResponseObject = "Short name must be alphanumeric.";
-                    return serviceResponse;
-                }
-
-                // Force lowercase on the shortname
-                item.ShortName = item.ShortName.ToLower();
-
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceLocation>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    // Set the new id
-                    if (item.Id == 0)
-                    {
-                        if (items.Count > 0)
-                        {
-                            item.Id = items.Max(t => t.Id) + 1;
-                        }
-                        else
-                        {
-                            item.Id = 1;
-                        }
-                    }
-
-                    // Determine new item id
-                    if (items.Count > 0)
-                    {
-                        // Check if the item already exists
-                        if (items.Exists(x => x.Id == item.Id))
-                        {
-                            // Remove the updated item from the list
-                            var existingitem = items.Find(x => x.Id == item.Id);
-                            if (GeneralHelper.IsNotNull(existingitem))
-                            {
-                                int index = items.IndexOf(existingitem);
-                                items.RemoveAt(index);
-                            }
-                        }
-
-                        // Put the item at the end
-                        items.Add(item);
-                    }
-                    else
-                    {
-                        item.Id = 1;
-                        items.Add(item);
-                    }
-
-                    // Write items to file
-                    await ConfigurationHelper.WriteList<ResourceLocation>(items);
-                    serviceResponse.Success = true;
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Locations not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> DeleteItem(int id)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<ResourceLocation>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    // Get the specified item
-                    var item = items.Find(x => x.Id == id);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        // Remove the item from the collection
-                        items.Remove(item);
-
-                        // Write items to file
-                        await ConfigurationHelper.WriteList<ResourceLocation>(items);
-                        serviceResponse.Success = true;
-                    }
-                    else
-                    {
-                        serviceResponse.ResponseObject = "Resource Location not found!";
-                    }
-                }
-                else
-                {
-                    serviceResponse.ResponseObject = "Resource Locations not found!";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> PostConfig(List<ResourceLocation> items)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var newitems = new List<ResourceLocation>();
-                int i = 1;
-
-                // Determine new item id
-                foreach (ResourceLocation item in items)
-                {
-                    // Make sure the new item short name only contains letters/numbers
-                    if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
-                    {
-                        serviceResponse.Success = false;
-                        serviceResponse.ResponseObject = "Short name must be alphanumeric.";
-                        return serviceResponse;
-                    }
-
-                    // Force lowercase on the shortname
-                    item.ShortName = item.ShortName.ToLower();
-
-                    item.Id = i;
-                    newitems.Add(item);
-                    i += 1;
-                }
-
-                // Write items to file
-                await ConfigurationHelper.WriteList<ResourceLocation>(newitems);
+                serviceResponse.ResponseObject = item;
                 serviceResponse.Success = true;
             }
-            catch (Exception ex)
+            else
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
+                serviceResponse.ResponseObject = "Resource Location not found!";
             }
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Locations not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostItem(ResourceLocation item)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Make sure the new item short name only contains letters/numbers
+        if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
+        {
+            serviceResponse.Success = false;
+            serviceResponse.ResponseObject = "Short name must be alphanumeric.";
             return serviceResponse;
         }
 
-        public static async Task<ServiceResponse> RefreshResourceLocations(bool shortNameReset = false)
+        // Force lowercase on the shortname
+        item.ShortName = item.ShortName.ToLower();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceLocation>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            // Set the new id
+            if (item.Id == 0)
             {
-                // Get the existing Resource location items
-                serviceResponse = await ResourceLocationService.GetItems();
-                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                if (items.Count > 0)
                 {
-                    List<ResourceLocation> locations = (List<ResourceLocation>)serviceResponse.ResponseObject!;
-                    if (GeneralHelper.IsNotNull(locations))
+                    item.Id = items.Max(t => t.Id) + 1;
+                }
+                else
+                {
+                    item.Id = 1;
+                }
+            }
+
+            // Determine new item id
+            if (items.Count > 0)
+            {
+                // Check if the item already exists
+                if (items.Exists(x => x.Id == item.Id))
+                {
+                    // Remove the updated item from the list
+                    var existingitem = items.Find(x => x.Id == item.Id);
+                    if (existingitem != null)
                     {
-                        string url = "https://raw.githubusercontent.com/mspnp/AzureNamingTool/main/src/repository/resourcelocations.json";
+                        var index = items.IndexOf(existingitem);
+                        items.RemoveAt(index);
+                    }
+                }
 
-                        string refreshdata = await GeneralHelper.DownloadString(url);
-                        if (!String.IsNullOrEmpty(refreshdata))
+                // Put the item at the end
+                items.Add(item);
+            }
+            else
+            {
+                item.Id = 1;
+                items.Add(item);
+            }
+
+            // Write items to file
+            _fileWriter.WriteList(items);
+            serviceResponse.Success = true;
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Locations not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse DeleteItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<ResourceLocation>();
+        if (items != null)
+        {
+            // Get the specified item
+            var item = items.Find(x => x.Id == id);
+            if (item != null)
+            {
+                // Remove the item from the collection
+                items.Remove(item);
+
+                // Write items to file
+                _fileWriter.WriteList(items);
+                serviceResponse.Success = true;
+            }
+            else
+            {
+                serviceResponse.ResponseObject = "Resource Location not found!";
+            }
+        }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Locations not found!";
+        }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostConfig(List<ResourceLocation> items)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var newitems = new List<ResourceLocation>();
+        var i = 1;
+
+        // Determine new item id
+        foreach (var item in items)
+        {
+            // Make sure the new item short name only contains letters/numbers
+            if (!ValidationHelper.CheckAlphanumeric(item.ShortName))
+            {
+                serviceResponse.Success = false;
+                serviceResponse.ResponseObject = "Short name must be alphanumeric.";
+                return serviceResponse;
+            }
+
+            // Force lowercase on the shortname
+            item.ShortName = item.ShortName.ToLower();
+
+            item.Id = i;
+            newitems.Add(item);
+            i += 1;
+        }
+
+        // Write items to file
+        _fileWriter.WriteList(newitems);
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse> RefreshResourceLocations(bool shortNameReset = false)
+    {
+        var serviceResponse = GetItems();
+        if (serviceResponse.ResponseObject != null)
+        {
+            var locations = (List<ResourceLocation>) serviceResponse.ResponseObject!;
+            if (locations != null)
+            {
+                var url =
+                    "https://raw.githubusercontent.com/mspnp/AzureNamingTool/main/src/repository/resourcelocations.json";
+
+                var refreshdata = await _httpContentDownloader.DownloadString(url);
+                if (!string.IsNullOrEmpty(refreshdata))
+                {
+                    var newlocations = new List<ResourceLocation>();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        PropertyNameCaseInsensitive = true
+                    };
+
+                    newlocations = JsonSerializer.Deserialize<List<ResourceLocation>>(refreshdata, options);
+                    if (newlocations != null)
+                    {
+                        // Loop through the new items
+                        // Add any new resource location and update any existing locations
+                        foreach (var newlocation in newlocations)
                         {
-                            var newlocations = new List<ResourceLocation>();
-                            var options = new JsonSerializerOptions
+                            // Check if the existing locations contain the current location
+                            var i = locations.FindIndex(x => x.Name == newlocation.Name);
+                            if (i > -1)
                             {
-                                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                                PropertyNameCaseInsensitive = true
-                            };
+                                // Update the Resource location Information
+                                var oldlocation = locations[i];
+                                newlocation.Enabled = oldlocation.Enabled;
 
-                            newlocations = JsonSerializer.Deserialize<List<ResourceLocation>>(refreshdata, options);
-                            if (GeneralHelper.IsNotNull(newlocations))
-                            {
-                                // Loop through the new items
-                                // Add any new resource location and update any existing locations
-                                foreach (ResourceLocation newlocation in newlocations)
+                                if (!shortNameReset || string.IsNullOrEmpty(oldlocation.ShortName))
                                 {
-                                    // Check if the existing locations contain the current location
-                                    int i = locations.FindIndex(x => x.Name == newlocation.Name);
-                                    if (i > -1)
-                                    {
-                                        // Update the Resource location Information
-                                        ResourceLocation oldlocation = locations[i];
-                                        newlocation.Enabled = oldlocation.Enabled;
-
-                                        if ((!shortNameReset) || (String.IsNullOrEmpty(oldlocation.ShortName)))
-                                        {
-                                            newlocation.ShortName = oldlocation.ShortName;
-                                        }
-                                        // Remove the old location
-                                        locations.RemoveAt(i);
-                                        // Add the new location
-                                        locations.Add(newlocation);
-                                    }
-                                    else
-                                    {
-                                        // Add a new resource location
-                                        locations.Add(newlocation);
-                                    }
+                                    newlocation.ShortName = oldlocation.ShortName;
                                 }
 
-                                // Update the settings file
-                                serviceResponse = await PostConfig(locations);
-
-                                // Update the repository file
-                                await FileSystemHelper.WriteFile("resourcelocations.json", refreshdata, "repository/");
-
-                                // Clear cached data
-                                CacheHelper.InvalidateCacheObject("ResourceLocation");
-
-                                // Update the current configuration file version data information
-                                await ConfigurationHelper.UpdateConfigurationFileVersion("resourcelocations");
+                                // Remove the old location
+                                locations.RemoveAt(i);
+                                // Add the new location
+                                locations.Add(newlocation);
                             }
                             else
                             {
-                                serviceResponse.ResponseObject = "Resource Locations not found!";
+                                // Add a new resource location
+                                locations.Add(newlocation);
                             }
                         }
-                        else
-                        {
-                            serviceResponse.ResponseObject = "Refresh Resource Locations not found!";
-                        }
+
+                        // Update the settings file
+                        serviceResponse = PostConfig(locations);
+
+                        // Update the repository file
+                        _fileSystemHelper.WriteFile(FileNames.ResourceLocation, refreshdata, "repository/");
+
+                        // Clear cached data
+                        _cacheHelper.InvalidateCacheObject("ResourceLocation");
+
+                        // Update the current configuration file version data information
+                        await _configurationHelper.UpdateConfigurationFileVersion("resourcelocations");
                     }
                     else
                     {
@@ -312,17 +290,21 @@ namespace AzureNamingTool.Services
                 }
                 else
                 {
-                    serviceResponse.ResponseObject = "Resource Locations not found!";
-                    AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = "There was a problem refreshing the resource locations configuration." });
+                    serviceResponse.ResponseObject = "Refresh Resource Locations not found!";
                 }
             }
-            catch (Exception ex)
+            else
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
+                serviceResponse.ResponseObject = "Resource Locations not found!";
             }
-            return serviceResponse;
         }
+        else
+        {
+            serviceResponse.ResponseObject = "Resource Locations not found!";
+            _adminLogService.PostItem(new AdminLogMessage
+                {Title = "ERROR", Message = "There was a problem refreshing the resource locations configuration."});
+        }
+
+        return serviceResponse;
     }
 }

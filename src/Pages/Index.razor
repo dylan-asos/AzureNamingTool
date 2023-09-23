@@ -7,6 +7,8 @@
 @inject NavigationManager NavigationManager
 @inject StateContainer state
 @inject ProtectedSessionStorage session
+@inject ConfigurationHelper ConfigurationHelper
+@inject GithubConnectivityChecker ConnectivityChecker
 
 <PageTitle>Azure Naming Tool - Home</PageTitle>
 
@@ -75,29 +77,22 @@
 
         if (firstRender)
         {
-            try
+            if (admin)
             {
-                if (admin)
+                if (await ConnectivityChecker.VerifyConnectivity())
                 {
-                    if (await ConfigurationHelper.VerifyConnectivity())
+                    var latestversion = await ConfigurationHelper.GetToolVersion();
+                    if (!notificationshown)
                     {
-                        var latestversion = await ConfigurationHelper.GetToolVersion();
-                        if (!notificationshown)
+                        // Check if the client's version matches the current offical version
+                        if (appversion != latestversion)
                         {
-                            // Check if the client's version matches the current offical version
-                            if (appversion != latestversion)
-                            {
-                                ModalHelper.ShowInformationModal(Modal!, theme!, "bg-navcolor", "ATTENTION", "<p style='font-weight:bold;'>Your current version is out of date!</p><p>Please click <a href='" + updateurl + "' target='_blank'>here</a> to update to the current version for the latest features!</p><p><span style='font-weight:bold;'>Installed Version:</span> <span style='font-style:italic; '>" + appversion + "</p><p><span style='font-weight:bold;'>Latest version:</span> <span style='font-style:italic; '>" + latestversion + "</span></p>", "", true);
-                                await session.SetAsync("versionnotification", true);
-                                StateHasChanged();
-                            }
+                            ModalHelper.ShowInformationModal(Modal!, theme!, "bg-navcolor", "ATTENTION", "<p style='font-weight:bold;'>Your current version is out of date!</p><p>Please click <a href='" + updateurl + "' target='_blank'>here</a> to update to the current version for the latest features!</p><p><span style='font-weight:bold;'>Installed Version:</span> <span style='font-style:italic; '>" + appversion + "</p><p><span style='font-weight:bold;'>Latest version:</span> <span style='font-style:italic; '>" + latestversion + "</span></p>", "", true);
+                            await session.SetAsync("versionnotification", true);
+                            StateHasChanged();
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
             }
         }
     }

@@ -1,100 +1,86 @@
 ﻿using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
-using Microsoft.AspNetCore.Mvc;
-using System;
 
-namespace AzureNamingTool.Services
+namespace AzureNamingTool.Services;
+
+public class AdminService
 {
-    public class AdminService
+    private readonly SiteConfiguration _config;
+    private readonly ConfigurationHelper _configurationHelper;
+    private readonly GeneralHelper _generalHelper;
+    private readonly ValidationHelper _validationHelper;
+
+    public AdminService(
+        ValidationHelper validationHelper, 
+        ConfigurationHelper configurationHelper, 
+        GeneralHelper generalHelper, 
+        SiteConfiguration config)
     {
-        private static readonly SiteConfiguration config = ConfigurationHelper.GetConfigurationData();
+        _validationHelper = validationHelper;
+        _configurationHelper = configurationHelper;
+        _generalHelper = generalHelper;
+        _config = config;
+    }
 
-        public static async Task<ServiceResponse> UpdatePassword(string password)
+    public ServiceResponse UpdatePassword(string password)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (_validationHelper.ValidatePassword(password))
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                if (ValidationHelper.ValidatePassword(password))
-                {
-                    config.AdminPassword = GeneralHelper.EncryptString(password, config.SALTKey!);
-                    await ConfigurationHelper.UpdateSettings(config);
-                    serviceResponse.Success = true;
-                }
-                else
-                {
-                    serviceResponse.Success = false;
-                    serviceResponse.ResponseObject = "The pasword does not meet the security requirements.";
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
+            _config.AdminPassword = _generalHelper.EncryptString(password, _config.SaltKey!);
+            _configurationHelper.UpdateSettings(_config);
+            serviceResponse.Success = true;
+        }
+        else
+        {
+            serviceResponse.Success = false;
+            serviceResponse.ResponseObject = "The password does not meet the security requirements.";
         }
 
-        public static async Task<ServiceResponse> GenerateAPIKey()
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get the old api key
-                string oldapikey = config.APIKey!;
+        return serviceResponse;
+    }
 
-                // Set the new api key
-                Guid guid = Guid.NewGuid();
-                config.APIKey = GeneralHelper.EncryptString(guid.ToString(), config.SALTKey!);
-                await ConfigurationHelper.UpdateSettings(config);
-                serviceResponse.ResponseObject = guid.ToString();
-                serviceResponse.Success = true;
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> UpdateAPIKey(string apikey)
+    public ServiceResponse GenerateApiKey()
+    {
+        // Set the new api key
+        var guid = Guid.NewGuid();
+        _config.ApiKey = _generalHelper.EncryptString(guid.ToString(), _config.SaltKey!);
+        _configurationHelper.UpdateSettings(_config);
+        ServiceResponse serviceResponse = new()
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                config.APIKey = GeneralHelper.EncryptString(apikey, config.SALTKey!);
-                await ConfigurationHelper.UpdateSettings(config);
-                serviceResponse.ResponseObject = apikey;
-                serviceResponse.Success = true;
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
+            ResponseObject = guid.ToString(),
+            Success = true
+        };
 
-        public static async Task<ServiceResponse> UpdateIdentityHeaderName(string identityheadername)
+        return serviceResponse;
+    }
+
+    public ServiceResponse UpdateApiKey(string apikey)
+    {
+        _config.ApiKey = _generalHelper.EncryptString(apikey, _config.SaltKey!);
+        _configurationHelper.UpdateSettings(_config);
+
+        ServiceResponse serviceResponse = new()
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                config.IdentityHeaderName = GeneralHelper.EncryptString(identityheadername, config.SALTKey!);
-                await ConfigurationHelper.UpdateSettings(config);
-                serviceResponse.ResponseObject = identityheadername;
-                serviceResponse.Success = true;
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
-        }
+            ResponseObject = apikey,
+            Success = true
+        };
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse UpdateIdentityHeaderName(string identityHeaderName)
+    {
+        _config.IdentityHeaderName = _generalHelper.EncryptString(identityHeaderName, _config.SaltKey!);
+        _configurationHelper.UpdateSettings(_config);
+
+        ServiceResponse serviceResponse = new()
+        {
+            ResponseObject = identityHeaderName,
+            Success = true
+        };
+        
+        return serviceResponse;
     }
 }

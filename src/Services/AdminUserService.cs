@@ -1,186 +1,162 @@
 ﻿using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
 
-namespace AzureNamingTool.Services
+namespace AzureNamingTool.Services;
+
+public class AdminUserService
 {
-    public class AdminUserService
+    private readonly FileReader _fileReader;
+    private readonly FileWriter _fileWriter;
+    
+    public AdminUserService(
+        FileReader reader, 
+        FileWriter fileWriter)
     {
-        public static async Task<ServiceResponse> GetItems()
+        _fileReader = reader;
+        _fileWriter = fileWriter;
+    }
+
+    public ServiceResponse GetItems()
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<AdminUser>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<AdminUser>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    serviceResponse.ResponseObject = items.OrderBy(x => x.Name).ToList();
-                    serviceResponse.Success = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
+            serviceResponse.ResponseObject = items.OrderBy(x => x.Name).ToList();
+            serviceResponse.Success = true;
         }
 
-        public static async Task<ServiceResponse> GetItem(string name)
+        return serviceResponse;
+    }
+
+    public ServiceResponse GetItem(string name)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<AdminUser>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<AdminUser>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    var item = items.Find(x => x.Name == name);
-                    serviceResponse.ResponseObject = item;
-                    serviceResponse.Success = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.Success = false;
-                serviceResponse.ResponseObject = ex;
-            }
-            return serviceResponse;
+            var item = items.Find(x => x.Name == name);
+            serviceResponse.ResponseObject = item;
+            serviceResponse.Success = true;
         }
 
-        public static async Task<ServiceResponse> PostItem(AdminUser item)
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostItem(AdminUser item)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = _fileReader.GetList<AdminUser>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            // Set the new id
+            if (item.Id == 0)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<AdminUser>();
-                if (GeneralHelper.IsNotNull(items))
+                if (items.Count > 0)
                 {
-                    // Set the new id
-                    if (item.Id == 0)
-                    {
-                        if (items.Count > 0)
-                        {
-                            item.Id = items.Max(t => t.Id) + 1;
-                        }
-                        else
-                        {
-                            item.Id = 1;
-                        }
-                    }
-
-                    items = items.OrderBy(x => x.Name).ToList();
-
-                    // Determine new item id
-                    if (items.Count > 0)
-                    {
-                        // Check if the item already exists
-                        if (items.Exists(x => x.Id == item.Id))
-                        {
-                            // Remove the updated item from the list
-                            var existingitem = items.Find(x => x.Id == item.Id);
-                            if (GeneralHelper.IsNotNull(existingitem))
-                            {
-                                int index = items.IndexOf(existingitem);
-                                items.RemoveAt(index);
-                            }
-                        }
-
-                        // Check for the new sort order
-                        if (items.Exists(x => x.Id == item.Id))
-                        {
-                            // Remove the updated item from the list
-                            items.Insert(items.IndexOf(items.FirstOrDefault(x => x.Id == item.Id)!), item);
-                        }
-                        else
-                        {
-                            // Put the item at the end
-                            items.Add(item);
-                        }
-                    }
-                    else
-                    {
-                        item.Id = 1;
-                        items.Add(item);
-                    }
-
-                    // Write items to file
-                    await ConfigurationHelper.WriteList<AdminUser>(items);
-                    serviceResponse.ResponseObject = "Item added!";
-                    serviceResponse.Success = true;
+                    item.Id = items.Max(t => t.Id) + 1;
+                }
+                else
+                {
+                    item.Id = 1;
                 }
             }
-            catch (Exception ex)
+
+            items = items.OrderBy(x => x.Name).ToList();
+
+            // Determine new item id
+            if (items.Count > 0)
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
+                // Check if the item already exists
+                if (items.Exists(x => x.Id == item.Id))
+                {
+                    // Remove the updated item from the list
+                    var existingitem = items.Find(x => x.Id == item.Id);
+                    if (existingitem != null)
+                    {
+                        var index = items.IndexOf(existingitem);
+                        items.RemoveAt(index);
+                    }
+                }
+
+                // Check for the new sort order
+                if (items.Exists(x => x.Id == item.Id))
+                {
+                    // Remove the updated item from the list
+                    items.Insert(items.IndexOf(items.FirstOrDefault(x => x.Id == item.Id)!), item);
+                }
+                else
+                {
+                    // Put the item at the end
+                    items.Add(item);
+                }
             }
-            return serviceResponse;
+            else
+            {
+                item.Id = 1;
+                items.Add(item);
+            }
+
+            // Write items to file
+            _fileWriter.WriteList(items);
+            serviceResponse.ResponseObject = "Item added!";
+            serviceResponse.Success = true;
         }
 
-        public static async Task<ServiceResponse> DeleteItem(int id)
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse DeleteItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items =  _fileReader.GetList<AdminUser>();
+        if (items != null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            // Get the specified item
+            var item = items.Find(x => x.Id == id);
+            if (item != null)
             {
-                // Get list of items
-                var items = await ConfigurationHelper.GetList<AdminUser>();
-                if (GeneralHelper.IsNotNull(items))
-                {
-                    // Get the specified item
-                    var item = items.Find(x => x.Id == id);
-                    if (GeneralHelper.IsNotNull(item))
-                    {
-                        // Remove the item from the collection
-                        items.Remove(item);
-
-                        // Write items to file
-                        await ConfigurationHelper.WriteList<AdminUser>(items);
-                        serviceResponse.Success = true;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
-            }
-            return serviceResponse;
-        }
-
-        public static async Task<ServiceResponse> PostConfig(List<AdminUser> items)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                var newitems = new List<AdminUser>();
-                int i = 1;
-
-                // Determine new item id
-                foreach (AdminUser item in items)
-                {
-                    item.Id = i;
-                    newitems.Add(item);
-                    i += 1;
-                }
+                // Remove the item from the collection
+                items.Remove(item);
 
                 // Write items to file
-                await ConfigurationHelper.WriteList<AdminUser>(newitems);
+                _fileWriter.WriteList(items);
                 serviceResponse.Success = true;
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                serviceResponse.ResponseObject = ex;
-                serviceResponse.Success = false;
-            }
-            return serviceResponse;
         }
+
+        return serviceResponse;
+    }
+
+    public ServiceResponse PostConfig(List<AdminUser> items)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var newitems = new List<AdminUser>();
+        var i = 1;
+
+        // Determine new item id
+        foreach (var item in items)
+        {
+            item.Id = i;
+            newitems.Add(item);
+            i += 1;
+        }
+
+        // Write items to file
+        _fileWriter.WriteList(newitems);
+        serviceResponse.Success = true;
+
+        return serviceResponse;
     }
 }

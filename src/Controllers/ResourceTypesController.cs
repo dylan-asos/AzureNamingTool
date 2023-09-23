@@ -1,146 +1,117 @@
-﻿using AzureNamingTool.Models;
+﻿using AzureNamingTool.Attributes;
 using AzureNamingTool.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Web;
+using AzureNamingTool.Models;
 using AzureNamingTool.Services;
-using AzureNamingTool.Attributes;
+using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace AzureNamingTool.Controllers
+namespace AzureNamingTool.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[ApiKey]
+public class ResourceTypesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ApiKey]
-    public class ResourceTypesController : ControllerBase
+    private readonly CacheHelper _cacheHelper;
+    private readonly ResourceTypeService _resourceTypeService;
+    private readonly ResourceTypeUpdater _resourceTypeUpdater;
+    private readonly AdminLogService _adminLogService;
+
+    public ResourceTypesController(
+        ResourceTypeService resourceTypeService, 
+        ResourceTypeUpdater resourceTypeUpdater,
+        CacheHelper cacheHelper, 
+        AdminLogService adminLogService)
     {
-        // GET: api/<ResourceTypesController>
-        /// <summary>
-        /// This function will return the resource types data. 
-        /// </summary>
-        /// <returns>json - Current resource types data</returns>
-        [HttpGet]
-        public async Task<IActionResult> Get(bool admin = false)
+        _resourceTypeService = resourceTypeService;
+        _resourceTypeUpdater = resourceTypeUpdater;
+        _cacheHelper = cacheHelper;
+        _adminLogService = adminLogService;
+    }
+
+    // GET: api/<ResourceTypesController>
+    /// <summary>
+    ///     This function will return the resource types data.
+    /// </summary>
+    /// <returns>json - Current resource types data</returns>
+    [HttpGet]
+    public IActionResult Get(bool admin = false)
+    {
+        var serviceResponse =
+            // Get list of items
+            _resourceTypeService.GetItems(admin);
+        
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await ResourceTypeService.GetItems(admin);
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // GET api/<ResourceTypesController>/5
-        /// <summary>
-        /// This function will return the specifed resource type data.
-        /// </summary>
-        /// <param name="id">int - Resource Type id</param>
-        /// <returns>json - Resource Type data</returns>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // GET api/<ResourceTypesController>/5
+    /// <summary>
+    ///     This function will return the specifed resource type data.
+    /// </summary>
+    /// <param name="id">int - Resource Type id</param>
+    /// <returns>json - Resource Type data</returns>
+    [HttpGet("{id}")]
+    public IActionResult Get(int id)
+    {
+        var serviceResponse =
+            // Get list of items
+            _resourceTypeService.GetItem(id);
+        
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                // Get list of items
-                serviceResponse = await ResourceTypeService.GetItem(id);
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // POST api/<ResourceTypesController>
-        /// <summary>
-        /// This function will update all resource types data.
-        /// </summary>
-        /// <param name="items">List - ResourceType (json) - All resource types data</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PostConfig([FromBody] List<ResourceType> items)
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // POST api/<ResourceTypesController>
+    /// <summary>
+    ///     This function will update all resource types data.
+    /// </summary>
+    /// <param name="items">List - ResourceType (json) - All resource types data</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PostConfig([FromBody] List<ResourceType> items)
+    {
+        var serviceResponse = _resourceTypeService.PostConfig(items);
+        
+        if (serviceResponse.Success)
         {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await ResourceTypeService.PostConfig(items);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Types updated." });
-                    CacheHelper.InvalidateCacheObject("ResourceType");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            _adminLogService.PostItem(new AdminLogMessage
+                {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
+            _cacheHelper.InvalidateCacheObject("ResourceType");
+            return Ok(serviceResponse.ResponseObject);
         }
 
-        // POST api/<ResourceTypesController>
-        /// <summary>
-        /// This function will update all resource types for the specifed component
-        /// </summary>
-        /// <param name="operation">string - Operation type  (optional-add, optional-remove, exlcude-add, exclude-remove)</param>
-        /// <param name="componentid">int - Component ID</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> UpdateTypeComponents(string operation, int componentid)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await ResourceTypeService.UpdateTypeComponents(operation, componentid);
-                if (serviceResponse.Success)
-                {
-                    AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Resource Types updated." });
-                    CacheHelper.InvalidateCacheObject("ResourceType");
-                    return Ok(serviceResponse.ResponseObject);
-                }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // POST api/<ResourceTypesController>
+    /// <summary>
+    ///     This function will update all resource types for the specifed component
+    /// </summary>
+    /// <param name="operation">string - Operation type  (optional-add, optional-remove, exlcude-add, exclude-remove)</param>
+    /// <param name="componentId">int - Component ID</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult UpdateTypeComponents(string operation, int componentId)
+    {
+        var serviceResponse = _resourceTypeUpdater.UpdateTypeComponents(operation, componentId);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceType");
+        return Ok(serviceResponse.ResponseObject);
     }
 }

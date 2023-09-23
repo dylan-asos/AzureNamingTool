@@ -16,6 +16,9 @@
 @inject IToastService toastService
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject CacheHelper CacheHelper
+@inject LogHelper LogHelper
+@inject AdminLogService AdminLogService
 
 <PageTitle>Azure Naming Tool - Admin Log</PageTitle>
 <div class="card  @theme!.ThemeStyle">
@@ -163,10 +166,10 @@
                 NavigationManager.NavigateTo("/");
             }
             ServiceResponse serviceResponse = new();
-            serviceResponse = await AdminLogService.GetItems();
+            serviceResponse = AdminLogService.GetItems();
             if (serviceResponse.Success)
             {
-                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                if (serviceResponse.ResponseObject != null)
                 {
                     lstAdminLogMessages = (List<AdminLogMessage>)serviceResponse.ResponseObject!;
                 }
@@ -195,14 +198,14 @@
         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will purge the Admin Log and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme!);
         if (confirm)
         {
-            await LogHelper.PurgeAdminLog();
+            LogHelper.PurgeAdminLog();
             toastService.ShowSuccess("Admin Log purged!");
             AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Admin Log purged." });
             CacheHelper.InvalidateCacheObject("AdminLogMessage");
-            serviceResponse = await AdminLogService.GetItems();
+            serviceResponse = AdminLogService.GetItems();
             if (serviceResponse.Success)
             {
-                if (GeneralHelper.IsNotNull(serviceResponse.ResponseObject))
+                if (serviceResponse.ResponseObject != null)
                 {
                     lstAdminLogMessages = (List<AdminLogMessage>)serviceResponse.ResponseObject!;
                 }

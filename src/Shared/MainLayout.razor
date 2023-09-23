@@ -9,12 +9,12 @@
 @inject IJSRuntime JsRuntime
 @inject ILogger<MainLayout> Logger
 @inject NavigationManager NavigationManager
-@using AzureNamingTool.Services;
 @using Blazored.Toast.Configuration
-@using System.Security.Claims;
 @inject ProtectedLocalStorage storage
 @inject ProtectedSessionStorage session
-@inject IHttpContextAccessor httpContextAccessor
+@inject ConfigurationHelper ConfigurationHelper
+@inject IdentityHelper IdentityHelper
+@inject SiteConfiguration SiteConfiguration
 
 <PageTitle>Azure Naming Tool</PageTitle>
 <BlazoredToasts Position="ToastPosition.BottomRight" ShowProgressBar="true" />
@@ -128,33 +128,29 @@
             if (!(bool)logout.Value)
             {
                 // Check if site is using an identity provider
-                if (GeneralHelper.IsNotNull(identityProviderDetails))
+                if (identityProviderDetails != null)
                 {
                     if (!String.IsNullOrEmpty(identityProviderDetails.CurrentUser))
                     {
                         if (identityProviderDetails.CurrentUser != "System")
                         {
                             // Show working modal
-                            var workingmodalparameters = new ModalParameters();
-                            workingmodalparameters.Add("message", "Authentication sync in progress...");
+                            var workingModalParameters = new ModalParameters {{"message", "Authentication sync in progress..."}};
 
-                            var workingmodaloptions = new ModalOptions()
+                            var workingModalOptions = new ModalOptions()
                                 {
                                     HideCloseButton = true,
                                     UseCustomLayout = true
                                 };
 
-                            if (GeneralHelper.IsNotNull(Modal))
+                            if (Modal != null)
                             {
-                                var workingmodal = Modal.Show<WorkingModal>("Working", workingmodalparameters, workingmodaloptions);
+                                var workingmodal = Modal.Show<WorkingModal>("Working", workingModalParameters, workingModalOptions);
 
                                 // Get the current user value from the passed parameter (hosts.cshtml)
                                 currentuser = identityProviderDetails.CurrentUser;
                                 await session.SetAsync("currentuser", currentuser);
-
-                                // Log the user access
-                                AdminLogService.PostItem(new AdminLogMessage() { Title = "INFORMATION", Message = "User accessed the site.", Source = currentuser });
-
+                                
                                 // CHeck if the user is an admin
                                 admin = await IdentityHelper.IsAdminUser(state, session, currentuser);
                                 // Close modal
@@ -215,14 +211,12 @@
         bool confrimAPIKeyGenerate = await JsRuntime.InvokeAsync<bool>("confirm", "This will reset the site settings. Are you sure?");
         if (confrimAPIKeyGenerate)
         {
+            SiteConfiguration.SaltKey = "";
+            SiteConfiguration.AdminPassword = "";
+            SiteConfiguration.ApiKey = "";
 
-            var config = ConfigurationHelper.GetConfigurationData();
-            config.SALTKey = "";
-            config.AdminPassword = "";
-            config.APIKey = "";
-
-            await ConfigurationHelper.UpdateSettings(config);
-            ConfigurationHelper.ResetState(state);
+            ConfigurationHelper.UpdateSettings(SiteConfiguration);
+            state.Reset();
             ConfigurationHelper.VerifySecurity(state);
 
             toastService.ShowSuccess("The site has been reset.");
@@ -255,10 +249,12 @@
         await session.SetAsync("admin", false);
         await session.SetAsync("currentuser", "System");
         await session.SetAsync("logout", true);
-        ResponseMessage message = new();
-        message.Type = MessageTypesEnum.INFORMATION;
-        message.Header = "INFORMATION";
-        message.Message = "Admin logged out.";
+        ResponseMessage message = new()
+        {
+            Type = MessageTypesEnum.INFORMATION,
+            Header = "INFORMATION",
+            Message = "Admin logged out."
+        };
         toastService.ShowInfo(message.Message);
         NavigationManager.NavigateTo(NavigationManager.Uri, true);
         StateHasChanged();

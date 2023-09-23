@@ -1,428 +1,328 @@
-﻿using AzureNamingTool.Models;
+﻿using AzureNamingTool.Attributes;
 using AzureNamingTool.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using AzureNamingTool.Models;
 using AzureNamingTool.Services;
-using AzureNamingTool.Attributes;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace AzureNamingTool.Controllers
+namespace AzureNamingTool.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[ApiKey]
+public class AdminController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ApiKey]
-    public class AdminController : ControllerBase
+    private readonly AdminLogService _adminLogService;
+    private readonly AdminService _adminService;
+    private readonly CacheHelper _cacheHelper;
+    private readonly ConfigurationHelper _configurationHelper;
+    private readonly SiteConfiguration _config;
+    private readonly GeneralHelper _generalHelper;
+    private readonly GeneratedNamesService _generatedNamesService;
+
+    public AdminController(
+        GeneralHelper generalHelper,
+        AdminService adminService,
+        AdminLogService adminLogService,
+        GeneratedNamesService generatedNamesService,
+        CacheHelper cacheHelper, 
+        ConfigurationHelper configurationHelper,
+        SiteConfiguration config)
     {
-        private readonly SiteConfiguration config = ConfigurationHelper.GetConfigurationData();
+        _generalHelper = generalHelper;
+        _adminService = adminService;
+        _adminLogService = adminLogService;
+        _generatedNamesService = generatedNamesService;
+        _cacheHelper = cacheHelper;
+        _configurationHelper = configurationHelper;
+        _config = config;
+    }
 
-        // POST api/<AdminController>
-        /// <summary>
-        /// This function will update the Global Admin Password. 
-        /// </summary>
-        /// <param name="password">string - New Global Admin Password</param>
-        /// <param name="adminpassword">string - Current Global Admin Password</param>
-        /// <returns>string - Successful update</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> UpdatePassword([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword, [FromBody] string password)
+    // POST api/<AdminController>
+    /// <summary>
+    ///     This function will update the Global Admin Password.
+    /// </summary>
+    /// <param name="password">string - New Global Admin Password</param>
+    /// <param name="adminpassword">string - Current Global Admin Password</param>
+    /// <returns>string - Successful update</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult UpdatePassword(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword, [FromBody] string password)
+    {
+        if (string.IsNullOrEmpty(adminpassword))
+            return Ok("FAILURE - You must provide the Global Admin Password.");
+
+        if (adminpassword != _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
+            return Ok("FAILURE - Incorrect Global Admin Password.");
+        
+        var serviceResponse = _adminService.UpdatePassword(password);
+        return serviceResponse.Success
+            ? Ok("SUCCESS")
+            : Ok("FAILURE - There was a problem updating the password.");
+    }
+
+    // POST api/<AdminController>
+    /// <summary>
+    ///     This function will update the API Key.
+    /// </summary>
+    /// <param name="apikey">string - New API Key</param>
+    /// <param name="adminpassword">string - Current Global Admin Password</param>
+    /// <returns>dttring - Successful update</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult UpdateAPIKey(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword, [FromBody] string apikey)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (adminpassword!= null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        serviceResponse = await AdminService.UpdatePassword(password);
-                        return (serviceResponse.Success ? Ok("SUCCESS") : Ok("FAILURE - There was a problem updating the password."));
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
+                serviceResponse = _adminService.UpdateApiKey(apikey);
+                return serviceResponse.Success
+                    ? Ok("SUCCESS")
+                    : Ok("FAILURE - There was a problem updating the API Key.");
+            }
 
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return Ok("FAILURE - Incorrect Global Admin Password.");
         }
 
-        // POST api/<AdminController>
-        /// <summary>
-        /// This function will update the API Key. 
-        /// </summary>
-        /// <param name="apikey">string - New API Key</param>
-        /// <param name="adminpassword">string - Current Global Admin Password</param>
-        /// <returns>dttring - Successful update</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> UpdateAPIKey([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword, [FromBody] string apikey)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        serviceResponse = await AdminService.UpdateAPIKey(apikey);
-                        return (serviceResponse.Success ? Ok("SUCCESS") : Ok("FAILURE - There was a problem updating the API Key."));
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
+        return Ok("FAILURE - You must provide the Global Admin Password.");
+    }
 
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
+    // POST api/<AdminController>
+    /// <summary>
+    ///     This function will generate a new API Key.
+    /// </summary>
+    /// <param name="adminpassword">string - Current Global Admin Password</param>
+    /// <returns>string - Successful update / Generated API Key</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult GenerateAPIKey(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (adminpassword!= null)
+        {
+            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
+                serviceResponse = _adminService.GenerateApiKey();
+                return serviceResponse.Success
+                    ? Ok("SUCCESS")
+                    : Ok("FAILURE - There was a problem generating the API Key.");
             }
+
+            return Ok("FAILURE - Incorrect Global Admin Password.");
         }
 
-        // POST api/<AdminController>
-        /// <summary>
-        /// This function will generate a new API Key. 
-        /// </summary>
-        /// <param name="adminpassword">string - Current Global Admin Password</param>
-        /// <returns>string - Successful update / Generated API Key</returns>
+        return Ok("FAILURE - You must provide the Global Admin Password.");
+    }
 
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> GenerateAPIKey([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword)
+    /// <summary>
+    ///     This function will return the admin log data.
+    /// </summary>
+    /// <returns>json - Current admin log data</returns>
+    [HttpGet]
+    [Route("[action]")]
+    public IActionResult GetAdminLog(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (adminpassword!= null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        serviceResponse = await AdminService.GenerateAPIKey();
-                        return (serviceResponse.Success ? Ok("SUCCESS") : Ok("FAILURE - There was a problem generating the API Key."));
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
-
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
-
-        /// <summary>
-        /// This function will return the admin log data.
-        /// </summary>
-        /// <returns>json - Current admin log data</returns>
-        [HttpGet]
-        [Route("[action]")]
-        public async Task<IActionResult> GetAdminLog([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        serviceResponse = await AdminLogService.GetItems();
-                        if (serviceResponse.Success)
-                        {
-                            return Ok(serviceResponse.ResponseObject);
-                        }
-                        else
-                        {
-                            return BadRequest(serviceResponse.ResponseObject);
-                        }
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
-
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
-
-        /// <summary>
-        /// This function will purge the admin log data.
-        /// </summary>
-        /// <returns>dttring - Successful operation</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PurgeAdminLog([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        serviceResponse = await AdminLogService.DeleteAllItems();
-                        if (serviceResponse.Success)
-                        {
-                            return Ok(serviceResponse.ResponseObject);
-                        }
-                        else
-                        {
-                            return BadRequest(serviceResponse.ResponseObject);
-                        }
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
-
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
-
-        /// <summary>
-        /// This function will return the generated names data.
-        /// </summary>
-        /// <returns>json - Current generated names data</returns>
-        [HttpGet]
-        [Route("[action]")]
-        public async Task<IActionResult> GetGeneratedNamesLog()
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                serviceResponse = await GeneratedNamesService.GetItems();
+                serviceResponse = _adminLogService.GetItems();
                 if (serviceResponse.Success)
                 {
                     return Ok(serviceResponse.ResponseObject);
                 }
-                else
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
+
+                return BadRequest(serviceResponse.ResponseObject);
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+
+            return Ok("FAILURE - Incorrect Global Admin Password.");
         }
 
-        // GET api/<AdminController>/GetGeneratedName/5
-        /// <summary>
-        /// This function will return the generated names data by ID.
-        /// </summary>
-        /// <param name="id">int - Generated Name id</param>
-        /// <returns>json - Current generated name data by ID</returns>
-        [HttpGet]
-        [Route("[action]/{id}")]
-        public async Task<IActionResult> GetGeneratedName(int id)
+        return Ok("FAILURE - You must provide the Global Admin Password.");
+    }
+
+    /// <summary>
+    ///     This function will purge the admin log data.
+    /// </summary>
+    /// <returns>dttring - Successful operation</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PurgeAdminLog(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (adminpassword!= null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             {
-                serviceResponse = await GeneratedNamesService.GetItem(id);
+                serviceResponse = _adminLogService.DeleteAllItems();
                 if (serviceResponse.Success)
                 {
                     return Ok(serviceResponse.ResponseObject);
                 }
-                else
+
+                return BadRequest(serviceResponse.ResponseObject);
+            }
+
+            return Ok("FAILURE - Incorrect Global Admin Password.");
+        }
+
+        return Ok("FAILURE - You must provide the Global Admin Password.");
+    }
+
+    /// <summary>
+    ///     This function will return the generated names data.
+    /// </summary>
+    /// <returns>json - Current generated names data</returns>
+    [HttpGet]
+    [Route("[action]")]
+    public IActionResult GetGeneratedNamesLog()
+    {
+        ServiceResponse serviceResponse = new();
+
+        serviceResponse = _generatedNamesService.GetItems();
+        if (serviceResponse.Success)
+        {
+            return Ok(serviceResponse.ResponseObject);
+        }
+
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // GET api/<AdminController>/GetGeneratedName/5
+    /// <summary>
+    ///     This function will return the generated names data by ID.
+    /// </summary>
+    /// <param name="id">int - Generated Name id</param>
+    /// <returns>json - Current generated name data by ID</returns>
+    [HttpGet]
+    [Route("[action]/{id}")]
+    public IActionResult GetGeneratedName(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        serviceResponse = _generatedNamesService.GetItem(id);
+        if (serviceResponse.Success)
+        {
+            return Ok(serviceResponse.ResponseObject);
+        }
+
+        return BadRequest(serviceResponse.ResponseObject);
+    }
+
+    // DELETE api/<AdminController>/DeleteGeneratedName/5
+    /// <summary>
+    ///     This function will delete the generated names data by ID.
+    /// </summary>
+    /// <param name="adminpassword">string - Admin password</param>
+    /// <param name="id">int - Generated Name id</param>
+    /// <returns>bool - PASS/FAIL</returns>
+    [HttpDelete]
+    [Route("[action]/{id}")]
+    public IActionResult DeleteGeneratedName(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword, int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (adminpassword!= null)
+        {
+            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
+            {
+                // Get the item details
+                serviceResponse = _generatedNamesService.GetItem(id);
+                if (serviceResponse.Success)
                 {
+                    var item = (GeneratedName) serviceResponse.ResponseObject!;
+                    serviceResponse = _generatedNamesService.DeleteItem(id);
+                    if (serviceResponse.Success)
+                    {
+                        _adminLogService.PostItem(new AdminLogMessage
+                        {
+                            Source = "API", Title = "INFORMATION",
+                            Message = "Generated Name (" + item.ResourceName + ") deleted."
+                        });
+                        _cacheHelper.InvalidateCacheObject("GeneratedName");
+                        return Ok("Generated Name (" + item.ResourceName + ") deleted.");
+                    }
+
                     return BadRequest(serviceResponse.ResponseObject);
                 }
+
+                return BadRequest(serviceResponse.ResponseObject);
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+
+            return Ok("FAILURE - Incorrect Global Admin Password.");
         }
 
-        // DELETE api/<AdminController>/DeleteGeneratedName/5
-        /// <summary>
-        /// This function will delete the generated names data by ID.
-        /// </summary>
-        /// <param name="adminpassword">string - Admin password</param>
-        /// <param name="id">int - Generated Name id</param>
-        /// <returns>bool - PASS/FAIL</returns>
-        [HttpDelete]
-        [Route("[action]/{id}")]
-        public async Task<IActionResult> DeleteGeneratedName([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword, int id)
+        return Ok("FAILURE - You must provide the Global Admin Password.");
+    }
+
+    /// <summary>
+    ///     This function will purge the generated names data.
+    /// </summary>
+    /// <returns>dttring - Successful operation</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult PurgeGeneratedNamesLog(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword)
+    {
+        ServiceResponse serviceResponse = new();
+
+        if (adminpassword!= null)
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             {
-                if (GeneralHelper.IsNotNull(adminpassword))
+                serviceResponse = _generatedNamesService.DeleteAllItems();
+                if (serviceResponse.Success)
                 {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        // Get the item details
-                        serviceResponse = await GeneratedNamesService.GetItem(id);
-                        if (serviceResponse.Success)
-                        {
-                            GeneratedName item = (GeneratedName)serviceResponse.ResponseObject!;
-                            serviceResponse = await GeneratedNamesService.DeleteItem(id);
-                            if (serviceResponse.Success)
-                            {
-                                AdminLogService.PostItem(new AdminLogMessage() { Source = "API", Title = "INFORMATION", Message = "Generated Name (" + item.ResourceName + ") deleted." });
-                                CacheHelper.InvalidateCacheObject("GeneratedName");
-                                return Ok("Generated Name (" + item.ResourceName + ") deleted.");
-                            }
-                            else
-                            {
-                                return BadRequest(serviceResponse.ResponseObject);
-                            }
-                        }
-                        else
-                        {
-                            return BadRequest(serviceResponse.ResponseObject);
-                        }
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
+                    return Ok(serviceResponse.ResponseObject);
+                }
 
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
+                return BadRequest(serviceResponse.ResponseObject);
             }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+
+            return Ok("FAILURE - Incorrect Global Admin Password.");
         }
 
-        /// <summary>
-        /// This function will purge the generated names data.
-        /// </summary>
-        /// <returns>dttring - Successful operation</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public async Task<IActionResult> PurgeGeneratedNamesLog([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword)
+        return Ok("FAILURE - You must provide the Global Admin Password.");
+    }
+
+    /// <summary>
+    ///     This function will reset the site configuration. THIS CANNOT BE UNDONE!
+    /// </summary>
+    /// <returns>dttring - Successful operation</returns>
+    [HttpPost]
+    [Route("[action]")]
+    public IActionResult ResetSiteConfiguration(
+        [BindRequired] [FromHeader(Name = "AdminPassword")] string adminPassword)
+    {
+        if (string.IsNullOrEmpty(adminPassword))
+            return Ok("FAILURE - You must provide the Global Admin Password.");
+        
+        if (adminPassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
         {
-            ServiceResponse serviceResponse = new();
-            try
+            if (_configurationHelper.ResetSiteConfiguration())
             {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        serviceResponse = await GeneratedNamesService.DeleteAllItems();
-                        if (serviceResponse.Success)
-                        {
-                            return Ok(serviceResponse.ResponseObject);
-                        }
-                        else
-                        {
-                            return BadRequest(serviceResponse.ResponseObject);
-                        }
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
+                return Ok("Site configuration reset succeeded!");
+            }
 
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
+            return BadRequest("Site configuration reset failed!");
         }
 
-        /// <summary>
-        /// This function will reset the site configuration. THIS CANNOT BE UNDONE!
-        /// </summary>
-        /// <returns>dttring - Successful operation</returns>
-        [HttpPost]
-        [Route("[action]")]
-        public IActionResult ResetSiteConfiguration([BindRequired][FromHeader(Name = "AdminPassword")] string adminpassword)
-        {
-            ServiceResponse serviceResponse = new();
-            try
-            {
-                if (GeneralHelper.IsNotNull(adminpassword))
-                {
-                    if (adminpassword == GeneralHelper.DecryptString(config.AdminPassword!, config.SALTKey!))
-                    {
-                        if (ConfigurationHelper.ResetSiteConfiguration())
-                        {
-                            return Ok("Site configuration reset suceeded!");
-                        }
-                        else
-                        {
-                            return BadRequest("Site configuration reset failed!");
-                        }
-                    }
-                    else
-                    {
-                        return Ok("FAILURE - Incorrect Global Admin Password.");
-                    }
-                }
-                else
-                {
-                    return Ok("FAILURE - You must provide the Global Admin Password.");
-                }
-            }
-            catch (Exception ex)
-            {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-                return BadRequest(ex);
-            }
-        }
+        return Ok("FAILURE - Incorrect Global Admin Password.");
+
     }
 }

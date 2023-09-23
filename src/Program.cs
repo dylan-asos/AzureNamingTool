@@ -4,7 +4,7 @@ using Blazored.Toast;
 using Microsoft.OpenApi.Models;
 using Blazored.Modal;
 using System.Reflection;
-using AzureNamingTool.Models;
+using AzureNamingTool;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMvcCore().AddApiExplorer();
 builder.Services.AddRazorPages();
 builder.Services.AddHealthChecks();
+builder.Services.AddLogging(s => s.AddConsole());
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddServerSideBlazor().AddCircuitOptions(x => x.DetailedErrors = true).AddHubOptions(x => x.MaximumReceiveMessageSize = 102400000);
@@ -24,8 +25,8 @@ builder.Services.AddBlazorDownloadFile();
 builder.Services.AddBlazoredToast();
 builder.Services.AddBlazoredModal();
 builder.Services.AddHttpContextAccessor();
+builder.Services.RegisterApplicationDependencies();
 
-builder.Services.AddSingleton<StateContainer>();
 
 builder.Services.AddSwaggerGen(c =>
 {
