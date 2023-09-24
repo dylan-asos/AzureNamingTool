@@ -189,7 +189,7 @@ public class ResourceLocationService
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var newitems = new List<ResourceLocation>();
+        var newItems = new List<ResourceLocation>();
         var i = 1;
 
         // Determine new item id
@@ -207,12 +207,12 @@ public class ResourceLocationService
             item.ShortName = item.ShortName.ToLower();
 
             item.Id = i;
-            newitems.Add(item);
+            newItems.Add(item);
             i += 1;
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        _fileWriter.WriteList(newItems);
         serviceResponse.Success = true;
 
         return serviceResponse;

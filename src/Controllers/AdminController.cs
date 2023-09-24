@@ -105,22 +105,16 @@ public class AdminController : ControllerBase
     public IActionResult GenerateAPIKey(
         [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword)
     {
-        ServiceResponse serviceResponse = new();
+        if (string.IsNullOrEmpty(adminpassword)) 
+            return Ok("FAILURE - You must provide the Global Admin Password.");
 
-        if (adminpassword!= null)
-        {
-            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
-            {
-                serviceResponse = _adminService.GenerateApiKey();
-                return serviceResponse.Success
-                    ? Ok("SUCCESS")
-                    : Ok("FAILURE - There was a problem generating the API Key.");
-            }
-
+        if (adminpassword != _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             return Ok("FAILURE - Incorrect Global Admin Password.");
-        }
-
-        return Ok("FAILURE - You must provide the Global Admin Password.");
+        
+        var serviceResponse = _adminService.GenerateApiKey();
+        return serviceResponse.Success
+            ? Ok("SUCCESS")
+            : Ok("FAILURE - There was a problem generating the API Key.");
     }
 
     /// <summary>
@@ -134,23 +128,22 @@ public class AdminController : ControllerBase
     {
         ServiceResponse serviceResponse = new();
 
-        if (adminpassword!= null)
+        if (string.IsNullOrEmpty(adminpassword))
+            return Ok("FAILURE - You must provide the Global Admin Password.");
+        
+        if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
         {
-            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
+            serviceResponse = _adminLogService.GetItems();
+            if (serviceResponse.Success)
             {
-                serviceResponse = _adminLogService.GetItems();
-                if (serviceResponse.Success)
-                {
-                    return Ok(serviceResponse.ResponseObject);
-                }
-
-                return BadRequest(serviceResponse.ResponseObject);
+                return Ok(serviceResponse.ResponseObject);
             }
 
-            return Ok("FAILURE - Incorrect Global Admin Password.");
+            return BadRequest(serviceResponse.ResponseObject);
         }
 
-        return Ok("FAILURE - You must provide the Global Admin Password.");
+        return Ok("FAILURE - Incorrect Global Admin Password.");
+
     }
 
     /// <summary>
@@ -235,39 +228,29 @@ public class AdminController : ControllerBase
     public IActionResult DeleteGeneratedName(
         [BindRequired] [FromHeader(Name = "AdminPassword")] string adminpassword, int id)
     {
-        ServiceResponse serviceResponse = new();
+        if (string.IsNullOrEmpty(adminpassword)) 
+            return Ok("FAILURE - You must provide the Global Admin Password.");
 
-        if (adminpassword!= null)
-        {
-            if (adminpassword == _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
-            {
-                // Get the item details
-                serviceResponse = _generatedNamesService.GetItem(id);
-                if (serviceResponse.Success)
-                {
-                    var item = (GeneratedName) serviceResponse.ResponseObject!;
-                    serviceResponse = _generatedNamesService.DeleteItem(id);
-                    if (serviceResponse.Success)
-                    {
-                        _adminLogService.PostItem(new AdminLogMessage
-                        {
-                            Source = "API", Title = "INFORMATION",
-                            Message = "Generated Name (" + item.ResourceName + ") deleted."
-                        });
-                        _cacheHelper.InvalidateCacheObject("GeneratedName");
-                        return Ok("Generated Name (" + item.ResourceName + ") deleted.");
-                    }
-
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
-
-                return BadRequest(serviceResponse.ResponseObject);
-            }
-
+        if (adminpassword != _generalHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             return Ok("FAILURE - Incorrect Global Admin Password.");
-        }
 
-        return Ok("FAILURE - You must provide the Global Admin Password.");
+        // Get the item details
+        var serviceResponse = _generatedNamesService.GetItem(id);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        var item = (GeneratedName) serviceResponse.ResponseObject!;
+        serviceResponse = _generatedNamesService.DeleteItem(id);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        _adminLogService.PostItem(new AdminLogMessage
+        {
+            Source = "API", Title = "INFORMATION",
+            Message = "Generated Name (" + item.ResourceName + ") deleted."
+        });
+        _cacheHelper.InvalidateCacheObject("GeneratedName");
+        return Ok("Generated Name (" + item.ResourceName + ") deleted.");
     }
 
     /// <summary>

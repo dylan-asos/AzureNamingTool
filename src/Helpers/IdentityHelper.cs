@@ -24,8 +24,9 @@ public class IdentityHelper
         
         if (serviceResponse.ResponseObject != null)
         {
-            List<AdminUser> adminusers = serviceResponse.ResponseObject!;
-            if (adminusers.Exists(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase)))
+            List<AdminUser> adminUsers = serviceResponse.ResponseObject!;
+            
+            if (adminUsers.Exists(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase)))
             {
                 state.SetAdmin(true);
                 await session.SetAsync("admin", true);

@@ -202,24 +202,18 @@ public class ConfigurationHelper
     private string GetCurrentConfigFileVersionData()
     {
         var versiondatajson = string.Empty;
-        try
-        {
-            versiondatajson = _fileSystemHelper.ReadFile("configurationfileversions.json");
-            // Check if the user has any version data. This value will be '[]' if not.
-            if (versiondatajson == "[]")
-            {
-                // Create new version data with default values in /settings file
-                ConfigurationFileVersionData? versiondata = new();
-                _fileSystemHelper.WriteFile("configurationfileversions.json",
-                    JsonSerializer.Serialize(versiondata));
-                versiondatajson = JsonSerializer.Serialize(versiondata);
-            }
-        }
-        catch (Exception ex)
-        {
-            _adminLogService.PostItem(new AdminLogMessage {Title = "ERROR", Message = ex.Message});
-        }
 
+        versiondatajson = _fileSystemHelper.ReadFile("configurationfileversions.json");
+        // Check if the user has any version data. This value will be '[]' if not.
+        if (versiondatajson == "[]")
+        {
+            // Create new version data with default values in /settings file
+            ConfigurationFileVersionData? versiondata = new();
+            _fileSystemHelper.WriteFile("configurationfileversions.json",
+                JsonSerializer.Serialize(versiondata));
+            versiondatajson = JsonSerializer.Serialize(versiondata);
+        }
+        
         return versiondatajson;
     }
 

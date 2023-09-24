@@ -1,5 +1,6 @@
 ﻿using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
+using AzureNamingTool.Pages;
 
 namespace AzureNamingTool.Services;
 
@@ -7,13 +8,16 @@ public class AdminLogService
 {
     private readonly FileReader _fileReader;
     private readonly FileWriter _fileWriter;
-    
+    private readonly ILogger<AdminLogService> _logger;
+
     public AdminLogService(
         FileReader reader, 
-        FileWriter fileWriter)
+        FileWriter fileWriter,
+        ILogger<AdminLogService> logger)
     {
         _fileReader = reader;
         _fileWriter = fileWriter;
+        _logger = logger;
     }
     
     /// <summary>
@@ -50,6 +54,8 @@ public class AdminLogService
         {
             adminLogMessage.Id = items.Max(x => x.Id) + 1;
         }
+        
+        _logger.LogInformation(adminLogMessage.Message);
 
         items.Add(adminLogMessage);
         _fileWriter.WriteList(items);
