@@ -79,7 +79,7 @@ public class GeneratedNamesService
         items.Add(generatedName);
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         _cacheHelper.InvalidateCacheObject(FileNames.GeneratedName);
 
         serviceResponse.Success = true;
@@ -102,7 +102,7 @@ public class GeneratedNamesService
             items.Remove(item);
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -117,18 +117,18 @@ public class GeneratedNamesService
     ///     This function clears the generated names log.
     /// </summary>
     /// <returns>void</returns>
-    public ServiceResponse DeleteAllItems()
+    public async Task<ServiceResponse> DeleteAllItems()
     {
         ServiceResponse serviceResponse = new();
 
         List<GeneratedName> items = new();
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<GeneratedName> items)
+    public async Task<ServiceResponse> PostConfig(List<GeneratedName> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -145,7 +145,7 @@ public class GeneratedNamesService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

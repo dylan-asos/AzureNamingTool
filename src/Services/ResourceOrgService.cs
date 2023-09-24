@@ -137,7 +137,7 @@ public class ResourceOrgService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Resource Org added/updated!";
         serviceResponse.Success = true;
 
@@ -168,7 +168,7 @@ public class ResourceOrgService
             }
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -179,7 +179,7 @@ public class ResourceOrgService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceOrg> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceOrg> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -208,7 +208,7 @@ public class ResourceOrgService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

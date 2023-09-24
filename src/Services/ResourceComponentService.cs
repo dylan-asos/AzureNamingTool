@@ -138,13 +138,13 @@ public class ResourceComponentService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceComponent> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceComponent> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -194,7 +194,7 @@ public class ResourceComponentService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

@@ -62,7 +62,7 @@ public class ResourceLocationsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceLocation> items)
     {
-        var serviceResponse = _resourceLocationService.PostConfig(items);
+        var serviceResponse = await _resourceLocationService.PostConfig(items);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         

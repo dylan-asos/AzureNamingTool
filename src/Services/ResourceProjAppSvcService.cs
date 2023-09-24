@@ -137,7 +137,7 @@ public class ResourceProjAppSvcService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Resource Project/App/Service added/updated!";
         serviceResponse.Success = true;
 
@@ -167,7 +167,7 @@ public class ResourceProjAppSvcService
             }
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -178,7 +178,7 @@ public class ResourceProjAppSvcService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceProjAppSvc> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceProjAppSvc> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -207,7 +207,7 @@ public class ResourceProjAppSvcService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

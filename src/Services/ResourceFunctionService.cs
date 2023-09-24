@@ -138,7 +138,7 @@ public class ResourceFunctionService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Resource Function added/updated!";
         serviceResponse.Success = true;
 
@@ -168,7 +168,7 @@ public class ResourceFunctionService
             }
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -179,7 +179,7 @@ public class ResourceFunctionService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceFunction> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceFunction> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -208,7 +208,7 @@ public class ResourceFunctionService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

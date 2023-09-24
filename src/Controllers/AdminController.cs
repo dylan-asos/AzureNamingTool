@@ -142,7 +142,7 @@ public class AdminController : ControllerBase
     /// <returns>dttring - Successful operation</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PurgeAdminLog(
+    public async Task<IActionResult> PurgeAdminLog(
         [BindRequired] [FromHeader(Name = "AdminPassword")]
         string adminpassword)
     {
@@ -152,11 +152,11 @@ public class AdminController : ControllerBase
         if (adminpassword != _encryptionHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             return Ok("FAILURE - Incorrect Global Admin Password.");
 
-        var serviceResponse = _adminLogService.DeleteAllItems();
+        var serviceResponse = await _adminLogService.DeleteAllItems();
 
         return serviceResponse.Success
-            ? (IActionResult) Ok(serviceResponse.ResponseObject)
-            : (IActionResult) BadRequest(serviceResponse.ResponseObject);
+            ? Ok(serviceResponse.ResponseObject)
+            : BadRequest(serviceResponse.ResponseObject);
     }
 
     /// <summary>
@@ -235,7 +235,7 @@ public class AdminController : ControllerBase
     /// <returns>dttring - Successful operation</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PurgeGeneratedNamesLog(
+    public async Task<IActionResult> PurgeGeneratedNamesLog(
         [BindRequired] [FromHeader(Name = "AdminPassword")]
         string adminpassword)
     {
@@ -245,11 +245,11 @@ public class AdminController : ControllerBase
         if (adminpassword != _encryptionHelper.DecryptString(_config.AdminPassword!, _config.SaltKey!))
             return Ok("FAILURE - Incorrect Global Admin Password.");
 
-        var serviceResponse = _generatedNamesService.DeleteAllItems();
+        var serviceResponse = await _generatedNamesService.DeleteAllItems();
 
         return serviceResponse.Success
-            ? (IActionResult) Ok(serviceResponse.ResponseObject)
-            : (IActionResult) BadRequest(serviceResponse.ResponseObject);
+            ? Ok(serviceResponse.ResponseObject)
+            : BadRequest(serviceResponse.ResponseObject);
     }
 
     /// <summary>

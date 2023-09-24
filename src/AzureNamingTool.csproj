@@ -30,7 +30,6 @@
     <Content Remove="appsettings.Development.json" />
     <Content Remove="appsettings.json" />
     <Content Remove="settings\appsettings.Development.json" />
-    <Content Remove="settings\appsettings.json" />
     <Content Remove="settings\namePolicyDefinition.json" />
     <Content Remove="settings\resourcecomponents.json" />
     <Content Remove="settings\resourcedelimiters.json" />

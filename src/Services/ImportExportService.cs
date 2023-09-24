@@ -186,22 +186,22 @@ public class ImportExportService
         ServiceResponse serviceResponse = new();
 
         // Write all the configurations
-        _resourceComponentService.PostConfig(configData.ResourceComponents);
-        _resourceDelimiterService.PostConfig(configData.ResourceDelimiters);
-        _resourceEnvironmentService.PostConfig(configData.ResourceEnvironments);
-        _resourceFunctionService.PostConfig(configData.ResourceFunctions);
-        _resourceLocationService.PostConfig(configData.ResourceLocations);
-        _resourceOrgService.PostConfig(configData.ResourceOrgs);
-        _resourceProjAppSvcService.PostConfig(configData.ResourceProjAppSvcs);
-        _resourceTypeService.PostConfig(configData.ResourceTypes);
-        _resourceUnitDeptService.PostConfig(configData.ResourceUnitDepts);
-        _customComponentService.PostConfig(configData.CustomComponents);
-        _generatedNamesService.PostConfig(configData.GeneratedNames);
-        _adminUserService.PostConfig(configData.AdminUsers);
+        await _resourceComponentService.PostConfig(configData.ResourceComponents);
+        await _resourceDelimiterService.PostConfig(configData.ResourceDelimiters);
+        await _resourceEnvironmentService.PostConfig(configData.ResourceEnvironments);
+        await _resourceFunctionService.PostConfig(configData.ResourceFunctions);
+        await _resourceLocationService.PostConfig(configData.ResourceLocations);
+        await _resourceOrgService.PostConfig(configData.ResourceOrgs);
+        await _resourceProjAppSvcService.PostConfig(configData.ResourceProjAppSvcs);
+        await _resourceTypeService.PostConfig(configData.ResourceTypes);
+        await _resourceUnitDeptService.PostConfig(configData.ResourceUnitDepts);
+        await _customComponentService.PostConfig(configData.CustomComponents);
+        await _generatedNamesService.PostConfig(configData.GeneratedNames);
+        await _adminUserService.PostConfig(configData.AdminUsers);
         
         if (configData.AdminLogs != null)
         {
-            _adminLogService.PostConfig(configData.AdminLogs);
+            await _adminLogService.PostConfig(configData.AdminLogs);
         }
 
         _siteConfiguration.DismissedAlerts = configData.DismissedAlerts;

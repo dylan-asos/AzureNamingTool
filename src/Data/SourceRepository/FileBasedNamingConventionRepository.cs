@@ -1,4 +1,5 @@
-﻿using AzureNamingTool.Helpers;
+﻿using System.Text.Json;
+using AzureNamingTool.Helpers;
 
 namespace AzureNamingTool.Data.SourceRepository;
 
@@ -12,15 +13,22 @@ internal class FileBasedNamingConventionRepository : INamingConventionRepository
         _fileSystemHelper = fileSystemHelper;
     }
 
-    public Task<string> ReadFile(string fileName)
+    public Task<string> ReadData(string fileName)
     {
         var data = _fileSystemHelper.ReadFile(fileName);
         return Task.FromResult(data);
     }
 
-    public Task WriteFile(string fileName, string data)
+    public Task WriteData(string fileName, object data)
     {
-        _fileSystemHelper.WriteFile(fileName, data);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        var serializedData = JsonSerializer.Serialize(data, options);
+        _fileSystemHelper.WriteFile(fileName, serializedData);
         return Task.CompletedTask;
     }
 }

@@ -65,7 +65,7 @@ public class ResourceComponentDeleter
         components.RemoveAll(x =>
             x.ParentComponent == _generalHelper.NormalizeName(item.Name, true));
         
-        _fileWriter.WriteList(components);
+        await _fileWriter.WriteList(components);
 
         // Remove the item from the collection
         items.Remove(item);
@@ -80,7 +80,7 @@ public class ResourceComponentDeleter
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.Success = true;
 
         return serviceResponse;

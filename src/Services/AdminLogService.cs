@@ -52,25 +52,25 @@ public class AdminLogService
         _logger.Log(adminLogMessage.Level, adminLogMessage.Message);
 
         items.Add(adminLogMessage);
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
     }
 
     /// <summary>
     ///     This function clears the Admin log.
     /// </summary>
     /// <returns>void</returns>
-    public ServiceResponse DeleteAllItems()
+    public async Task<ServiceResponse> DeleteAllItems()
     {
         ServiceResponse serviceResponse = new();
 
         List<AdminLogMessage> lstAdminLogMessages = new();
-        _fileWriter.WriteList(lstAdminLogMessages);
+        await _fileWriter.WriteList(lstAdminLogMessages);
         serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<AdminLogMessage> items)
+    public async Task<ServiceResponse> PostConfig(List<AdminLogMessage> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -87,7 +87,7 @@ public class AdminLogService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newItems);
+        await _fileWriter.WriteList(newItems);
         serviceResponse.Success = true;
 
         return serviceResponse;

@@ -120,7 +120,7 @@ public class CustomComponentsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<CustomComponent> items)
     {
-        var serviceResponse = _customComponentService.PostConfig(items);
+        var serviceResponse = await _customComponentService.PostConfig(items);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
@@ -198,7 +198,7 @@ public class CustomComponentsController : ControllerBase
                 }
 
                 // Update the custom component options
-                serviceResponse = _customComponentService.PostConfig(newcustomcomponents);
+                serviceResponse = await _customComponentService.PostConfig(newcustomcomponents);
                 if (!serviceResponse.Success)
                 {
                     return BadRequest(serviceResponse.ResponseObject);

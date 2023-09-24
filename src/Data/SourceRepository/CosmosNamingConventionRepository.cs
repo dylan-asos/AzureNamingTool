@@ -2,12 +2,12 @@
 
 internal class CosmosNamingConventionRepository : INamingConventionRepository
 {
-    public async Task<string> ReadFile(string fileName)
+    public async Task<string> ReadData(string fileName)
     {
         return await Task.FromResult("CosmosNamingConventionRepository");
     }
 
-    public Task WriteFile(string fileName, string data)
+    public Task WriteData(string fileName, object data)
     {
         return Task.CompletedTask;
     }

@@ -93,7 +93,7 @@ public class ResourceEnvironmentsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceEnvironment> items)
     {
-        var serviceResponse = _resourceEnvironmentService.PostConfig(items);
+        var serviceResponse = await _resourceEnvironmentService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
         

@@ -41,11 +41,10 @@ public class FileReader
                 nameof(CustomComponent) => FileNames.CustomComponent,
                 nameof(AdminLogMessage) => FileNames.AdminLogMessage,
                 nameof(GeneratedName) => FileNames.GeneratedName,
-                nameof(AdminUser) => FileNames.AdminUser,
-                _ => "[]"
+                nameof(AdminUser) => FileNames.AdminUser
             };
 
-            data = await targetRepository.ReadFile(fileName);
+            data = await targetRepository.ReadData(fileName);
             _cacheHelper.SetCacheObject(typeof(T).Name, data);
         }
 

@@ -2252,7 +2252,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Components Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceComponentService.PostConfig(JsonSerializer.Deserialize<List<ResourceComponent>>(newTypeConfig, options)!);
+                                            serviceResponse = await ResourceComponentService.PostConfig(JsonSerializer.Deserialize<List<ResourceComponent>>(newTypeConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2347,7 +2347,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Delimiters Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceDelimiterService.PostConfig(JsonSerializer.Deserialize<List<ResourceDelimiter>>(newDelimiterConfig, options)!);
+                                            serviceResponse = await ResourceDelimiterService.PostConfig(JsonSerializer.Deserialize<List<ResourceDelimiter>>(newDelimiterConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2539,7 +2539,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Environments Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceEnvironmentService.PostConfig(JsonSerializer.Deserialize<List<ResourceEnvironment>>(newEnvironmentConfig, options)!);
+                                            serviceResponse = await ResourceEnvironmentService.PostConfig(JsonSerializer.Deserialize<List<ResourceEnvironment>>(newEnvironmentConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2716,7 +2716,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Functions Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceFunctionService.PostConfig(JsonSerializer.Deserialize<List<ResourceFunction>>(newFunctionConfig, options)!);
+                                            serviceResponse = await ResourceFunctionService.PostConfig(JsonSerializer.Deserialize<List<ResourceFunction>>(newFunctionConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2882,7 +2882,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Locations Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceLocationService.PostConfig(JsonSerializer.Deserialize<List<AzureNamingTool.Models.ResourceLocation>>(newLocationConfig, options)!);
+                                            serviceResponse = await ResourceLocationService.PostConfig(JsonSerializer.Deserialize<List<AzureNamingTool.Models.ResourceLocation>>(newLocationConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3059,7 +3059,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Orgs Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceOrgService.PostConfig(JsonSerializer.Deserialize<List<ResourceOrg>>(newOrgConfig, options)!);
+                                            serviceResponse = await ResourceOrgService.PostConfig(JsonSerializer.Deserialize<List<ResourceOrg>>(newOrgConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3236,7 +3236,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Projects/Apps/Services Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceProjAppSvcService.PostConfig(JsonSerializer.Deserialize<List<ResourceProjAppSvc>>(newProjAppSvcConfig, options)!);
+                                            serviceResponse = await ResourceProjAppSvcService.PostConfig(JsonSerializer.Deserialize<List<ResourceProjAppSvc>>(newProjAppSvcConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3383,7 +3383,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Types Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceTypeService.PostConfig(JsonSerializer.Deserialize<List<ResourceType>>(newTypeConfig, options)!);
+                                            serviceResponse = await ResourceTypeService.PostConfig(JsonSerializer.Deserialize<List<ResourceType>>(newTypeConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3561,7 +3561,7 @@
                                         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the current Units/Depts Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                                         if (confirm)
                                         {
-                                            serviceResponse = ResourceUnitDeptService.PostConfig(JsonSerializer.Deserialize<List<ResourceUnitDept>>(newUnitDeptConfig, options)!);
+                                            serviceResponse = await ResourceUnitDeptService.PostConfig(JsonSerializer.Deserialize<List<ResourceUnitDept>>(newUnitDeptConfig, options)!);
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3818,7 +3818,7 @@
                                                                 }
 
                                                                 // Update the custom component options
-                                                                serviceResponse = CustomComponentService.PostConfig(newcustomcomponents);
+                                                                serviceResponse = await CustomComponentService.PostConfig(newcustomcomponents);
                                                             }
                                                         }
                                                     }
@@ -3840,7 +3840,7 @@
                                                                 }
                                                             }
                                                             // Update the custom component options
-                                                            serviceResponse = CustomComponentService.PostConfig(newcustomcomponents);
+                                                            serviceResponse = await CustomComponentService.PostConfig(newcustomcomponents);
                                                         }
                                                     }
                                                 }

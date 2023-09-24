@@ -93,7 +93,7 @@ public class ResourceUnitDeptsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceUnitDept> items)
     {
-        var serviceResponse = _resourceUnitDeptService.PostConfig(items);
+        var serviceResponse = await _resourceUnitDeptService.PostConfig(items);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         

@@ -130,7 +130,7 @@ public class ResourceTypeService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items.OrderBy(x => x.Id).ToList());
+        await _fileWriter.WriteList(items.OrderBy(x => x.Id).ToList());
         serviceResponse.ResponseObject = "Resource Type added/updated!";
         serviceResponse.Success = true;
 
@@ -152,7 +152,7 @@ public class ResourceTypeService
             items.Remove(item);
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -163,7 +163,7 @@ public class ResourceTypeService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceType> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceType> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -182,7 +182,7 @@ public class ResourceTypeService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;
@@ -286,7 +286,7 @@ public class ResourceTypeService
                         }
 
                         // Update the settings file
-                        serviceResponse = PostConfig(types);
+                        serviceResponse = await PostConfig(types);
 
                         // Update the repository file
                         _fileSystemHelper.WriteFile(FileNames.ResourceType, refreshdata, "repository/");

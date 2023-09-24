@@ -139,7 +139,7 @@ public class ResourceEnvironmentService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Resource Environment added/updated!";
         serviceResponse.Success = true;
 
@@ -169,7 +169,7 @@ public class ResourceEnvironmentService
             }
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -180,7 +180,7 @@ public class ResourceEnvironmentService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceEnvironment> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceEnvironment> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -209,7 +209,7 @@ public class ResourceEnvironmentService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

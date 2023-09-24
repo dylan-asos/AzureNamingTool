@@ -148,7 +148,7 @@ public class CustomComponentService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Custom Component added/updated!";
         serviceResponse.Success = true;
 
@@ -178,7 +178,7 @@ public class CustomComponentService
             }
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -189,7 +189,7 @@ public class CustomComponentService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<CustomComponent> items)
+    public async Task<ServiceResponse> PostConfig(List<CustomComponent> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -218,7 +218,7 @@ public class CustomComponentService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

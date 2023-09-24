@@ -86,7 +86,7 @@ public class ResourceComponentsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceComponent> items)
     {
-        var serviceResponse = _resourceComponentService.PostConfig(items);
+        var serviceResponse = await _resourceComponentService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
 

@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureNamingTool", "AzureNam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureNamingTool.Tests", "..\tests\AzureNamingTool.Tests\AzureNamingTool.Tests.csproj", "{2F90915A-E688-4807-9E22-C4EDEFBAA511}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureNamingTool.UiTests", "..\tests\AzureNamingTool.UiTests\AzureNamingTool.UiTests.csproj", "{8778DBFE-71CB-4279-811A-BE7970BE1601}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B5294D00-A021-49A2-A850-7CBB8B5909AC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +25,19 @@ Global
 		{2F90915A-E688-4807-9E22-C4EDEFBAA511}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F90915A-E688-4807-9E22-C4EDEFBAA511}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F90915A-E688-4807-9E22-C4EDEFBAA511}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8778DBFE-71CB-4279-811A-BE7970BE1601}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8778DBFE-71CB-4279-811A-BE7970BE1601}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8778DBFE-71CB-4279-811A-BE7970BE1601}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8778DBFE-71CB-4279-811A-BE7970BE1601}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8C98E701-BDC5-4F6F-9F85-7BEC01C00E51}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2F90915A-E688-4807-9E22-C4EDEFBAA511} = {B5294D00-A021-49A2-A850-7CBB8B5909AC}
+		{8778DBFE-71CB-4279-811A-BE7970BE1601} = {B5294D00-A021-49A2-A850-7CBB8B5909AC}
 	EndGlobalSection
 EndGlobal

@@ -95,7 +95,7 @@ public class ResourceFunctionsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceFunction> items)
     {
-        var serviceResponse = _resourceFunctionService.PostConfig(items);
+        var serviceResponse = await _resourceFunctionService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
         

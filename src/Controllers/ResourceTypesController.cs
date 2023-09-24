@@ -81,17 +81,16 @@ public class ResourceTypesController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceType> items)
     {
-        var serviceResponse = _resourceTypeService.PostConfig(items);
-        
-        if (serviceResponse.Success)
-        {
-            await _adminLogService.PostItem(new AdminLogMessage
-                {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
-            _cacheHelper.InvalidateCacheObject("ResourceType");
-            return Ok(serviceResponse.ResponseObject);
-        }
+        var serviceResponse = await _resourceTypeService.PostConfig(items);
 
-        return BadRequest(serviceResponse.ResponseObject);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceType");
+        return Ok(serviceResponse.ResponseObject);
+
     }
 
     // POST api/<ResourceTypesController>

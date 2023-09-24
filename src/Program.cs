@@ -92,3 +92,10 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+/// <summary>
+/// by default the Program.cs file in minimal APIs is compiled into a private class
+/// which can not be accessed by other projects, so we define this skeleton to allow us to access the Program class
+/// when wiring up the tests
+/// </summary>
+public partial class Program { }

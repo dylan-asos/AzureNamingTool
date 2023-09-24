@@ -147,7 +147,7 @@ public class ResourceDelimiterService
             }
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.ResponseObject = "Resource Delimiter added/updated!";
             serviceResponse.Success = true;
         }
@@ -155,7 +155,7 @@ public class ResourceDelimiterService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceDelimiter> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceDelimiter> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -207,7 +207,7 @@ public class ResourceDelimiterService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        await _fileWriter.WriteList(newitems);
         serviceResponse.Success = true;
 
         return serviceResponse;

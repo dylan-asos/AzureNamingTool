@@ -99,7 +99,7 @@ public class AdminUserService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Item added!";
         serviceResponse.Success = true;
 
@@ -121,7 +121,7 @@ public class AdminUserService
             items.Remove(item);
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
 
@@ -129,7 +129,7 @@ public class AdminUserService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<AdminUser> items)
+    public async Task<ServiceResponse> PostConfig(List<AdminUser> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -146,7 +146,7 @@ public class AdminUserService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newItems);
+        await _fileWriter.WriteList(newItems);
         serviceResponse.Success = true;
 
         return serviceResponse;

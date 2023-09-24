@@ -129,7 +129,7 @@ public class ResourceLocationService
         }
 
         // Write items to file
-        _fileWriter.WriteList(items);
+        await _fileWriter.WriteList(items);
         serviceResponse.Success = true;
 
         return serviceResponse;
@@ -150,7 +150,7 @@ public class ResourceLocationService
             items.Remove(item);
 
             // Write items to file
-            _fileWriter.WriteList(items);
+            await _fileWriter.WriteList(items);
             serviceResponse.Success = true;
         }
         else
@@ -161,7 +161,7 @@ public class ResourceLocationService
         return serviceResponse;
     }
 
-    public ServiceResponse PostConfig(List<ResourceLocation> items)
+    public async Task<ServiceResponse> PostConfig(List<ResourceLocation> items)
     {
         ServiceResponse serviceResponse = new();
 
@@ -189,7 +189,7 @@ public class ResourceLocationService
         }
 
         // Write items to file
-        _fileWriter.WriteList(newItems);
+        await _fileWriter.WriteList(newItems);
         serviceResponse.Success = true;
 
         return serviceResponse;
@@ -246,7 +246,7 @@ public class ResourceLocationService
                 }
 
                 // Update the settings file
-                serviceResponse = PostConfig(locations);
+                serviceResponse = await PostConfig(locations);
 
                 // Update the repository file
                 _fileSystemHelper.WriteFile(FileNames.ResourceLocation, refreshdata, "repository/");

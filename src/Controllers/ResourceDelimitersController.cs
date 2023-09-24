@@ -93,7 +93,7 @@ public class ResourceDelimitersController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceDelimiter> items)
     {
-        var serviceResponse = _resourceDelimiterService.PostConfig(items);
+        var serviceResponse = await _resourceDelimiterService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
         

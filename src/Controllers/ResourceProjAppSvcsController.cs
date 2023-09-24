@@ -91,16 +91,15 @@ public class ResourceProjAppSvcsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceProjAppSvc> items)
     {
-        var serviceResponse = _resourceProjAppSvcService.PostConfig(items);
-        if (serviceResponse.Success)
-        {
-            await _adminLogService.PostItem(new AdminLogMessage
-                {Source = "API", Title = "INFORMATION", Message = "Resource Projects/Apps/Services added/updated."});
-            _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-            return Ok(serviceResponse.ResponseObject);
-        }
+        var serviceResponse = await _resourceProjAppSvcService.PostConfig(items);
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Projects/Apps/Services added/updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
+        return Ok(serviceResponse.ResponseObject);
 
-        return BadRequest(serviceResponse.ResponseObject);
     }
 
     // DELETE api/<ResourceProjAppSvcsController>/5

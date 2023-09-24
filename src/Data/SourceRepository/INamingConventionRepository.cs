@@ -2,7 +2,7 @@
 
 public interface INamingConventionRepository
 {
-    Task<string> ReadFile(string fileName);
+    Task<string> ReadData(string fileName);
     
-    Task WriteFile(string fileName, string data);
+    Task WriteData(string fileName, object data);
 }
