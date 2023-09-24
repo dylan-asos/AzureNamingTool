@@ -137,7 +137,7 @@ public class CustomComponentsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfigWithParentData([FromBody] CustomComponmentConfig config)
+    public IActionResult PostConfigWithParentData([FromBody] CustomComponentConfig config)
     {
         List<ResourceComponent> currentresourcecomponents = new();
         List<CustomComponent> newcustomcomponents = new();

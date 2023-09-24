@@ -7,19 +7,19 @@ public class AdminService
 {
     private readonly SiteConfiguration _config;
     private readonly ConfigurationHelper _configurationHelper;
-    private readonly GeneralHelper _generalHelper;
     private readonly ValidationHelper _validationHelper;
+    private readonly EncryptionHelper _encryptionHelper;
 
     public AdminService(
         ValidationHelper validationHelper, 
-        ConfigurationHelper configurationHelper, 
-        GeneralHelper generalHelper, 
-        SiteConfiguration config)
+        ConfigurationHelper configurationHelper,
+        SiteConfiguration config, 
+        EncryptionHelper encryptionHelper)
     {
         _validationHelper = validationHelper;
         _configurationHelper = configurationHelper;
-        _generalHelper = generalHelper;
         _config = config;
+        _encryptionHelper = encryptionHelper;
     }
 
     public ServiceResponse UpdatePassword(string password)
@@ -28,7 +28,7 @@ public class AdminService
 
         if (_validationHelper.ValidatePassword(password))
         {
-            _config.AdminPassword = _generalHelper.EncryptString(password, _config.SaltKey!);
+            _config.AdminPassword = _encryptionHelper.EncryptString(password, _config.SaltKey!);
             _configurationHelper.UpdateSettings(_config);
             serviceResponse.Success = true;
         }
@@ -45,7 +45,7 @@ public class AdminService
     {
         // Set the new api key
         var guid = Guid.NewGuid();
-        _config.ApiKey = _generalHelper.EncryptString(guid.ToString(), _config.SaltKey!);
+        _config.ApiKey = _encryptionHelper.EncryptString(guid.ToString(), _config.SaltKey!);
         _configurationHelper.UpdateSettings(_config);
         ServiceResponse serviceResponse = new()
         {
@@ -58,7 +58,7 @@ public class AdminService
 
     public ServiceResponse UpdateApiKey(string apikey)
     {
-        _config.ApiKey = _generalHelper.EncryptString(apikey, _config.SaltKey!);
+        _config.ApiKey = _encryptionHelper.EncryptString(apikey, _config.SaltKey!);
         _configurationHelper.UpdateSettings(_config);
 
         ServiceResponse serviceResponse = new()
@@ -72,7 +72,7 @@ public class AdminService
 
     public ServiceResponse UpdateIdentityHeaderName(string identityHeaderName)
     {
-        _config.IdentityHeaderName = _generalHelper.EncryptString(identityHeaderName, _config.SaltKey!);
+        _config.IdentityHeaderName = _encryptionHelper.EncryptString(identityHeaderName, _config.SaltKey!);
         _configurationHelper.UpdateSettings(_config);
 
         ServiceResponse serviceResponse = new()

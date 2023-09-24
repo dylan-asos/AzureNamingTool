@@ -7,7 +7,11 @@ namespace AzureNamingTool.Services;
 
 public class ImportExportService
 {
+    private readonly AdminLogService _adminLogService;
+    private readonly AdminUserService _adminUserService;
     private readonly CacheHelper _cacheHelper;
+    private readonly CustomComponentService _customComponentService;
+    private readonly GeneratedNamesService _generatedNamesService;
     private readonly ResourceComponentService _resourceComponentService;
 
     private readonly ResourceDelimiterService _resourceDelimiterService;
@@ -18,15 +22,11 @@ public class ImportExportService
     private readonly ResourceProjAppSvcService _resourceProjAppSvcService;
     private readonly ResourceTypeService _resourceTypeService;
     private readonly ResourceUnitDeptService _resourceUnitDeptService;
-    private readonly CustomComponentService _customComponentService;
-    private readonly GeneratedNamesService _generatedNamesService;
-    private readonly AdminLogService _adminLogService;
-    private readonly AdminUserService _adminUserService;
     private readonly SiteConfiguration _siteConfiguration;
 
     public ImportExportService(
         CacheHelper cacheHelper,
-        ResourceComponentService resourceComponentService, 
+        ResourceComponentService resourceComponentService,
         ResourceDelimiterService resourceDelimiterService,
         ResourceEnvironmentService resourceEnvironmentService,
         ResourceFunctionService resourceFunctionService,
@@ -197,43 +197,39 @@ public class ImportExportService
         _resourceUnitDeptService.PostConfig(configData.ResourceUnitDepts);
         _customComponentService.PostConfig(configData.CustomComponents);
         _generatedNamesService.PostConfig(configData.GeneratedNames);
+        _adminUserService.PostConfig(configData.AdminUsers);
         
-        if (configData.AdminUsers!= null)
-        {
-             _adminUserService.PostConfig(configData.AdminUsers);
-        }
-
-        if (configData.AdminLogs!= null)
+        if (configData.AdminLogs != null)
         {
             _adminLogService.PostConfig(configData.AdminLogs);
         }
-        
+
         _siteConfiguration.DismissedAlerts = configData.DismissedAlerts;
         _siteConfiguration.DuplicateNamesAllowed = configData.DuplicateNamesAllowed;
         _siteConfiguration.ConnectivityCheckEnabled = configData.ConnectivityCheckEnabled;
 
         // Set the admin settings, if they are included in the import
-        if (configData.SALTKey!= null)
+        if (configData.SALTKey != null)
         {
             _siteConfiguration.SaltKey = configData.SALTKey;
         }
 
-        if (configData.AdminPassword!= null)
+        if (configData.AdminPassword != null)
         {
             _siteConfiguration.AdminPassword = configData.AdminPassword;
         }
 
-        if (configData.APIKey!= null)
+        if (configData.APIKey != null)
         {
             _siteConfiguration.ApiKey = configData.APIKey;
         }
 
-        if (configData.IdentityHeaderName!= null)
+        if (configData.IdentityHeaderName != null)
         {
             _siteConfiguration.IdentityHeaderName = configData.IdentityHeaderName;
         }
 
-        if (configData.ResourceTypeEditingAllowed!= null)
+        if (configData.ResourceTypeEditingAllowed != null)
         {
             _siteConfiguration.ResourceTypeEditingAllowed = configData.ResourceTypeEditingAllowed;
         }

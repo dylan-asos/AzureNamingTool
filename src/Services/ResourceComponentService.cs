@@ -7,17 +7,14 @@ namespace AzureNamingTool.Services;
 public class ResourceComponentService
 {
     private readonly FileReader _fileReader;
-    private readonly FileWriter _fileWriter;
-    private readonly GeneralHelper _generalHelper;
     private readonly FileSystemHelper _fileSystemHelper;
+    private readonly FileWriter _fileWriter;
 
     public ResourceComponentService(
-        GeneralHelper generalHelper,
         FileReader fileReader,
         FileWriter fileWriter,
         FileSystemHelper fileSystemHelper)
     {
-        _generalHelper = generalHelper;
         _fileReader = fileReader;
         _fileWriter = fileWriter;
         _fileSystemHelper = fileSystemHelper;
@@ -83,90 +80,88 @@ public class ResourceComponentService
 
         // Get list of items
         var items = _fileReader.GetList<ResourceComponent>();
-        if (items != null)
+        if (items == null) 
+            return serviceResponse;
+        
+        // Set the new id
+        if (item.Id == 0)
         {
-            if (items != null)
-            {
-                // Set the new id
-                if (item.Id == 0)
-                {
-                    item.Id = items.Count + 1;
-                }
-
-                var position = 1;
-                items = items.OrderBy(x => x.SortOrder).ToList();
-
-                if (item.SortOrder == 0)
-                {
-                    item.SortOrder = items.Count + 1;
-                }
-
-                // Determine new item id
-                if (items.Count > 0)
-                {
-                    // Check if the item already exists
-                    if (items.Exists(x => x.Id == item.Id))
-                    {
-                        // Remove the updated item from the list
-                        var existingitem = items.Find(x => x.Id == item.Id);
-                        if (existingitem != null)
-                        {
-                            var index = items.IndexOf(existingitem);
-                            items.RemoveAt(index);
-                        }
-                    }
-
-                    // Reset the sort order of the list
-                    foreach (var thisitem in items.OrderBy(x => x.SortOrder).ThenByDescending(x => x.Enabled)
-                                 .ToList())
-                    {
-                        thisitem.SortOrder = position;
-                        position += 1;
-                    }
-
-                    // Check for the new sort order
-                    if (items.Exists(x => x.SortOrder == item.SortOrder))
-                    {
-                        // Insert the new item
-                        items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!),
-                            item);
-                    }
-                    else
-                    {
-                        // Put the item at the end
-                        items.Add(item);
-                    }
-                }
-                else
-                {
-                    item.Id = 1;
-                    item.SortOrder = 1;
-                    items.Add(item);
-                }
-
-                position = 1;
-                foreach (var thisitem in items.OrderBy(x => x.SortOrder).ThenByDescending(x => x.Enabled).ToList())
-                {
-                    thisitem.SortOrder = position;
-                    thisitem.Id = position;
-                    position += 1;
-                }
-
-                // Write items to file
-                _fileWriter.WriteList(items);
-                serviceResponse.Success = true;
-            }
+            item.Id = items.Count + 1;
         }
 
+        var position = 1;
+        items = items.OrderBy(x => x.SortOrder).ToList();
+
+        if (item.SortOrder == 0)
+        {
+            item.SortOrder = items.Count + 1;
+        }
+
+        // Determine new item id
+        if (items.Count > 0)
+        {
+            // Check if the item already exists
+            if (items.Exists(x => x.Id == item.Id))
+            {
+                // Remove the updated item from the list
+                var existingItem = items.Find(x => x.Id == item.Id);
+                if (existingItem != null)
+                {
+                    var index = items.IndexOf(existingItem);
+                    items.RemoveAt(index);
+                }
+            }
+
+            // Reset the sort order of the list
+            foreach (var thisItem in items
+                         .OrderBy(x => x.SortOrder)
+                         .ThenByDescending(x => x.Enabled)
+                         .ToList())
+            {
+                thisItem.SortOrder = position;
+                position += 1;
+            }
+
+            // Check for the new sort order
+            if (items.Exists(x => x.SortOrder == item.SortOrder))
+            {
+                // Insert the new item
+                items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!),
+                    item);
+            }
+            else
+            {
+                // Put the item at the end
+                items.Add(item);
+            }
+        }
+        else
+        {
+            item.Id = 1;
+            item.SortOrder = 1;
+            items.Add(item);
+        }
+
+        position = 1;
+        foreach (var thisitem in items.OrderBy(x => x.SortOrder).ThenByDescending(x => x.Enabled).ToList())
+        {
+            thisitem.SortOrder = position;
+            thisitem.Id = position;
+            position += 1;
+        }
+
+        // Write items to file
+        _fileWriter.WriteList(items);
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
-    
+
     public ServiceResponse PostConfig(List<ResourceComponent> items)
     {
         ServiceResponse serviceResponse = new();
 
-        var componentnames = new string[8]
+        var componentNames = new string[8]
         {
             "ResourceEnvironment", "ResourceInstance", "ResourceLocation", "ResourceOrg", "ResourceProjAppSvc",
             "ResourceType", "ResourceUnitDept", "ResourceFunction"
@@ -177,7 +172,7 @@ public class ResourceComponentService
         foreach (var item in items)
         {
             // Check if the item is valid
-            if (!componentnames.Contains(item.Name))
+            if (!componentNames.Contains(item.Name))
             {
                 item.IsCustom = true;
             }
@@ -187,18 +182,18 @@ public class ResourceComponentService
         }
 
         // Make sure all the component names are present
-        foreach (var name in componentnames)
+        foreach (var name in componentNames)
         {
-            if (!newitems.Exists(x => x.Name == name))
+            if (newitems.Exists(x => x.Name == name)) 
+                continue;
+            
+            // Create a component object 
+            ResourceComponent newItem = new()
             {
-                // Create a component object 
-                ResourceComponent newitem = new()
-                {
-                    Name = name,
-                    Enabled = false
-                };
-                newitems.Add(newitem);
-            }
+                Name = name,
+                Enabled = false
+            };
+            newitems.Add(newItem);
         }
 
         // Determine new item ids
@@ -227,16 +222,16 @@ public class ResourceComponentService
         var update = false;
 
         var serviceResponse = GetItems(true);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return;
-        
+
         List<ResourceComponent> currentComponents = serviceResponse.ResponseObject!;
         // Get the default component data
         List<ResourceComponent> defaultComponents = new();
         var data = _fileSystemHelper.ReadFile(FileNames.ResourceComponent, "repository/");
-        if (string.IsNullOrEmpty(data)) 
+        if (string.IsNullOrEmpty(data))
             return;
-                
+
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -254,15 +249,15 @@ public class ResourceComponentService
         {
             // Create a new component for any updates
             var newComponent = currentComponent;
-                        
+
             // Get the matching default component for the current component
             var defaultComponent = defaultComponents.Find(x => x.Name == currentComponent.Name);
-                        
+
             // Check the data to see if it's been configured
             if (string.IsNullOrEmpty(currentComponent.MinLength))
             {
-                newComponent.MinLength = defaultComponent != null 
-                    ? defaultComponent.MinLength 
+                newComponent.MinLength = defaultComponent != null
+                    ? defaultComponent.MinLength
                     : "1";
 
                 update = true;
@@ -271,10 +266,10 @@ public class ResourceComponentService
             // Check the data to see if it's been configured
             if (string.IsNullOrEmpty(currentComponent.MaxLength))
             {
-                newComponent.MaxLength = defaultComponent != null 
-                    ? defaultComponent.MaxLength 
+                newComponent.MaxLength = defaultComponent != null
+                    ? defaultComponent.MaxLength
                     : "10";
-                
+
                 update = true;
             }
 

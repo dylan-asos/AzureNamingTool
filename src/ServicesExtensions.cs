@@ -17,6 +17,7 @@ public static class ServicesExtensions
         services.AddTransient<LogHelper>();
         services.AddTransient<ServicesHelper>();
         services.AddTransient<ValidationHelper>();
+        services.AddTransient<EncryptionHelper>();
 
         services.AddTransient<FileReader>();
         services.AddTransient<FileWriter>();

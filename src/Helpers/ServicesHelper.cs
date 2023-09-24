@@ -50,8 +50,9 @@ public class ServicesHelper
     }
 
 
-    public ServicesData LoadServicesData(ServicesData servicesData, bool admin)
+    public ServicesData LoadServicesData(bool admin)
     {
+        ServicesData servicesData = new();
         var serviceResponse = _resourceComponentService.GetItems(admin);
         servicesData.ResourceComponents = (List<ResourceComponent>?) serviceResponse.ResponseObject;
         serviceResponse = _resourceDelimiterService.GetItems(admin);

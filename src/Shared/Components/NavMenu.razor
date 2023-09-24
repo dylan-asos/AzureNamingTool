@@ -174,7 +174,7 @@
         {
             if (await ConnectivityChecker.VerifyConnectivity())
             {
-                servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
+                servicesData = ServicesHelper.LoadServicesData(admin);
                 try
                 {
                     result = await storage.GetAsync<bool>("newsenabled");
@@ -196,7 +196,7 @@
         {
             if ((servicesData != null) || (state._reloadnav))
             {
-                servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
+                servicesData = ServicesHelper.LoadServicesData(admin);
                 state.SetNavReload(false);
             }
         }

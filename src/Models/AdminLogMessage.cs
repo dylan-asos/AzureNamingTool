@@ -7,5 +7,7 @@
         public string Title { get; set; } =  String.Empty;
         public string Message { get; set; } =  String.Empty;
         public string Source { get; set; } = "System";
+        
+        public LogLevel Level { get; set; } = LogLevel.Information;
     }
 }

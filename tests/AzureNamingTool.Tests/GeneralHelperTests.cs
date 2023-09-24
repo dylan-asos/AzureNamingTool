@@ -12,6 +12,6 @@ public class GeneralHelperTests
         var generalHelper = new Helpers.GeneralHelper();
         var result = generalHelper.NormalizeName(input, true);
 
-        result.Should().BeSameAs("org");
+        result.Should().Be("org");
     }
 }

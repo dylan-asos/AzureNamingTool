@@ -25,9 +25,8 @@ namespace AzureNamingTool.Attributes
             var config = (SiteConfiguration)context.HttpContext
                 .RequestServices.GetService(typeof(SiteConfiguration))!;
             
-            var generalHelper = new GeneralHelper();
-            
-            if (!generalHelper.DecryptString(config.ApiKey!, config.SaltKey!).Equals(extractedApiKey))
+            var encryptionHelper = new EncryptionHelper();
+            if (!encryptionHelper.DecryptString(config.ApiKey!, config.SaltKey!).Equals(extractedApiKey))
             {
                 context.Result = new ContentResult()
                 {

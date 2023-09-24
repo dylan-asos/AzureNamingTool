@@ -23,6 +23,7 @@
 @inject CacheHelper CacheHelper
 @inject FileSystemHelper FileSystemHelper
 @inject SiteConfiguration SiteConfiguration
+@inject EncryptionHelper EncryptionHelper
 
 <PageTitle>Azure Naming Tool - Admin</PageTitle>
 <div class="card  @theme.ThemeStyle">
@@ -473,12 +474,12 @@
                 releasenotesurl = "https://github.com/mspnp/AzureNamingTool/wiki/v" + appversion;
             }
 
-            servicesData = ServicesHelper.LoadServicesData(servicesData, true);
+            servicesData = ServicesHelper.LoadServicesData(true);
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
             if (admin)
             {
-                currentapikey = GeneralHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
+                currentapikey = EncryptionHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
                 // Determine if the version notification has been dismissed
                 var resultVersionAlert = await session.GetAsync<bool>("versionalert-" + appversion + "-shown");
                 versionalertshown = resultVersionAlert.Success ? resultVersionAlert.Value : false;
@@ -519,13 +520,13 @@
         {
             case "login":
                 // Check the password
-                if (currentpassword == GeneralHelper.DecryptString(SiteConfiguration.AdminPassword!, SiteConfiguration.SaltKey!))
+                if (currentpassword == EncryptionHelper.DecryptString(SiteConfiguration.AdminPassword!, SiteConfiguration.SaltKey!))
                 {
                     state.SetAdmin(true);
                     await session.SetAsync("admin", true);
                     await session.SetAsync("currentuser", "GlobalAdmin");
                     // Load the current API Key
-                    currentapikey = GeneralHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
+                    currentapikey = EncryptionHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
                     message.Type = MessageTypesEnum.INFORMATION;
                     message.Header = "INFORMATION";
                     message.Message = "Global Admin logged in.";
@@ -696,7 +697,7 @@
                 bool added = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Admin User", "<p>Add an Admin User.</p>", id, "AdminUser", admin, "");
                 if (added)
                 {
-                    servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
+                    servicesData = ServicesHelper.LoadServicesData(admin);
                     state.SetNavReload(true);
                     StateHasChanged();
                 }
@@ -753,7 +754,7 @@
         }
 
 
-        servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
+        servicesData = ServicesHelper.LoadServicesData(admin);
         state.SetNavReload(true);
         StateHasChanged();
 
@@ -883,7 +884,7 @@
             AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
         }
 
-        servicesData = ServicesHelper.LoadServicesData(servicesData, admin);
+        servicesData = ServicesHelper.LoadServicesData(admin);
         state.SetNavReload(true);
         StateHasChanged();
     }

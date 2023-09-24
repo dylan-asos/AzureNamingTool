@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace AzureNamingTool.Helpers;
 
 public class GeneralHelper
@@ -9,72 +6,32 @@ public class GeneralHelper
     {
         return sourceData!.GetType()!.GetProperty(propName)!.GetValue(sourceData, null);
     }
-
-    public string EncryptString(string text, string keyString)
-    {
-        var iv = new byte[16];
-        byte[] array;
-        using (var aes = Aes.Create())
-        {
-            aes.KeySize = 256;
-            aes.Key = Encoding.UTF8.GetBytes(keyString);
-            aes.IV = iv;
-            aes.Padding = PaddingMode.PKCS7;
-            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            using MemoryStream memoryStream = new();
-            using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
-            using (StreamWriter streamWriter = new(cryptoStream))
-            {
-                streamWriter.Write(text);
-            }
-
-            array = memoryStream.ToArray();
-        }
-
-        return Convert.ToBase64String(array);
-    }
-
-    public string DecryptString(string cipherText, string keyString)
-    {
-        var iv = new byte[16];
-        var buffer = Convert.FromBase64String(cipherText);
-        using var aes = Aes.Create();
-        aes.KeySize = 256;
-        aes.Key = Encoding.UTF8.GetBytes(keyString);
-        aes.IV = iv;
-        aes.Padding = PaddingMode.PKCS7;
-        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-        using MemoryStream memoryStream = new(buffer);
-        using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
-        using StreamReader streamReader = new(cryptoStream);
-        return streamReader.ReadToEnd();
-    }
-
+    
     public bool IsBase64Encoded(string value)
     {
-        var base64encoded = false;
+        var base64Encoded = false;
         try
         {
             var byteArray = Convert.FromBase64String(value);
-            base64encoded = true;
+            base64Encoded = true;
         }
         catch (FormatException)
         {
             // The string is not base 64. Dismiss the error and return false
         }
 
-        return base64encoded;
+        return base64Encoded;
     }
 
     public string NormalizeName(string name, bool lowercase)
     {
-        var newname = name.Replace("Resource", "").Replace(" ", "");
+        var newName = name.Replace("Resource", "").Replace(" ", "");
         if (lowercase)
         {
-            newname = newname.ToLower();
+            newName = newName.ToLower();
         }
 
-        return newname;
+        return newName;
     }
 
     public string SetTextEnabledClass(bool enabled)
@@ -82,22 +39,22 @@ public class GeneralHelper
         return enabled ? "" : "disabled-text";
     }
 
-    public string[] FormatResoureType(string type)
+    public string[] FormatResourceType(string type)
     {
-        var returntype = new string[3];
-        returntype[0] = type;
+        var returnType = new string[3];
+        returnType[0] = type;
         // Make sure it is a full resource type name
-        if (type.Contains("("))
+        if (type.Contains('('))
         {
-            returntype[0] = type.Substring(0, type.IndexOf("(")).Trim();
+            returnType[0] = type.Substring(0, type.IndexOf("(", StringComparison.Ordinal)).Trim();
         }
 
-        if (type!= null && returntype[0]!= null)
+        if (type != null && returnType[0] != null)
         {
             // trim any details out of the value
-            if (returntype[0].Contains(" -"))
+            if (returnType[0].Contains(" -"))
             {
-                returntype[1] = returntype[0].Substring(0, returntype[0].IndexOf(" -")).Trim();
+                returnType[1] = returnType[0].Substring(0, returnType[0].IndexOf(" -")).Trim();
             }
 
             // trim any details out of the value
@@ -105,11 +62,11 @@ public class GeneralHelper
             {
                 {
                     var intstart = type.IndexOf("(") + 1;
-                    returntype[2] = string.Concat(type.Substring(intstart).TakeWhile(x => x != ')'));
+                    returnType[2] = string.Concat(type.Substring(intstart).TakeWhile(x => x != ')'));
                 }
             }
         }
 
-        return returntype;
+        return returnType;
     }
 }

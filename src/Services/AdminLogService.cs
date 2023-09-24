@@ -1,6 +1,5 @@
 ﻿using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
-using AzureNamingTool.Pages;
 
 namespace AzureNamingTool.Services;
 
@@ -54,8 +53,8 @@ public class AdminLogService
         {
             adminLogMessage.Id = items.Max(x => x.Id) + 1;
         }
-        
-        _logger.LogInformation(adminLogMessage.Message);
+
+        _logger.Log(adminLogMessage.Level, adminLogMessage.Message);
 
         items.Add(adminLogMessage);
         _fileWriter.WriteList(items);
@@ -81,19 +80,19 @@ public class AdminLogService
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var newitems = new List<AdminLogMessage>();
+        var newItems = new List<AdminLogMessage>();
         var i = 1;
 
         // Determine new item id
         foreach (var item in items)
         {
             item.Id = i;
-            newitems.Add(item);
+            newItems.Add(item);
             i += 1;
         }
 
         // Write items to file
-        _fileWriter.WriteList(newitems);
+        _fileWriter.WriteList(newItems);
         serviceResponse.Success = true;
 
         return serviceResponse;

@@ -17,7 +17,8 @@ public class ConfigurationHelper
     private readonly GeneralHelper _generalHelper;
     private readonly HttpContentDownloader _httpContentDownloader;
     private readonly SiteConfiguration _siteConfiguration;
-
+    private readonly EncryptionHelper _encryptionHelper;
+    
     public ConfigurationHelper(
         FileSystemHelper fileSystemHelper,
         CacheHelper cacheHelper,
@@ -25,8 +26,7 @@ public class ConfigurationHelper
         AdminLogService adminLogService,
         HttpContentDownloader httpContentDownloader,
         GithubConnectivityChecker connectivityChecker,
-        SiteConfiguration siteConfiguration
-    )
+        SiteConfiguration siteConfiguration, EncryptionHelper encryptionHelper)
     {
         _fileSystemHelper = fileSystemHelper;
         _cacheHelper = cacheHelper;
@@ -35,6 +35,7 @@ public class ConfigurationHelper
         _httpContentDownloader = httpContentDownloader;
         _connectivityChecker = connectivityChecker;
         _siteConfiguration = siteConfiguration;
+        _encryptionHelper = encryptionHelper;
     }
 
 
@@ -55,7 +56,7 @@ public class ConfigurationHelper
                 // Verify the value is encrypted, and should be decrypted
                 if (decrypt && !string.IsNullOrEmpty(value) && _generalHelper.IsBase64Encoded(value))
                 {
-                    value = _generalHelper.DecryptString(value, _siteConfiguration.SaltKey!);
+                    value = _encryptionHelper.DecryptString(value, _siteConfiguration.SaltKey!);
                 }
 
                 // Set the result to cache
@@ -87,7 +88,7 @@ public class ConfigurationHelper
         var valueoriginal = value;
         if (encrypt)
         {
-            value = _generalHelper.EncryptString(value, _siteConfiguration.SaltKey!);
+            value = _encryptionHelper.EncryptString(value, _siteConfiguration.SaltKey!);
         }
 
         var type = _siteConfiguration.GetType();
@@ -136,11 +137,11 @@ public class ConfigurationHelper
                     .Select(s => s[random.Next(s.Length)]).ToArray());
 
                 _siteConfiguration.SaltKey = salt;
-                _siteConfiguration.ApiKey = _generalHelper.EncryptString(_siteConfiguration.ApiKey!, salt);
+                _siteConfiguration.ApiKey = _encryptionHelper.EncryptString(_siteConfiguration.ApiKey!, salt);
 
                 if (!string.IsNullOrEmpty(_siteConfiguration.AdminPassword))
                 {
-                    _siteConfiguration.AdminPassword = _generalHelper.EncryptString(_siteConfiguration.AdminPassword,
+                    _siteConfiguration.AdminPassword = _encryptionHelper.EncryptString(_siteConfiguration.AdminPassword,
                         _siteConfiguration.SaltKey);
                     state.Password = true;
                 }

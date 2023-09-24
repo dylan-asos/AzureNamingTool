@@ -543,7 +543,7 @@
 
     private void SetServicesData()
     {
-        servicesData = ServicesHelper.LoadServicesData(servicesData, false);
+        servicesData = ServicesHelper.LoadServicesData(false);
         List<ResourceType> filteredtypes = new List<ResourceType>();
         // Filter out the types w/o the scope
         foreach (ResourceType type in servicesData.ResourceTypes!)
@@ -608,7 +608,7 @@
                 {
                     // Single type generation
                     StringBuilder sbName = new();
-                    selectedResourceTypeFull = GeneralHelper.FormatResoureType(selectedResourceTypeDisplayName);
+                    selectedResourceTypeFull = GeneralHelper.FormatResourceType(selectedResourceTypeDisplayName);
                     if (selectedResourceTypeFull[1] != null)
                     {
                         selectedResourceType = selectedResourceTypeFull[1];
@@ -823,7 +823,7 @@
 
             if (!String.IsNullOrEmpty(selectedResourceTypeDisplayName))
             {
-                selectedResourceTypeFull = GeneralHelper.FormatResoureType(selectedResourceTypeDisplayName);
+                selectedResourceTypeFull = GeneralHelper.FormatResourceType(selectedResourceTypeDisplayName);
                 if (selectedResourceTypeFull[1] != null)
                 {
                     selectedResourceType = selectedResourceTypeFull[1];

@@ -347,9 +347,9 @@
 
     protected override async void OnInitialized()
     {
-        if (servicesData != null)
+        if (servicesData == null)
         {
-            servicesData = ServicesHelper.LoadServicesData(servicesData, true);
+            servicesData = ServicesHelper.LoadServicesData(true);
         }
         switch (type)
         {
@@ -615,7 +615,7 @@
         {
             if (!(servicesData != null))
             {
-                servicesData = ServicesHelper.LoadServicesData(servicesData, true);
+                servicesData = ServicesHelper.LoadServicesData(true);
             }
             bool confirm = false;
             confirm = await JsRuntime.InvokeAsync<bool>("confirm", "This will update all resource types! Are you sure?");

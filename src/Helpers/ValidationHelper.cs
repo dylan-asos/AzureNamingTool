@@ -27,7 +27,7 @@ public class ValidationHelper
         return isValidated;
     }
 
-    public bool ValidateShortName(string type, string value, string? parentcomponent = null)
+    public bool ValidateShortName(string type, string value, string? parentComponent = null)
     {
         var valid = false;
 
@@ -47,11 +47,11 @@ public class ValidationHelper
                     // Check if it's a custom component
                     if (type == "CustomComponent")
                     {
-                        if (parentcomponent!= null)
+                        if (parentComponent!= null)
                         {
                             resourceComponent = resourceComponents.Find(x =>
                                 _generalHelper.NormalizeName(x.Name, true) ==
-                                _generalHelper.NormalizeName(parentcomponent, true))!;
+                                _generalHelper.NormalizeName(parentComponent, true))!;
                         }
                     }
                     else

@@ -13,7 +13,7 @@ public class ResourceLocationsController : ControllerBase
 {
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceLocationService _resourceLocationService;
-    private AdminLogService _adminLogService;
+    private readonly AdminLogService _adminLogService;
 
     public ResourceLocationsController(CacheHelper cacheHelper, ResourceLocationService resourceLocationService, AdminLogService adminLogService)
     {
