@@ -31,11 +31,9 @@ public class ResourceDelimitersController : ControllerBase
     /// <param name="admin">bool - All/Only-enabled delimiters flag</param>
     /// <returns>json - Current delimiters data</returns>
     [HttpGet]
-    public IActionResult Get(bool admin = false)
+    public async Task<IActionResult> Get(bool admin = false)
     {
-        ServiceResponse serviceResponse = new();
-
-        serviceResponse = _resourceDelimiterService.GetItems(admin);
+        var serviceResponse = await _resourceDelimiterService.GetItems(admin);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -51,12 +49,11 @@ public class ResourceDelimitersController : ControllerBase
     /// <param name="id">int - Resource Delimiter id</param>
     /// <returns>json - Resource delimiter data</returns>
     [HttpGet("{id:int}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        serviceResponse = _resourceDelimiterService.GetItem(id);
+        var serviceResponse =
+            // Get list of items
+            await _resourceDelimiterService.GetItem(id);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -72,22 +69,18 @@ public class ResourceDelimitersController : ControllerBase
     /// <param name="item">ResourceDelimiter (json) - Delimiter data</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
-    public IActionResult Post([FromBody] ResourceDelimiter item)
+    public async Task<IActionResult> Post([FromBody] ResourceDelimiter item)
     {
-        ServiceResponse serviceResponse = new();
-
-        serviceResponse = _resourceDelimiterService.PostItem(item);
-        if (serviceResponse.Success)
+        var serviceResponse = await _resourceDelimiterService.PostItem(item);
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
         {
-            _adminLogService.PostItem(new AdminLogMessage
-            {
-                Source = "API", Title = "INFORMATION", Message = "Resource Delimiter (" + item.Name + ") added/updated."
-            });
-            _cacheHelper.InvalidateCacheObject("ResourceDelimiter");
-            return Ok(serviceResponse.ResponseObject);
-        }
-
-        return BadRequest(serviceResponse.ResponseObject);
+            Source = "API", Title = "INFORMATION", Message = "Resource Delimiter (" + item.Name + ") added/updated."
+        });
+        _cacheHelper.InvalidateCacheObject("ResourceDelimiter");
+        return Ok(serviceResponse.ResponseObject);
     }
 
     // POST api/<resourcedelimitersController>
@@ -98,17 +91,16 @@ public class ResourceDelimitersController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceDelimiter> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceDelimiter> items)
     {
         var serviceResponse = _resourceDelimiterService.PostConfig(items);
-        if (serviceResponse.Success)
-        {
-            _adminLogService.PostItem(new AdminLogMessage
-                {Source = "API", Title = "INFORMATION", Message = "Resource Delimiters added/updated."});
-            _cacheHelper.InvalidateCacheObject("ResourceDelimiter");
-            return Ok(serviceResponse.ResponseObject);
-        }
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Delimiters added/updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceDelimiter");
+        return Ok(serviceResponse.ResponseObject);
 
-        return BadRequest(serviceResponse.ResponseObject);
     }
 }

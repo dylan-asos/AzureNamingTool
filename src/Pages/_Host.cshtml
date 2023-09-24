@@ -17,7 +17,7 @@
     // Sync configuration data
     if (!state.ConfigurationDataSynced)
     {
-        ResourceComponentService.SyncConfigurationData();
+        await ResourceComponentService.SyncConfigurationData();
         state.SetConfigurationDataSynced(true);
     }
     
@@ -88,9 +88,9 @@
 
     function scrollIntoView(id) {
         const element = document.getElementById(id);
-        var headerOffset = 70;
-        var elementPosition = element.getBoundingClientRect().top;
-        var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        const headerOffset = 70;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
         window.scrollTo({
             top: offsetPosition,
@@ -106,9 +106,9 @@
     };
 
     function htmlToCSV(filename, tableclass = "") {
-        var data = [];
-        var rows;
-        if (tableclass != "") {
+        const data = [];
+        let rows;
+        if (tableclass !== "") {
             rows = document.querySelectorAll("table[class*=" + tableclass + "] tr ");
         }
         else {
@@ -144,7 +144,7 @@
             return;
         }
 
-        var tag = document.createElement('script');
+        const tag = document.createElement('script');
         tag.src = sourceUrl;
         tag.type = "text/javascript";
 

@@ -13,7 +13,7 @@ public class LogHelper
         _fileSystemHelper = fileSystemHelper;
         _cacheHelper = cacheHelper;
     }
-    
+
     /// <summary>
     ///     This function prugres the generated names log.
     /// </summary>
@@ -30,50 +30,20 @@ public class LogHelper
     /// <returns>List of AdminLogMessages - List of Adming Log messages.</returns>
     private List<AdminLogMessage> GetAdminLog()
     {
-        List<AdminLogMessage> lstAdminLogMessages = new();
-
         var data = _fileSystemHelper.ReadFile(FileNames.AdminLogMessage);
-        
-        if (data != null)
-        {
-            var items = new List<AdminLogMessage>();
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
-            };
-            lstAdminLogMessages = JsonSerializer.Deserialize<List<AdminLogMessage>>(data, options)!
-                .OrderByDescending(x => x.CreatedOn).ToList();
-        }
 
-        return lstAdminLogMessages;
-    }
-
-    /// <summary>
-    ///     This function logs the Admin message.
-    /// </summary>
-    /// <param name="title">string - Message title</param>
-    /// <param name="message">string - MEssage body</param>
-    public void LogAdminMessage(string title, string message)
-    {
-        AdminLogMessage adminmessage = new()
+        var options = new JsonSerializerOptions
         {
-            Id = 1,
-            Title = title,
-            Message = message
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
         };
 
-        // Log the created name
-        var lstAdminLogMessages = GetAdminLog();
-        if (lstAdminLogMessages.Count > 0)
-        {
-            adminmessage.Id = lstAdminLogMessages.Max(x => x.Id) + 1;
-        }
+        var lstAdminLogMessages =
+            JsonSerializer.Deserialize<List<AdminLogMessage>>(data, options)!
+                .OrderByDescending(x => x.CreatedOn)
+                .ToList();
 
-        lstAdminLogMessages.Add(adminmessage);
-        var jsonAdminLogMessages = JsonSerializer.Serialize(lstAdminLogMessages);
-        _fileSystemHelper.WriteFile(FileNames.AdminLogMessage, jsonAdminLogMessages);
-        _cacheHelper.InvalidateCacheObject("AdminLogMessage");
+        return lstAdminLogMessages;
     }
 
     /// <summary>

@@ -27,14 +27,14 @@ public class ValidationHelper
         return isValidated;
     }
 
-    public bool ValidateShortName(string type, string value, string? parentComponent = null)
+    public async Task<bool> ValidateShortName(string type, string value, string? parentComponent = null)
     {
         var valid = false;
 
         ResourceComponent resourceComponent = new();
 
         var serviceResponse =
-            _resourceComponentService.GetItems(true);
+            await _resourceComponentService.GetItems(true);
 
         if (serviceResponse.Success)
         {

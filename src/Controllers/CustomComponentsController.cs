@@ -36,9 +36,9 @@ public class CustomComponentsController : ControllerBase
     /// </summary>
     /// <returns>json - Current custom components data</returns>
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var serviceResponse = _customComponentService.GetItems();
+        var serviceResponse = await _customComponentService.GetItems();
         
         if (serviceResponse.Success)
         {
@@ -56,9 +56,10 @@ public class CustomComponentsController : ControllerBase
     /// <returns>json - Current custom components data</returns>
     [Route("[action]/{parenttype}")]
     [HttpGet]
-    public IActionResult GetByParentType(string parenttype)
+    public async Task<IActionResult> GetByParentType(string parenttype)
     {
-        var serviceResponse = _customComponentService.GetItemsByParentType(_generalHelper.NormalizeName(parenttype, true));
+        var serviceResponse = await _customComponentService
+            .GetItemsByParentType(_generalHelper.NormalizeName(parenttype, true));
         
         if (serviceResponse.Success)
         {
@@ -75,11 +76,11 @@ public class CustomComponentsController : ControllerBase
     /// <param name="id">int - Custom Component id</param>
     /// <returns>json - Custom component data</returns>
     [HttpGet("{id:int}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
         var serviceResponse =
             // Get list of items
-            _customComponentService.GetItem(id);
+            await _customComponentService.GetItem(id);
         
         if (serviceResponse.Success)
         {
@@ -96,13 +97,13 @@ public class CustomComponentsController : ControllerBase
     /// <param name="item">CustomComponent (json) - Custom component data</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
-    public IActionResult Post([FromBody] CustomComponent item)
+    public async Task<IActionResult> Post([FromBody] CustomComponent item)
     {
-        var serviceResponse = _customComponentService.PostItem(item);
+        var serviceResponse = await _customComponentService.PostItem(item);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") updated."});
         _cacheHelper.InvalidateCacheObject("CustomComponent");
         
@@ -117,13 +118,13 @@ public class CustomComponentsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<CustomComponent> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<CustomComponent> items)
     {
         var serviceResponse = _customComponentService.PostConfig(items);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Components updated."});
         _cacheHelper.InvalidateCacheObject("CustomComponent");
         return Ok(serviceResponse.ResponseObject);
@@ -137,12 +138,12 @@ public class CustomComponentsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfigWithParentData([FromBody] CustomComponentConfig config)
+    public async Task<IActionResult> PostConfigWithParentData([FromBody] CustomComponentConfig config)
     {
         List<ResourceComponent> currentresourcecomponents = new();
         List<CustomComponent> newcustomcomponents = new();
         // Get the current resource components
-        var serviceResponse = _resourceComponentService.GetItems(true);
+        var serviceResponse = await _resourceComponentService.GetItems(true);
 
         if (!serviceResponse.Success) 
         return BadRequest(serviceResponse.ResponseObject);
@@ -166,7 +167,7 @@ public class CustomComponentsController : ControllerBase
                             DisplayName = thisparentcomponent.Name,
                             IsCustom = true
                         };
-                        serviceResponse = _resourceComponentService.PostItem(newcustomcomponent);
+                        serviceResponse = await _resourceComponentService.PostItem(newcustomcomponent);
 
                         if (serviceResponse.Success)
                         {
@@ -205,7 +206,7 @@ public class CustomComponentsController : ControllerBase
             }
         }
 
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Components updated."});
         _cacheHelper.InvalidateCacheObject("CustomComponent");
         return Ok("Custom Component configuration updated!");
@@ -219,20 +220,20 @@ public class CustomComponentsController : ControllerBase
     /// <param name="id">int - Custom component id</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var serviceResponse = _customComponentService.GetItem(id);
+        var serviceResponse = await _customComponentService.GetItem(id);
 
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
         var item = (CustomComponent) serviceResponse.ResponseObject!;
-        serviceResponse = _customComponentService.DeleteItem(id);
+        serviceResponse = await _customComponentService.DeleteItem(id);
 
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") deleted."});
         _cacheHelper.InvalidateCacheObject("GeneratedName");
         return Ok("Custom Component (" + item.Name + ") deleted.");

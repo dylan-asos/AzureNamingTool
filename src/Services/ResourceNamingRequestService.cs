@@ -44,7 +44,7 @@ public class ResourceNamingRequestService
     /// </summary>
     /// <param name="request"></param>
     /// <returns>ResourceNameResponse - Response of name generation</returns>
-    public ResourceNameResponse RequestNameWithComponents(ResourceNameRequestWithComponents request)
+    public async Task<ResourceNameResponse> RequestNameWithComponents(ResourceNameRequestWithComponents request)
     {
         ResourceNameResponse response = new()
         {
@@ -75,7 +75,7 @@ public class ResourceNamingRequestService
 
             // Get the components
             ServiceResponse serviceresponse = new();
-            serviceresponse = _resourceComponentService.GetItems(false);
+            serviceresponse = await _resourceComponentService.GetItems(false);
             var currentResourceComponents = serviceresponse.ResponseObject;
             dynamic d = request;
 
@@ -202,7 +202,7 @@ public class ResourceNamingRequestService
                 ResourceType = resourceType.ShortName,
                 Name = name
             };
-            var serviceResponse = _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
+            var serviceResponse = await _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
             if (serviceResponse.Success)
             {
                 if (serviceResponse.ResponseObject != null)
@@ -229,7 +229,7 @@ public class ResourceNamingRequestService
                     ResourceName = name.ToLower(),
                     Components = lstComponents
                 };
-                _generatedNamesService.PostItem(generatedName);
+                await _generatedNamesService.PostItem(generatedName);
                 response.Success = true;
                 response.ResourceName = name.ToLower();
                 response.Message = sbMessage.ToString();
@@ -242,7 +242,7 @@ public class ResourceNamingRequestService
         }
         catch (Exception ex)
         {
-            _adminLogService.PostItem(new AdminLogMessage {Title = "ERROR", Message = ex.Message});
+            await _adminLogService.PostItem(new AdminLogMessage {Title = "ERROR", Message = ex.Message});
             response.Message = ex.Message;
             return response;
         }
@@ -272,7 +272,7 @@ public class ResourceNamingRequestService
         StringBuilder sbMessage = new();
 
         // Get the current delimiter
-        serviceResponse = _resourceDelimiterService.GetCurrentItem();
+        serviceResponse = await _resourceDelimiterService.GetCurrentItem();
         if (serviceResponse.Success)
         {
             resourceDelimiter = (ResourceDelimiter) serviceResponse.ResponseObject!;
@@ -286,7 +286,7 @@ public class ResourceNamingRequestService
         }
 
         // Get the specified resource type
-        var resourceTypes = _fileReader.GetList<ResourceType>();
+        var resourceTypes = await _fileReader.GetList<ResourceType>();
         if (resourceTypes!= null)
         {
             var resourceTypesByShortName = resourceTypes.FindAll(x => x.ShortName == request.ResourceType);
@@ -358,7 +358,7 @@ public class ResourceNamingRequestService
             }
 
             // Get the current components
-            serviceResponse = _resourceComponentService.GetItems(false);
+            serviceResponse = await _resourceComponentService.GetItems(false);
             if (serviceResponse.Success)
             {
                 if (serviceResponse.ResponseObject != null)
@@ -387,7 +387,7 @@ public class ResourceNamingRequestService
                                             switch (component.Name.ToLower())
                                             {
                                                 case "resourcetype":
-                                                    var types = _fileReader.GetList<ResourceType>();
+                                                    var types = await _fileReader.GetList<ResourceType>();
                                                     if (types!= null)
                                                     {
                                                         var type = types.Find(x => x.ShortName == value);
@@ -401,7 +401,7 @@ public class ResourceNamingRequestService
                                                     break;
                                                 case "resourceenvironment":
                                                     var environments =
-                                                        _fileReader.GetList<ResourceEnvironment>();
+                                                        await _fileReader.GetList<ResourceEnvironment>();
                                                     if (environments!= null)
                                                     {
                                                         var environment = environments.Find(x => x.ShortName == value);
@@ -415,7 +415,7 @@ public class ResourceNamingRequestService
                                                     break;
                                                 case "resourcelocation":
                                                     var locations =
-                                                        _fileReader.GetList<ResourceLocation>();
+                                                        await _fileReader.GetList<ResourceLocation>();
                                                     if (locations != null)
                                                     {
                                                         var location = locations.Find(x => x.ShortName == value);
@@ -428,7 +428,7 @@ public class ResourceNamingRequestService
 
                                                     break;
                                                 case "resourceorg":
-                                                    var orgs = _fileReader.GetList<ResourceOrg>();
+                                                    var orgs = await _fileReader.GetList<ResourceOrg>();
                                                     if (orgs!= null)
                                                     {
                                                         var org = orgs.Find(x => x.ShortName == value);
@@ -442,7 +442,7 @@ public class ResourceNamingRequestService
                                                     break;
                                                 case "resourceprojappsvc":
                                                     var projappsvcs =
-                                                        _fileReader.GetList<ResourceProjAppSvc>();
+                                                        await _fileReader.GetList<ResourceProjAppSvc>();
                                                     if (projappsvcs!= null)
                                                     {
                                                         var projappsvc = projappsvcs.Find(x => x.ShortName == value);
@@ -456,7 +456,7 @@ public class ResourceNamingRequestService
                                                     break;
                                                 case "resourceunitdept":
                                                     var unitdepts =
-                                                        _fileReader.GetList<ResourceUnitDept>();
+                                                        await _fileReader.GetList<ResourceUnitDept>();
                                                     if (unitdepts!= null)
                                                     {
                                                         var unitdept = unitdepts.Find(x => x.ShortName == value);
@@ -470,7 +470,7 @@ public class ResourceNamingRequestService
                                                     break;
                                                 case "resourcefunction":
                                                     var functions =
-                                                        _fileReader.GetList<ResourceFunction>();
+                                                        await _fileReader.GetList<ResourceFunction>();
                                                     if (functions!= null)
                                                     {
                                                         var function = functions.Find(x => x.ShortName == value);
@@ -553,7 +553,7 @@ public class ResourceNamingRequestService
                                 if (!component.IsFreeText)
                                 {
                                     // Get the custom components data
-                                    serviceResponse = _customComponentService.GetItems();
+                                    serviceResponse = await _customComponentService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -597,7 +597,7 @@ public class ResourceNamingRequestService
                                                                     {
                                                                         // Check to make sure it is a valid custom component
                                                                         var customComponents =
-                                                                            _fileReader
+                                                                            await _fileReader
                                                                                 .GetList<CustomComponent>();
                                                                         if (customComponents!= null)
                                                                         {
@@ -761,7 +761,7 @@ public class ResourceNamingRequestService
             ResourceType = resourceType.ShortName,
             Name = name
         };
-        serviceResponse = _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
+        serviceResponse = await _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
         if (serviceResponse.Success)
         {
             if (serviceResponse.ResponseObject != null)
@@ -787,7 +787,7 @@ public class ResourceNamingRequestService
             if (!_configurationHelper.VerifyDuplicateNamesAllowed())
             {
                 // Check if the name already exists
-                serviceResponse = _generatedNamesService.GetItems();
+                serviceResponse = await _generatedNamesService.GetItems();
                 if (serviceResponse.Success)
                 {
                     if (serviceResponse.ResponseObject != null)
@@ -821,7 +821,7 @@ public class ResourceNamingRequestService
                     generatedName.ResourceTypeName += " - " + resourceType.Property;
                 }
 
-                var responseGenerateName = _generatedNamesService.PostItem(generatedName);
+                var responseGenerateName = await _generatedNamesService.PostItem(generatedName);
                 if (responseGenerateName.Success)
                 {
                     resourceNameResponse.Success = true;

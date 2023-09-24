@@ -7,82 +7,64 @@ public class CustomComponentService
 {
     private readonly FileReader _fileReader;
     private readonly FileWriter _fileWriter;
-    
+
     public CustomComponentService(
-        FileReader reader, 
+        FileReader reader,
         FileWriter fileWriter)
     {
         _fileReader = reader;
         _fileWriter = fileWriter;
     }
 
-    public ServiceResponse GetItems()
+    public async Task<ServiceResponse> GetItems()
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<CustomComponent>();
-        if (items != null)
+        var items = await _fileReader.GetList<CustomComponent>();
+
+        serviceResponse.ResponseObject = items.OrderBy(x => x.SortOrder).ToList();
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse> GetItemsByParentType(string parentType)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = await _fileReader.GetList<CustomComponent>();
+
+        serviceResponse.ResponseObject =
+            items.Where(x => x.ParentComponent == parentType).OrderBy(x => x.SortOrder).ToList();
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse> GetItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = await _fileReader.GetList<CustomComponent>();
+
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
         {
-            serviceResponse.ResponseObject = items.OrderBy(x => x.SortOrder).ToList();
+            serviceResponse.ResponseObject = item;
             serviceResponse.Success = true;
         }
         else
         {
-            serviceResponse.ResponseObject = "Custom Components not found!";
+            serviceResponse.ResponseObject = "Custom Component not found!";
         }
 
         return serviceResponse;
     }
 
-    public ServiceResponse GetItemsByParentType(string parentType)
-    {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        var items = _fileReader.GetList<CustomComponent>();
-        if (items != null)
-        {
-            serviceResponse.ResponseObject =
-                items.Where(x => x.ParentComponent == parentType).OrderBy(x => x.SortOrder).ToList();
-            serviceResponse.Success = true;
-        }
-        else
-        {
-            serviceResponse.ResponseObject = "Custom Components not found!";
-        }
-
-        return serviceResponse;
-    }
-
-    public ServiceResponse GetItem(int id)
-    {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        var items = _fileReader.GetList<CustomComponent>();
-        if (items != null)
-        {
-            var item = items.Find(x => x.Id == id);
-            if (item != null)
-            {
-                serviceResponse.ResponseObject = item;
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Custom Component not found!";
-            }
-        }
-        else
-        {
-            serviceResponse.ResponseObject = "Custom Components not found!";
-        }
-
-        return serviceResponse;
-    }
-
-    public ServiceResponse PostItem(CustomComponent item)
+    public async Task<ServiceResponse> PostItem(CustomComponent item)
     {
         ServiceResponse serviceResponse = new();
 
@@ -98,68 +80,97 @@ public class CustomComponentService
         item.ShortName = item.ShortName.ToLower();
 
         // Get list of items
-        var items = _fileReader.GetList<CustomComponent>();
-        if (items != null)
+        var items = await _fileReader.GetList<CustomComponent>();
+
+        // Set the new id
+        if (item.Id == 0)
         {
-            // Set the new id
-            if (item.Id == 0)
-            {
-                item.Id = items.Count + 1;
-            }
+            item.Id = items.Count + 1;
+        }
 
-            var position = 1;
-            items = items.OrderBy(x => x.SortOrder).ToList();
+        var position = 1;
+        items = items.OrderBy(x => x.SortOrder).ToList();
 
-            if (item.SortOrder == 0)
-            {
-                if (items.Count > 0)
-                {
-                    item.Id = items.Max(t => t.Id) + 1;
-                }
-            }
-
-            // Determine new item id
+        if (item.SortOrder == 0)
+        {
             if (items.Count > 0)
             {
-                // Check if the item already exists
-                if (items.Exists(x => x.Id == item.Id))
-                {
-                    // Remove the updated item from the list
-                    var existingitem = items.Find(x => x.Id == item.Id);
-                    if (existingitem != null)
-                    {
-                        var index = items.IndexOf(existingitem);
-                        items.RemoveAt(index);
-                    }
-                }
+                item.Id = items.Max(t => t.Id) + 1;
+            }
+        }
 
-                // Reset the sort order of the list
-                foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
+        // Determine new item id
+        if (items.Count > 0)
+        {
+            // Check if the item already exists
+            if (items.Exists(x => x.Id == item.Id))
+            {
+                // Remove the updated item from the list
+                var existingitem = items.Find(x => x.Id == item.Id);
+                if (existingitem != null)
                 {
-                    thisitem.SortOrder = position;
-                    position += 1;
+                    var index = items.IndexOf(existingitem);
+                    items.RemoveAt(index);
                 }
+            }
 
-                // Check for the new sort order
-                if (items.Exists(x => x.SortOrder == item.SortOrder))
-                {
-                    // Remove the updated item from the list
-                    items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!), item);
-                }
-                else
-                {
-                    // Put the item at the end
-                    items.Add(item);
-                }
+            // Reset the sort order of the list
+            foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
+            {
+                thisitem.SortOrder = position;
+                position += 1;
+            }
+
+            // Check for the new sort order
+            if (items.Exists(x => x.SortOrder == item.SortOrder))
+            {
+                // Remove the updated item from the list
+                items.Insert(items.IndexOf(items.FirstOrDefault(x => x.SortOrder == item.SortOrder)!), item);
             }
             else
             {
-                item.Id = 1;
-                item.SortOrder = 1;
+                // Put the item at the end
                 items.Add(item);
             }
+        }
+        else
+        {
+            item.Id = 1;
+            item.SortOrder = 1;
+            items.Add(item);
+        }
 
-            position = 1;
+        position = 1;
+        foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
+        {
+            thisitem.SortOrder = position;
+            position += 1;
+        }
+
+        // Write items to file
+        _fileWriter.WriteList(items);
+        serviceResponse.ResponseObject = "Custom Component added/updated!";
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse> DeleteItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = await _fileReader.GetList<CustomComponent>();
+
+        // Get the specified item
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
+        {
+            // Remove the item from the collection
+            items.Remove(item);
+
+            // Update all the sort order values to reflect the removal
+            var position = 1;
             foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
             {
                 thisitem.SortOrder = position;
@@ -168,44 +179,7 @@ public class CustomComponentService
 
             // Write items to file
             _fileWriter.WriteList(items);
-            serviceResponse.ResponseObject = "Custom Component added/updated!";
             serviceResponse.Success = true;
-        }
-
-        return serviceResponse;
-    }
-
-    public ServiceResponse DeleteItem(int id)
-    {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        var items = _fileReader.GetList<CustomComponent>();
-        if (items != null)
-        {
-            // Get the specified item
-            var item = items.Find(x => x.Id == id);
-            if (item != null)
-            {
-                // Remove the item from the collection
-                items.Remove(item);
-
-                // Update all the sort order values to reflect the removal
-                var position = 1;
-                foreach (var thisitem in items.OrderBy(x => x.SortOrder).ToList())
-                {
-                    thisitem.SortOrder = position;
-                    position += 1;
-                }
-
-                // Write items to file
-                _fileWriter.WriteList(items);
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Custom Component not found!";
-            }
         }
         else
         {

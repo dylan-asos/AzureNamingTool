@@ -13,27 +13,29 @@ public class IdentityHelper
         _adminUserService = adminUserService;
     }
 
+    /// <summary>
+    /// Checks if the username is in the list of Admin Users
+    /// </summary>
     public async Task<bool> IsAdminUser(StateContainer state, ProtectedSessionStorage session, string name)
     {
         var result = false;
-
-        // Check if the username is in the list of Admin Users
-        var serviceResponse = _adminUserService.GetItems();
+        
+        var serviceResponse = await _adminUserService.GetItems();
         if (!serviceResponse.Success) 
             return result;
-        
-        if (serviceResponse.ResponseObject != null)
-        {
-            List<AdminUser> adminUsers = serviceResponse.ResponseObject!;
-            
-            if (adminUsers.Exists(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase)))
-            {
-                state.SetAdmin(true);
-                await session.SetAsync("admin", true);
-                result = true;
-            }
-        }
 
+        if (serviceResponse.ResponseObject == null) 
+            return result;
+        
+        List<AdminUser> adminUsers = serviceResponse.ResponseObject!;
+
+        if (!adminUsers.Exists(x => string.Equals(x.Name, name, StringComparison.CurrentCultureIgnoreCase)))
+            return result;
+        
+        state.SetAdmin(true);
+        await session.SetAsync("admin", true);
+        result = true;
+        
         return result;
     }
 

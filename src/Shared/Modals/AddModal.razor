@@ -149,7 +149,7 @@
                                     MinLength = itemMinLength,
                                     MaxLength = itemMaxLength
                                 };
-                            serviceResponse = ResourceComponentService.PostItem(resourceComponent);
+                            serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
                         }
                     }
                 }
@@ -162,7 +162,7 @@
                 if (!String.IsNullOrEmpty(itemName))
                 {
                     // Check if the item already exists
-                    serviceResponse = AdminUserService.GetItems();
+                    serviceResponse = await AdminUserService.GetItems();
                     ArgumentNullException.ThrowIfNull(servicesData.AdminUsers);
                     List<AdminUser> adminUsers = servicesData.AdminUsers;
                     if (adminUsers.Any(x => x.Name == itemName))
@@ -176,7 +176,7 @@
                             {
                                 Name = itemName
                             };
-                        serviceResponse = AdminUserService.PostItem(adminUser);
+                        serviceResponse = await AdminUserService.PostItem(adminUser);
                     }
                 }
 
@@ -186,7 +186,7 @@
                 {
                     if ((!string.IsNullOrEmpty(itemName)) && (!string.IsNullOrEmpty(itemShortName)))
                     {
-                        if (ValidationHelper.ValidateShortName(type, itemShortName, this.parentcomponent))
+                        if (await ValidationHelper.ValidateShortName(type, itemShortName, this.parentcomponent))
                         {
                             itemShortName = itemShortName.ToLower();
                             string normailzedname = GeneralHelper.NormalizeName(itemName, true);
@@ -209,12 +209,12 @@
                                                 ShortName = itemShortName.ToLower()
 
                                             };
-                                        serviceResponse = ResourceEnvironmentService.PostItem(resourceEnvironment);
+                                        serviceResponse = await ResourceEnvironmentService.PostItem(resourceEnvironment);
                                     }
                                     break;
                                 case "ResourceLocation":
                                     // Check if the item already exists
-                                    serviceResponse = ResourceLocationService.GetItems();
+                                    serviceResponse = await ResourceLocationService.GetItems();
                                     ArgumentNullException.ThrowIfNull(servicesData.ResourceLocations);
                                     List<ResourceLocation> resourceLocations = servicesData.ResourceLocations;
                                     if (resourceLocations.Any(x => GeneralHelper.NormalizeName(x.Name, true) == normailzedname || x.ShortName == itemShortName))
@@ -230,12 +230,12 @@
                                                 ShortName = itemShortName.ToLower()
 
                                             };
-                                        serviceResponse = ResourceLocationService.PostItem(resourceLocation);
+                                        serviceResponse = await ResourceLocationService.PostItem(resourceLocation);
                                     }
                                     break;
                                 case "ResourceOrg":
                                     // Check if the item already exists
-                                    serviceResponse = ResourceOrgService.GetItems();
+                                    serviceResponse = await ResourceOrgService.GetItems();
                                     ArgumentNullException.ThrowIfNull(servicesData.ResourceOrgs);
                                     List<ResourceOrg> resourceOrgs = servicesData.ResourceOrgs;
                                     if (resourceOrgs.Any(x => GeneralHelper.NormalizeName(x.Name, true) == normailzedname || x.ShortName == itemShortName))
@@ -251,12 +251,12 @@
                                                 ShortName = itemShortName.ToLower()
 
                                             };
-                                        serviceResponse = ResourceOrgService.PostItem(resourceOrg);
+                                        serviceResponse = await ResourceOrgService.PostItem(resourceOrg);
                                     }
                                     break;
                                 case "ResourceProjAppSvc":
                                     // Check if the item already exists
-                                    serviceResponse = ResourceProjAppSvcService.GetItems();
+                                    serviceResponse = await ResourceProjAppSvcService.GetItems();
                                     ArgumentNullException.ThrowIfNull(servicesData.ResourceProjAppSvcs);
                                     List<ResourceProjAppSvc> resourceProjAppSvcs = servicesData.ResourceProjAppSvcs;
                                     if (resourceProjAppSvcs.Any(x => GeneralHelper.NormalizeName(x.Name, true) == normailzedname || x.ShortName == itemShortName))
@@ -272,12 +272,12 @@
                                                 ShortName = itemShortName.ToLower()
 
                                             };
-                                        serviceResponse = ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
+                                        serviceResponse = await ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
                                     }
                                     break;
                                 case "ResourceUnitDept":
                                     // Check if the item already exists
-                                    serviceResponse = ResourceUnitDeptService.GetItems();
+                                    serviceResponse = await ResourceUnitDeptService.GetItems();
                                     ArgumentNullException.ThrowIfNull(servicesData.ResourceUnitDepts);
                                     List<ResourceUnitDept> resourceUnitDepts = servicesData.ResourceUnitDepts;
                                     if (resourceUnitDepts.Any(x => GeneralHelper.NormalizeName(x.Name, true) == normailzedname || x.ShortName == itemShortName))
@@ -293,12 +293,12 @@
                                                 ShortName = itemShortName.ToLower()
 
                                             };
-                                        serviceResponse =  ResourceUnitDeptService.PostItem(resourceUnitDept);
+                                        serviceResponse =  await ResourceUnitDeptService.PostItem(resourceUnitDept);
                                     }
                                     break;
                                 case "ResourceFunction":
                                     // Check if the item already exists
-                                    serviceResponse = ResourceFunctionService.GetItems();
+                                    serviceResponse = await ResourceFunctionService.GetItems();
                                     ArgumentNullException.ThrowIfNull(servicesData.ResourceFunctions);
                                     List<ResourceFunction> resourceFunctions = servicesData.ResourceFunctions;
                                     if (resourceFunctions.Any(x => GeneralHelper.NormalizeName(x.Name, true) == normailzedname || x.ShortName == itemShortName))
@@ -314,12 +314,12 @@
                                                 ShortName = itemShortName.ToLower()
 
                                             };
-                                        serviceResponse = ResourceFunctionService.PostItem(resourceFunction);
+                                        serviceResponse = await ResourceFunctionService.PostItem(resourceFunction);
                                     }
                                     break;
                                 case "CustomComponent":
                                     // Check if the item already exists
-                                    serviceResponse = CustomComponentService.GetItems();
+                                    serviceResponse = await CustomComponentService.GetItems();
                                     ArgumentNullException.ThrowIfNull(servicesData.CustomComponents);
                                     List<CustomComponent> customComponents = servicesData.CustomComponents;
                                     if (customComponents.Any(x => GeneralHelper.NormalizeName(x.Name, true) == normailzedname || x.ShortName == itemShortName))
@@ -337,7 +337,7 @@
                                                 MinLength = itemMinLength,
                                                 MaxLength = itemMaxLength
                                             };
-                                        serviceResponse = CustomComponentService.PostItem(customComponent);
+                                        serviceResponse = await CustomComponentService.PostItem(customComponent);
                                     }
                                     break;
                             }
@@ -361,7 +361,7 @@
             {
                 await ModalInstance.CloseAsync();
                 toastService.ShowSuccess(type.Replace("Resource", "Resource ") + " added!");
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "SUCCESS", Message = "(" + type + ") " + itemName + " added!", Source = currentuser });
+                await AdminLogService.PostItem(new AdminLogMessage() { Title = "SUCCESS", Message = "(" + type + ") " + itemName + " added!", Source = currentuser });
             }
             else
             {

@@ -39,62 +39,49 @@ public class ResourceTypeService
         _httpContentDownloader = httpContentDownloader;
     }
 
-    public ServiceResponse GetItems(bool admin = true)
+    public async Task<ServiceResponse> GetItems(bool admin = true)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<ResourceType>();
-        if (items != null)
-        {
-            if (!admin)
-            {
-                serviceResponse.ResponseObject = items.Where(x => x.Enabled).OrderBy(x => x.Resource).ToList();
-            }
-            else
-            {
-                serviceResponse.ResponseObject = items.OrderBy(x => x.Resource).ToList();
-            }
+        var items = await _fileReader.GetList<ResourceType>();
 
+        if (!admin)
+        {
+            serviceResponse.ResponseObject = items.Where(x => x.Enabled).OrderBy(x => x.Resource).ToList();
+        }
+        else
+        {
+            serviceResponse.ResponseObject = items.OrderBy(x => x.Resource).ToList();
+        }
+
+        serviceResponse.Success = true;
+
+        return serviceResponse;
+    }
+
+    public async Task<ServiceResponse> GetItem(int id)
+    {
+        ServiceResponse serviceResponse = new();
+
+        // Get list of items
+        var items = await _fileReader.GetList<ResourceType>();
+
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
+        {
+            serviceResponse.ResponseObject = item;
             serviceResponse.Success = true;
         }
         else
         {
-            serviceResponse.ResponseObject = "Resource Types not found!";
-        }
-
-
-        return serviceResponse;
-    }
-
-    public ServiceResponse GetItem(int id)
-    {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        var items = _fileReader.GetList<ResourceType>();
-        if (items!= null)
-        {
-            var item = items.Find(x => x.Id == id);
-            if (item!= null)
-            {
-                serviceResponse.ResponseObject = item;
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Resource Type not found!";
-            }
-        }
-        else
-        {
-            serviceResponse.ResponseObject = "Resource Types not found!";
+            serviceResponse.ResponseObject = "Resource Type not found!";
         }
 
         return serviceResponse;
     }
 
-    public ServiceResponse PostItem(ResourceType item)
+    public async Task<ServiceResponse> PostItem(ResourceType item)
     {
         ServiceResponse serviceResponse = new();
 
@@ -110,80 +97,67 @@ public class ResourceTypeService
         item.ShortName = item.ShortName.ToLower();
 
         // Get list of items
-        var items = _fileReader.GetList<ResourceType>();
-        if (items!= null)
+        var items = await _fileReader.GetList<ResourceType>();
+
+        // Set the new id
+        if (item.Id == 0)
         {
-            // Set the new id
-            if (item.Id == 0)
-            {
-                item.Id = items.Count + 1;
-            }
+            item.Id = items.Count + 1;
+        }
 
-            // Determine new item id
-            if (items.Count > 0)
+        // Determine new item id
+        if (items.Count > 0)
+        {
+            // Check if the item already exists
+            if (items.Exists(x => x.Id == item.Id))
             {
-                // Check if the item already exists
-                if (items.Exists(x => x.Id == item.Id))
+                // Remove the updated item from the list
+                var existingitem = items.Find(x => x.Id == item.Id);
+                if (existingitem != null)
                 {
-                    // Remove the updated item from the list
-                    var existingitem = items.Find(x => x.Id == item.Id);
-                    if (existingitem!= null)
-                    {
-                        var index = items.IndexOf(existingitem);
-                        items.RemoveAt(index);
-                    }
+                    var index = items.IndexOf(existingitem);
+                    items.RemoveAt(index);
                 }
-
-                // Put the item at the end
-                items.Add(item);
-            }
-            else
-            {
-                item.Id = 1;
-                items.Add(item);
             }
 
-            // Write items to file
-            _fileWriter.WriteList(items.OrderBy(x => x.Id).ToList());
-            serviceResponse.ResponseObject = "Resource Type added/updated!";
-            serviceResponse.Success = true;
+            // Put the item at the end
+            items.Add(item);
         }
         else
         {
-            serviceResponse.ResponseObject = "Resource Types not found!";
+            item.Id = 1;
+            items.Add(item);
         }
 
+        // Write items to file
+        _fileWriter.WriteList(items.OrderBy(x => x.Id).ToList());
+        serviceResponse.ResponseObject = "Resource Type added/updated!";
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse DeleteItem(int id)
+    public async Task<ServiceResponse> DeleteItem(int id)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<ResourceType>();
-        if (items!= null)
-        {
-            // Get the specified item
-            var item = items.Find(x => x.Id == id);
-            if (item!= null)
-            {
-                // Remove the item from the collection
-                items.Remove(item);
+        var items = await _fileReader.GetList<ResourceType>();
 
-                // Write items to file
-                _fileWriter.WriteList(items);
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Resource Type not found!";
-            }
+        // Get the specified item
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
+        {
+            // Remove the item from the collection
+            items.Remove(item);
+
+            // Write items to file
+            _fileWriter.WriteList(items);
+            serviceResponse.Success = true;
         }
         else
         {
-            serviceResponse.ResponseObject = "Resource Types not found!";
+            serviceResponse.ResponseObject = "Resource Type not found!";
         }
 
         return serviceResponse;
@@ -263,11 +237,11 @@ public class ResourceTypeService
 
     public async Task<ServiceResponse> RefreshResourceTypes(bool shortNameReset = false)
     {
-        var serviceResponse = GetItems();
+        var serviceResponse = await GetItems();
         if (serviceResponse.Success)
         {
             var types = (List<ResourceType>) serviceResponse.ResponseObject!;
-            if (types!= null)
+            if (types != null)
             {
                 var url =
                     "https://raw.githubusercontent.com/mspnp/AzureNamingTool/main/src/repository/resourcetypes.json";
@@ -282,7 +256,7 @@ public class ResourceTypeService
                     };
 
                     newtypes = JsonSerializer.Deserialize<List<ResourceType>>(refreshdata, options);
-                    if (newtypes!= null)
+                    if (newtypes != null)
                     {
                         // Loop through the new items
                         // Add any new resource type and update any existing types
@@ -302,14 +276,11 @@ public class ResourceTypeService
                                     newtype.ShortName = oldtype.ShortName;
                                 }
 
-                                // Remove the old type
                                 types.RemoveAt(i);
-                                // Add the new type
                                 types.Add(newtype);
                             }
                             else
                             {
-                                // Add a new resource type
                                 types.Add(newtype);
                             }
                         }
@@ -334,7 +305,7 @@ public class ResourceTypeService
                 else
                 {
                     serviceResponse.ResponseObject = "Refresh Resource Types not found!";
-                    _adminLogService.PostItem(new AdminLogMessage
+                    await _adminLogService.PostItem(new AdminLogMessage
                     {
                         Title = "ERROR",
                         Message = "There was a problem refreshing the resource types configuration."
@@ -353,13 +324,13 @@ public class ResourceTypeService
 
         return serviceResponse;
     }
-    
-    public ServiceResponse ValidateResourceTypeName(ValidateNameRequest validateNameRequest)
+
+    public async Task<ServiceResponse> ValidateResourceTypeName(ValidateNameRequest validateNameRequest)
     {
         ValidateNameResponse validateNameResponse = new();
         ResourceDelimiter? resourceDelimiter = new();
 
-        var serviceResponse = _resourceDelimiterService.GetCurrentItem();
+        var serviceResponse = await _resourceDelimiterService.GetCurrentItem();
         if (serviceResponse.Success)
         {
             if (serviceResponse.ResponseObject != null)
@@ -375,19 +346,19 @@ public class ResourceTypeService
         }
 
         // Get the specifed resource type
-        serviceResponse = GetItems();
+        serviceResponse = await GetItems();
         if (serviceResponse.Success)
         {
             if (serviceResponse.ResponseObject != null)
             {
                 // Get the resource types
                 var resourceTypes = (List<ResourceType>) serviceResponse.ResponseObject!;
-                if (resourceTypes!= null)
+                if (resourceTypes != null)
                 {
                     // Get the specified resoure type
                     var resourceType =
                         resourceTypes.FirstOrDefault(x => x.ShortName == validateNameRequest.ResourceType)!;
-                    if (resourceType!= null)
+                    if (resourceType != null)
                     {
                         // Create a validate name request
                         validateNameResponse = _validationHelper.ValidateGeneratedName(resourceType,

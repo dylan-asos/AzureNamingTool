@@ -57,14 +57,14 @@ public class ImportExportService
         _siteConfiguration = siteConfiguration;
     }
 
-    public ServiceResponse ExportConfig(bool includeadmin = false)
+    public async Task<ServiceResponse> ExportConfig(bool includeadmin = false)
     {
         ServiceResponse serviceResponse = new();
 
         ConfigurationData configdata = new();
         // Get the current data
         //ResourceComponents
-        serviceResponse = _resourceComponentService.GetItems(true);
+        serviceResponse = await _resourceComponentService.GetItems(true);
         if (serviceResponse.Success)
         {
             if (serviceResponse.ResponseObject != null)
@@ -74,77 +74,77 @@ public class ImportExportService
         }
 
         //ResourceDelimiters
-        serviceResponse = _resourceDelimiterService.GetItems(true);
+        serviceResponse = await _resourceDelimiterService.GetItems(true);
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceDelimiters = serviceResponse.ResponseObject!;
         }
 
         //ResourceEnvironments
-        serviceResponse = _resourceEnvironmentService.GetItems();
+        serviceResponse = await _resourceEnvironmentService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceEnvironments = serviceResponse.ResponseObject!;
         }
 
         // ResourceFunctions
-        serviceResponse = _resourceFunctionService.GetItems();
+        serviceResponse = await _resourceFunctionService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceFunctions = serviceResponse.ResponseObject!;
         }
 
         // ResourceLocations
-        serviceResponse = _resourceLocationService.GetItems();
+        serviceResponse = await _resourceLocationService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceLocations = serviceResponse.ResponseObject!;
         }
 
         // ResourceOrgs
-        serviceResponse = _resourceOrgService.GetItems();
+        serviceResponse = await _resourceOrgService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceOrgs = serviceResponse.ResponseObject!;
         }
 
         // ResourceProjAppSvc
-        serviceResponse = _resourceProjAppSvcService.GetItems();
+        serviceResponse = await _resourceProjAppSvcService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceProjAppSvcs = serviceResponse.ResponseObject!;
         }
 
         // ResourceTypes
-        serviceResponse = _resourceTypeService.GetItems();
+        serviceResponse = await _resourceTypeService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceTypes = serviceResponse.ResponseObject!;
         }
 
         // ResourceUnitDepts
-        serviceResponse = _resourceUnitDeptService.GetItems();
+        serviceResponse = await _resourceUnitDeptService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.ResourceUnitDepts = serviceResponse.ResponseObject!;
         }
 
         // CustomComponents
-        serviceResponse = _customComponentService.GetItems();
+        serviceResponse = await _customComponentService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.CustomComponents = serviceResponse.ResponseObject!;
         }
 
         //GeneratedNames
-        serviceResponse = _generatedNamesService.GetItems();
+        serviceResponse = await _generatedNamesService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.GeneratedNames = serviceResponse.ResponseObject!;
         }
 
         //AdminLogs
-        serviceResponse = _adminLogService.GetItems();
+        serviceResponse = await _adminLogService.GetItems();
         if (serviceResponse.ResponseObject != null)
         {
             configdata.AdminLogs = serviceResponse.ResponseObject;
@@ -165,7 +165,7 @@ public class ImportExportService
             //IdentityHeaderName
             configdata.IdentityHeaderName = _siteConfiguration.IdentityHeaderName;
             //AdminUsers
-            serviceResponse = _adminUserService.GetItems();
+            serviceResponse = await _adminUserService.GetItems();
             if (serviceResponse.ResponseObject != null)
             {
                 configdata.AdminUsers = serviceResponse.ResponseObject!;

@@ -1934,7 +1934,7 @@
         {
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
-            servicesData = ServicesHelper.LoadServicesData(admin);
+            servicesData = await ServicesHelper.LoadServicesData(admin);
 
             // Get the list of categories
             categories = ResourceTypeService.GetTypeCategories(servicesData.ResourceTypes!);
@@ -1992,7 +1992,7 @@
         {
             if (!(servicesData != null))
             {
-                servicesData = ServicesHelper.LoadServicesData(admin);
+                servicesData = await ServicesHelper.LoadServicesData(admin);
             }
         }
     }
@@ -2070,7 +2070,7 @@
                                         {
                                             resourceComponent.SortOrder += -1;
                                         }
-                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2096,7 +2096,7 @@
                                         {
                                             resourceComponent.SortOrder += 1;
                                         }
-                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2120,7 +2120,7 @@
                                     {
                                         resourceComponent.Enabled = true;
                                         resourceComponent.SortOrder = servicesData.ResourceComponents.Count + 1;
-                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2143,7 +2143,7 @@
                                     if (resourceComponent != null)
                                     {
                                         resourceComponent.Enabled = false;
-                                        serviceResponse = ResourceComponentService.PostItem(resourceComponent);
+                                        serviceResponse = await ResourceComponentService.PostItem(resourceComponent);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2167,7 +2167,7 @@
                                     confirm = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Component", "<p>Add a Component.</p>", (int)id, "ResourceComponent", admin, "");
                                     if (confirm)
                                     {
-                                        servicesData = ServicesHelper.LoadServicesData(admin);
+                                        servicesData = await ServicesHelper.LoadServicesData(admin);
                                         state.SetNavReload(true);
                                         StateHasChanged();
                                     }
@@ -2179,7 +2179,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Component", "Edit the Component.", (int)id, "ResourceComponent", !resourceComponent.IsCustom);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2196,7 +2196,7 @@
                                         resourceComponent = servicesData.ResourceComponents!.Find(x => x.Id == id)!;
                                         if (resourceComponent != null)
                                         {
-                                            serviceResponse = ResourceComponentDeleter.DeleteItem(Convert.ToInt32(resourceComponent.Id));
+                                            serviceResponse = await ResourceComponentDeleter.DeleteItem(Convert.ToInt32(resourceComponent.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2217,7 +2217,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceComponentService.GetItems(true);
+                                    serviceResponse = await ResourceComponentService.GetItems(true);
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -2269,7 +2269,7 @@
 
                                     break;
                             }
-                            serviceResponse = ResourceComponentService.GetItems(admin);
+                            serviceResponse = await ResourceComponentService.GetItems(admin);
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -2287,7 +2287,7 @@
                                     if (resourceDelimiter != null)
                                     {
                                         resourceDelimiter.Enabled = true;
-                                        serviceResponse = ResourceDelimiterService.PostItem(resourceDelimiter);
+                                        serviceResponse = await ResourceDelimiterService.PostItem(resourceDelimiter);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2309,7 +2309,7 @@
                                     if (resourceDelimiter != null)
                                     {
                                         resourceDelimiter.Enabled = false;
-                                        serviceResponse = ResourceDelimiterService.PostItem(resourceDelimiter);
+                                        serviceResponse = await ResourceDelimiterService.PostItem(resourceDelimiter);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2328,7 +2328,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceDelimiterService.GetItems(admin);
+                                    serviceResponse = await ResourceDelimiterService.GetItems(admin);
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -2379,7 +2379,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceDelimiterService.GetItems(admin);
+                            serviceResponse = await ResourceDelimiterService.GetItems(admin);
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -2401,7 +2401,7 @@
                                         {
                                             resourceEnvironment.SortOrder += -1;
                                         }
-                                        serviceResponse = ResourceEnvironmentService.PostItem(resourceEnvironment);
+                                        serviceResponse = await ResourceEnvironmentService.PostItem(resourceEnvironment);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2427,7 +2427,7 @@
                                         {
                                             resourceEnvironment.SortOrder += 1;
                                         }
-                                        serviceResponse = ResourceEnvironmentService.PostItem(resourceEnvironment);
+                                        serviceResponse = await ResourceEnvironmentService.PostItem(resourceEnvironment);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2451,7 +2451,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Environment", "<p>Edit the Environment.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceEnvironment", false);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2468,7 +2468,7 @@
                                         resourceEnvironment = servicesData.ResourceEnvironments!.Find(x => x.Id == id)!;
                                         if (resourceEnvironment != null)
                                         {
-                                            serviceResponse = ResourceEnvironmentService.DeleteItem(Convert.ToInt32(resourceEnvironment.Id));
+                                            serviceResponse = await ResourceEnvironmentService.DeleteItem(Convert.ToInt32(resourceEnvironment.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2493,7 +2493,7 @@
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Environment", "<p>Add an Environment.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceEnvironment", admin, "");
                                         if (response)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2504,7 +2504,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceEnvironmentService.GetItems();
+                                    serviceResponse = await ResourceEnvironmentService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -2556,7 +2556,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceEnvironmentService.GetItems();
+                            serviceResponse = await ResourceEnvironmentService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -2578,7 +2578,7 @@
                                         {
                                             resourceFunction.SortOrder += -1;
                                         }
-                                        serviceResponse = ResourceFunctionService.PostItem(resourceFunction);
+                                        serviceResponse = await ResourceFunctionService.PostItem(resourceFunction);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2604,7 +2604,7 @@
                                         {
                                             resourceFunction.SortOrder += 1;
                                         }
-                                        serviceResponse = ResourceFunctionService.PostItem(resourceFunction);
+                                        serviceResponse = await ResourceFunctionService.PostItem(resourceFunction);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2628,7 +2628,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Function", "<p>Edit the Function.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceFunction", false);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2645,7 +2645,7 @@
                                         resourceFunction = servicesData.ResourceFunctions!.Find(x => x.Id == id)!;
                                         if (resourceFunction != null)
                                         {
-                                            serviceResponse = ResourceFunctionService.DeleteItem(Convert.ToInt32(resourceFunction.Id));
+                                            serviceResponse = await ResourceFunctionService.DeleteItem(Convert.ToInt32(resourceFunction.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2670,7 +2670,7 @@
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Function", "<p>Add a Function.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceFunction", admin, "");
                                         if (response)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2681,7 +2681,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceFunctionService.GetItems();
+                                    serviceResponse = await ResourceFunctionService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -2733,7 +2733,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceFunctionService.GetItems();
+                            serviceResponse = await ResourceFunctionService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -2751,7 +2751,7 @@
                                     if (resourceLocation != null)
                                     {
                                         resourceLocation.Enabled = true;
-                                        serviceResponse = ResourceLocationService.PostItem(resourceLocation);
+                                        serviceResponse = await ResourceLocationService.PostItem(resourceLocation);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2774,7 +2774,7 @@
                                     if (resourceLocation != null)
                                     {
                                         resourceLocation.Enabled = false;
-                                        serviceResponse = ResourceLocationService.PostItem(resourceLocation);
+                                        serviceResponse = await ResourceLocationService.PostItem(resourceLocation);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2798,7 +2798,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Location", "<p>Edit the Location.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceLocation", true);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2815,7 +2815,7 @@
                                         resourceLocation = servicesData.ResourceLocations!.Find(x => x.Id == id)!;
                                         if (resourceLocation != null)
                                         {
-                                            serviceResponse = ResourceLocationService.DeleteItem(Convert.ToInt32(resourceLocation.Id));
+                                            serviceResponse = await ResourceLocationService.DeleteItem(Convert.ToInt32(resourceLocation.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -2835,7 +2835,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceLocationService.GetItems();
+                                    serviceResponse = await ResourceLocationService.GetItems();
                                     var locationjson = serviceResponse.ResponseObject;
                                     if (BlazorDownloadFileService != null)
                                     {
@@ -2899,7 +2899,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceLocationService.GetItems();
+                            serviceResponse = await ResourceLocationService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -2921,7 +2921,7 @@
                                         {
                                             resourceOrg.SortOrder += -1;
                                         }
-                                        serviceResponse = ResourceOrgService.PostItem(resourceOrg);
+                                        serviceResponse = await ResourceOrgService.PostItem(resourceOrg);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2947,7 +2947,7 @@
                                         {
                                             resourceOrg.SortOrder += 1;
                                         }
-                                        serviceResponse = ResourceOrgService.PostItem(resourceOrg);
+                                        serviceResponse = await ResourceOrgService.PostItem(resourceOrg);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -2971,7 +2971,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Org", "<p>Edit the Org.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceOrg", false);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -2988,7 +2988,7 @@
                                         resourceOrg = servicesData.ResourceOrgs!.Find(x => x.Id == id)!;
                                         if (resourceOrg != null)
                                         {
-                                            serviceResponse = ResourceOrgService.DeleteItem(Convert.ToInt32(resourceOrg.Id));
+                                            serviceResponse = await ResourceOrgService.DeleteItem(Convert.ToInt32(resourceOrg.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3013,7 +3013,7 @@
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Org", "<p>Add an Org.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceOrg", admin, "");
                                         if (response)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3024,7 +3024,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceOrgService.GetItems();
+                                    serviceResponse = await ResourceOrgService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -3076,7 +3076,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceOrgService.GetItems();
+                            serviceResponse = await ResourceOrgService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -3098,7 +3098,7 @@
                                         {
                                             resourceProjAppSvc.SortOrder += -1;
                                         }
-                                        serviceResponse = ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
+                                        serviceResponse = await ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3124,7 +3124,7 @@
                                         {
                                             resourceProjAppSvc.SortOrder += 1;
                                         }
-                                        serviceResponse = ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
+                                        serviceResponse = await ResourceProjAppSvcService.PostItem(resourceProjAppSvc);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3148,7 +3148,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Org", "<p>Edit the Project/App/Service.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceProjAppSvc", false);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3165,7 +3165,7 @@
                                         resourceProjAppSvc = servicesData.ResourceProjAppSvcs!.Find(x => x.Id == id)!;
                                         if (resourceProjAppSvc != null)
                                         {
-                                            serviceResponse = ResourceProjAppSvcService.DeleteItem(Convert.ToInt32(resourceProjAppSvc.Id));
+                                            serviceResponse = await ResourceProjAppSvcService.DeleteItem(Convert.ToInt32(resourceProjAppSvc.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3190,7 +3190,7 @@
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Project/App/Service", "<p>Add an Project/App/Service.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceProjAppSvc", admin, "");
                                         if (response)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3201,7 +3201,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceProjAppSvcService.GetItems();
+                                    serviceResponse = await ResourceProjAppSvcService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -3253,7 +3253,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceProjAppSvcService.GetItems();
+                            serviceResponse = await ResourceProjAppSvcService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -3271,7 +3271,7 @@
                                     if (resourceType != null)
                                     {
                                         resourceType.Enabled = true;
-                                        serviceResponse = ResourceTypeService.PostItem(resourceType);
+                                        serviceResponse = await ResourceTypeService.PostItem(resourceType);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3294,7 +3294,7 @@
                                     if (resourceType != null)
                                     {
                                         resourceType.Enabled = false;
-                                        serviceResponse = ResourceTypeService.PostItem(resourceType);
+                                        serviceResponse = await ResourceTypeService.PostItem(resourceType);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3319,7 +3319,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Resource Type", "<p>Edit the Resource Type.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + resourceType.LengthMin + "-" + resourceType.LengthMax + " characters.</li></ul>", (int)id, "ResourceType", true);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3330,7 +3330,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceTypeService.GetItems();
+                                    serviceResponse = await ResourceTypeService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -3400,7 +3400,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceTypeService.GetItems();
+                            serviceResponse = await ResourceTypeService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -3422,7 +3422,7 @@
                                         {
                                             resourceUnitDept.SortOrder += -1;
                                         }
-                                        serviceResponse = ResourceUnitDeptService.PostItem(resourceUnitDept);
+                                        serviceResponse = await ResourceUnitDeptService.PostItem(resourceUnitDept);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3448,7 +3448,7 @@
                                         {
                                             resourceUnitDept.SortOrder += 1;
                                         }
-                                        serviceResponse = ResourceUnitDeptService.PostItem(resourceUnitDept);
+                                        serviceResponse = await ResourceUnitDeptService.PostItem(resourceUnitDept);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3472,7 +3472,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Unit/Dept", "<p>Edit the Unit/Dept.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceUnitDept", false);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3490,7 +3490,7 @@
                                         resourceUnitDept = servicesData.ResourceUnitDepts!.Find(x => x.Id == id)!;
                                         if (resourceUnitDept != null)
                                         {
-                                            serviceResponse = ResourceUnitDeptService.DeleteItem(Convert.ToInt32(resourceUnitDept.Id));
+                                            serviceResponse = await ResourceUnitDeptService.DeleteItem(Convert.ToInt32(resourceUnitDept.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3515,7 +3515,7 @@
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Unit/Dept", "<p>Add a Unit/Dept.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "ResourceUnitDept", admin, "");
                                         if (response)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3526,7 +3526,7 @@
                                     }
                                     break;
                                 case "download":
-                                    serviceResponse = ResourceUnitDeptService.GetItems();
+                                    serviceResponse = await ResourceUnitDeptService.GetItems();
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -3578,7 +3578,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = ResourceUnitDeptService.GetItems();
+                            serviceResponse = await ResourceUnitDeptService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -3600,7 +3600,7 @@
                                         {
                                             customComponent.SortOrder += -1;
                                         }
-                                        serviceResponse = CustomComponentService.PostItem(customComponent);
+                                        serviceResponse = await CustomComponentService.PostItem(customComponent);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3626,7 +3626,7 @@
                                         {
                                             customComponent.SortOrder += 1;
                                         }
-                                        serviceResponse = CustomComponentService.PostItem(customComponent);
+                                        serviceResponse = await CustomComponentService.PostItem(customComponent);
                                         if (serviceResponse.Success)
                                         {
                                             message.Type = MessageTypesEnum.Success;
@@ -3651,7 +3651,7 @@
                                         response = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Custom Component", "<p>Add a Custom Component.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "CustomComponent", admin, parentcomponent);
                                         if (response)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3669,7 +3669,7 @@
                                         confirm = await ModalHelper.ShowEditModal(Modal, servicesData, theme, "bg-navcolor", "Edit Custom Component", "<p>Edit the Custom Component.</p><p><strong>NOTES</strong></p><ul><li>Short Name value will be converted to lower case.</li><li>Short Name must be " + thisresourceComponent.MinLength + "-" + thisresourceComponent.MaxLength + " characters.</li></ul>", (int)id, "CustomComponent", false, customComponent.ParentComponent);
                                         if (confirm)
                                         {
-                                            servicesData = ServicesHelper.LoadServicesData(admin);
+                                            servicesData = await ServicesHelper.LoadServicesData(admin);
                                             state.SetNavReload(true);
                                             StateHasChanged();
                                         }
@@ -3686,7 +3686,7 @@
                                         customComponent = servicesData.CustomComponents!.Find(x => x.Id == id)!;
                                         if (customComponent != null)
                                         {
-                                            serviceResponse = CustomComponentService.DeleteItem(Convert.ToInt32(customComponent.Id));
+                                            serviceResponse = await CustomComponentService.DeleteItem(Convert.ToInt32(customComponent.Id));
                                             if (serviceResponse.Success)
                                             {
                                                 message.Type = MessageTypesEnum.Success;
@@ -3709,7 +3709,7 @@
                                     bool valid = false;
                                     CustomComponentConfig customcomponentconfigexport = new();
                                     // Get the custom components
-                                    serviceResponse = ResourceComponentService.GetItems(true);
+                                    serviceResponse = await ResourceComponentService.GetItems(true);
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -3720,7 +3720,7 @@
                                                 customcomponentconfigexport.ParentComponents = components.Where(x => x.IsCustom == true).ToList();
 
                                                 // Get the custom component options
-                                                serviceResponse = CustomComponentService.GetItems();
+                                                serviceResponse = await CustomComponentService.GetItems();
                                                 if (serviceResponse.Success)
                                                 {
                                                     if (serviceResponse.ResponseObject != null)
@@ -3771,7 +3771,7 @@
                                             List<ResourceComponent> currentresourcecomponents = new();
                                             List<CustomComponent> newcustomcomponents = new();
                                             // Get the current resource components
-                                            serviceResponse = ResourceComponentService.GetItems(true);
+                                            serviceResponse = await ResourceComponentService.GetItems(true);
                                             if (serviceResponse.Success)
                                             {
                                                 if (serviceResponse.ResponseObject != null)
@@ -3800,7 +3800,7 @@
                                                                                 IsCustom = true,
                                                                                 IsFreeText = thisparentcomponent.IsFreeText
                                                                             };
-                                                                        serviceResponse = ResourceComponentService.PostItem(newcustomcomponent);
+                                                                        serviceResponse = await ResourceComponentService.PostItem(newcustomcomponent);
                                                                         // Add the new custom component to the list
                                                                         currentresourcecomponents.Add(newcustomcomponent);
                                                                     }
@@ -3862,7 +3862,7 @@
                                     }
                                     break;
                             }
-                            serviceResponse = CustomComponentService.GetItems();
+                            serviceResponse = await CustomComponentService.GetItems();
                             if (serviceResponse.Success)
                             {
                                 if (serviceResponse.ResponseObject != null)
@@ -3875,7 +3875,7 @@
                             switch (action)
                             {
                                 case "download":
-                                    serviceResponse = ImportExportService.ExportConfig(includeAdmin);
+                                    serviceResponse = await ImportExportService.ExportConfig(includeAdmin);
                                     if (serviceResponse.Success)
                                     {
                                         if (serviceResponse.ResponseObject != null)
@@ -3940,7 +3940,7 @@
                             switch (action)
                             {
                                 case "download":
-                                    serviceResponse = PolicyService.GetPolicy();
+                                    serviceResponse = await PolicyService.GetPolicy();
                                     var policyjson = serviceResponse.ResponseObject;
 
                                     var stream = new MemoryStream();
@@ -3961,11 +3961,11 @@
 
                     // Reset cache items
                     CacheHelper.InvalidateCacheObject(type);
-                    servicesData = ServicesHelper.LoadServicesData(admin);
+                    servicesData = await ServicesHelper.LoadServicesData(admin);
                 }
                 catch (Exception ex)
                 {
-                    AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
+                    await AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
                     message.Type = MessageTypesEnum.ERROR;
                     message.Message = "There was a problem with the request.";
                 }
@@ -3998,7 +3998,7 @@
 
                     // Get the current user, if any
                     string currentuser = await IdentityHelper.GetCurrentUser(session);
-                    AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
+                    await AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
                 }
             }
             else
@@ -4008,7 +4008,7 @@
         }
         else
         {
-            servicesData = ServicesHelper.LoadServicesData(admin);
+            servicesData = await ServicesHelper.LoadServicesData(admin);
             toastService.ShowError("There was an error with teh request. Please try again");
         }
     }

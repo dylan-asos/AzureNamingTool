@@ -2,11 +2,8 @@
 @using System.Reflection
 @using AzureNamingTool.Helpers
 @using AzureNamingTool.Models
-@using AzureNamingTool.Services
-@inject ILogger<Index> Logger
 @inject NavigationManager NavigationManager
-@inject StateContainer state
-@inject ProtectedSessionStorage session
+@inject ProtectedSessionStorage Session
 @inject ConfigurationHelper ConfigurationHelper
 @inject GithubConnectivityChecker ConnectivityChecker
 
@@ -60,6 +57,7 @@
 @code {
     [CascadingParameter]
     protected ThemeInfo? theme { get; set; }
+    
     [CascadingParameter]
     public IModalService? Modal { get; set; }
     private bool admin;
@@ -69,10 +67,10 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var resultAdmin = await session.GetAsync<bool>("admin");
+        var resultAdmin = await Session.GetAsync<bool>("admin");
         admin = (bool)resultAdmin.Value;
         // Determine if the version notification has been dismissed
-        var resultNotification = await session.GetAsync<bool>("versionnotification");
+        var resultNotification = await Session.GetAsync<bool>("versionnotification");
         bool notificationshown = resultNotification.Success ? resultNotification.Value : false;
 
         if (firstRender)
@@ -88,7 +86,7 @@
                         if (appversion != latestversion)
                         {
                             ModalHelper.ShowInformationModal(Modal!, theme!, "bg-navcolor", "ATTENTION", "<p style='font-weight:bold;'>Your current version is out of date!</p><p>Please click <a href='" + updateurl + "' target='_blank'>here</a> to update to the current version for the latest features!</p><p><span style='font-weight:bold;'>Installed Version:</span> <span style='font-style:italic; '>" + appversion + "</p><p><span style='font-weight:bold;'>Latest version:</span> <span style='font-style:italic; '>" + latestversion + "</span></p>", "", true);
-                            await session.SetAsync("versionnotification", true);
+                            await Session.SetAsync("versionnotification", true);
                             StateHasChanged();
                         }
                     }

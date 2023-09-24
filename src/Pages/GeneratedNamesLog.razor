@@ -207,16 +207,15 @@
         {
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
-            LoadData();
+            await LoadData();
             duplicatenamesallowed = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("DuplicateNamesAllowed"));
             StateHasChanged();
         }
     }
 
-    private void LoadData()
+    private async Task LoadData()
     {
-        ServiceResponse serviceResponse = new();
-        serviceResponse = GeneratedNamesService.GetItems();
+        var serviceResponse = await GeneratedNamesService.GetItems();
         if (serviceResponse.Success)
         {
             if (serviceResponse.ResponseObject != null)
@@ -242,39 +241,37 @@
 
     private async Task DeleteGeneratedName(long id)
     {
-        ServiceResponse serviceResponse = new();
         ResponseMessage message = new();
-        bool confirm = false;
+        bool confirm;
         confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will delete the Generated Name and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
         if (confirm)
         {
-            serviceResponse = GeneratedNamesService.GetItem(Convert.ToInt32(id));
+            var serviceResponse = await GeneratedNamesService.GetItem(Convert.ToInt32(id));
             if (serviceResponse.Success)
             {
                 if (serviceResponse.ResponseObject != null)
                 {
-                    GeneratedName generatedname = (GeneratedName)serviceResponse.ResponseObject!;
-                    if (generatedname != null)
+                    var generatedname = (GeneratedName)serviceResponse.ResponseObject!;
+
+                    serviceResponse = await GeneratedNamesService.DeleteItem(Convert.ToInt32(generatedname.Id));
+                    if (serviceResponse.Success)
                     {
-                        serviceResponse = GeneratedNamesService.DeleteItem(Convert.ToInt32(generatedname.Id));
-                        if (serviceResponse.Success)
-                        {
-                            message.Type = MessageTypesEnum.Success;
-                            message.Message = "Generated name deleted!";
-                            toastService.ShowSuccess(message.Message);
-                            AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Generated Name (" + generatedname.ResourceName + ") deleted." });
-                            CacheHelper.InvalidateCacheObject("GeneratedName");
-                            LoadData();
-                            state.SetNavReload(true);
-                        }
-                        else
-                        {
-                            message.Type = MessageTypesEnum.ERROR;
-                            message.Message = "Generated name deletion failed!";
-                            message.MessageDetails = serviceResponse.ResponseMessage;
-                            toastService.ShowError(message.Message);
-                        }
+                        message.Type = MessageTypesEnum.Success;
+                        message.Message = "Generated name deleted!";
+                        toastService.ShowSuccess(message.Message);
+                        await AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Generated Name (" + generatedname.ResourceName + ") deleted." });
+                        CacheHelper.InvalidateCacheObject("GeneratedName");
+                        await LoadData();
+                        state.SetNavReload(true);
                     }
+                    else
+                    {
+                        message.Type = MessageTypesEnum.ERROR;
+                        message.Message = "Generated name deletion failed!";
+                        message.MessageDetails = serviceResponse.ResponseMessage;
+                        toastService.ShowError(message.Message);
+                    }
+                    
                 }
                 else
                 {
@@ -304,8 +301,8 @@
         {
             LogHelper.PurgeGeneratedNames();
             toastService.ShowSuccess("Generated Log purged!");
-            AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Generated Names log purged." });
-            LoadData();
+            await AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Generated Names log purged." });
+            await LoadData();
             StateHasChanged();
         }
     }

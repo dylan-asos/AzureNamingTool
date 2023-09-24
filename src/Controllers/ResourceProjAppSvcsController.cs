@@ -28,9 +28,9 @@ public class ResourceProjAppSvcsController : ControllerBase
     /// </summary>
     /// <returns>json - Current projects/apps/servicse data</returns>
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var serviceResponse = _resourceProjAppSvcService.GetItems();
+        var serviceResponse = await _resourceProjAppSvcService.GetItems();
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -46,9 +46,9 @@ public class ResourceProjAppSvcsController : ControllerBase
     /// <param name="id">int - Project/App/Service id</param>
     /// <returns>json - Project/App/Service data</returns>
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        var serviceResponse = _resourceProjAppSvcService.GetItem(id);
+        var serviceResponse = await _resourceProjAppSvcService.GetItem(id);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -64,12 +64,12 @@ public class ResourceProjAppSvcsController : ControllerBase
     /// <param name="item">ResourceProjAppSvc (json) - Project/App/Service data</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
-    public IActionResult Post([FromBody] ResourceProjAppSvc item)
+    public async Task<IActionResult> Post([FromBody] ResourceProjAppSvc item)
     {
-        var serviceResponse = _resourceProjAppSvcService.PostItem(item);
+        var serviceResponse = await _resourceProjAppSvcService.PostItem(item);
         if (serviceResponse.Success)
         {
-            _adminLogService.PostItem(new AdminLogMessage
+            await _adminLogService.PostItem(new AdminLogMessage
             {
                 Source = "API", Title = "INFORMATION",
                 Message = "Resource Project/App/Service (" + item.Name + ") added/updated."
@@ -89,12 +89,12 @@ public class ResourceProjAppSvcsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceProjAppSvc> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceProjAppSvc> items)
     {
         var serviceResponse = _resourceProjAppSvcService.PostConfig(items);
         if (serviceResponse.Success)
         {
-            _adminLogService.PostItem(new AdminLogMessage
+            await _adminLogService.PostItem(new AdminLogMessage
                 {Source = "API", Title = "INFORMATION", Message = "Resource Projects/Apps/Services added/updated."});
             _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
             return Ok(serviceResponse.ResponseObject);
@@ -110,16 +110,16 @@ public class ResourceProjAppSvcsController : ControllerBase
     /// <param name="id">int - Project/App?service id</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var serviceResponse = _resourceProjAppSvcService.GetItem(id);
+        var serviceResponse = await _resourceProjAppSvcService.GetItem(id);
         if (serviceResponse.Success)
         {
             var item = (ResourceProjAppSvc) serviceResponse.ResponseObject!;
-            serviceResponse = _resourceProjAppSvcService.DeleteItem(id);
+            serviceResponse = await _resourceProjAppSvcService.DeleteItem(id);
             if (serviceResponse.Success)
             {
-                _adminLogService.PostItem(new AdminLogMessage
+                await _adminLogService.PostItem(new AdminLogMessage
                 {
                     Source = "API", Title = "INFORMATION",
                     Message = "Resource Project/App/Service (" + item.Name + ") deleted."

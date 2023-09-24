@@ -31,9 +31,9 @@ public class ResourceEnvironmentsController : ControllerBase
     /// </summary>
     /// <returns>json - Current environments data</returns>
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var serviceResponse = _resourceEnvironmentService.GetItems();
+        var serviceResponse = await _resourceEnvironmentService.GetItems();
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -49,9 +49,9 @@ public class ResourceEnvironmentsController : ControllerBase
     /// <param name="id">int - Environment id</param>
     /// <returns>json - Environment data</returns>
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        var serviceResponse = _resourceEnvironmentService.GetItem(id);
+        var serviceResponse = await _resourceEnvironmentService.GetItem(id);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -67,21 +67,20 @@ public class ResourceEnvironmentsController : ControllerBase
     /// <param name="item">ResourceEnvironment (json) - Environment data</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
-    public IActionResult Post([FromBody] ResourceEnvironment item)
+    public async Task<IActionResult> Post([FromBody] ResourceEnvironment item)
     {
-        var serviceResponse = _resourceEnvironmentService.PostItem(item);
-        if (serviceResponse.Success)
+        var serviceResponse = await _resourceEnvironmentService.PostItem(item);
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
         {
-            _adminLogService.PostItem(new AdminLogMessage
-            {
-                Source = "API", Title = "INFORMATION",
-                Message = "Resource Environment (" + item.Name + ") added/updated."
-            });
-            _cacheHelper.InvalidateCacheObject("ResourceEnvironment");
-            return Ok(serviceResponse.ResponseObject);
-        }
+            Source = "API", Title = "INFORMATION",
+            Message = "Resource Environment (" + item.Name + ") added/updated."
+        });
+        _cacheHelper.InvalidateCacheObject("ResourceEnvironment");
+        return Ok(serviceResponse.ResponseObject);
 
-        return BadRequest(serviceResponse.ResponseObject);
     }
 
     // POST api/<ResourceEnvironmentsController>
@@ -92,18 +91,17 @@ public class ResourceEnvironmentsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceEnvironment> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceEnvironment> items)
     {
         var serviceResponse = _resourceEnvironmentService.PostConfig(items);
-        if (serviceResponse.Success)
-        {
-            _adminLogService.PostItem(new AdminLogMessage
-                {Source = "API", Title = "INFORMATION", Message = "Resource Environments added/updated."});
-            _cacheHelper.InvalidateCacheObject("ResourceEnvironment");
-            return Ok(serviceResponse.ResponseObject);
-        }
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Environments added/updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceEnvironment");
+        return Ok(serviceResponse.ResponseObject);
 
-        return BadRequest(serviceResponse.ResponseObject);
     }
 
     // DELETE api/<ResourceEnvironmentsController>/5
@@ -113,18 +111,18 @@ public class ResourceEnvironmentsController : ControllerBase
     /// <param name="id">int - Environment id</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var serviceResponse = _resourceEnvironmentService.GetItem(id);
+        var serviceResponse = await _resourceEnvironmentService.GetItem(id);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
         var item = (ResourceEnvironment) serviceResponse.ResponseObject!;
-        serviceResponse = _resourceEnvironmentService.DeleteItem(id);
+        serviceResponse = await _resourceEnvironmentService.DeleteItem(id);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
             Message = "Resource Environment (" + item.Name + ") deleted."

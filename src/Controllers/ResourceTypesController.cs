@@ -36,11 +36,11 @@ public class ResourceTypesController : ControllerBase
     /// </summary>
     /// <returns>json - Current resource types data</returns>
     [HttpGet]
-    public IActionResult Get(bool admin = false)
+    public async Task<IActionResult> Get(bool admin = false)
     {
         var serviceResponse =
             // Get list of items
-            _resourceTypeService.GetItems(admin);
+            await _resourceTypeService.GetItems(admin);
         
         if (serviceResponse.Success)
         {
@@ -57,11 +57,11 @@ public class ResourceTypesController : ControllerBase
     /// <param name="id">int - Resource Type id</param>
     /// <returns>json - Resource Type data</returns>
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
         var serviceResponse =
             // Get list of items
-            _resourceTypeService.GetItem(id);
+            await _resourceTypeService.GetItem(id);
         
         if (serviceResponse.Success)
         {
@@ -79,13 +79,13 @@ public class ResourceTypesController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceType> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceType> items)
     {
         var serviceResponse = _resourceTypeService.PostConfig(items);
         
         if (serviceResponse.Success)
         {
-            _adminLogService.PostItem(new AdminLogMessage
+            await _adminLogService.PostItem(new AdminLogMessage
                 {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
             _cacheHelper.InvalidateCacheObject("ResourceType");
             return Ok(serviceResponse.ResponseObject);
@@ -103,13 +103,13 @@ public class ResourceTypesController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult UpdateTypeComponents(string operation, int componentId)
+    public async Task<IActionResult> UpdateTypeComponents(string operation, int componentId)
     {
-        var serviceResponse = _resourceTypeUpdater.UpdateTypeComponents(operation, componentId);
+        var serviceResponse = await _resourceTypeUpdater.UpdateTypeComponents(operation, componentId);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
         _cacheHelper.InvalidateCacheObject("ResourceType");
         return Ok(serviceResponse.ResponseObject);

@@ -7,55 +7,49 @@ public class AdminUserService
 {
     private readonly FileReader _fileReader;
     private readonly FileWriter _fileWriter;
-    
+
     public AdminUserService(
-        FileReader reader, 
+        FileReader reader,
         FileWriter fileWriter)
     {
         _fileReader = reader;
         _fileWriter = fileWriter;
     }
 
-    public ServiceResponse GetItems()
+    public async Task<ServiceResponse> GetItems()
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<AdminUser>();
-        if (items != null)
-        {
-            serviceResponse.ResponseObject = items.OrderBy(x => x.Name).ToList();
-            serviceResponse.Success = true;
-        }
+        var items = await _fileReader.GetList<AdminUser>();
+
+        serviceResponse.ResponseObject = items.OrderBy(x => x.Name).ToList();
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse GetItem(string name)
+    public async Task<ServiceResponse> GetItem(string name)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<AdminUser>();
-        if (items != null)
-        {
-            var item = items.Find(x => x.Name == name);
-            serviceResponse.ResponseObject = item;
-            serviceResponse.Success = true;
-        }
+        var items = await _fileReader.GetList<AdminUser>();
+
+        var item = items.Find(x => x.Name == name);
+        serviceResponse.ResponseObject = item;
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse PostItem(AdminUser item)
+    public async Task<ServiceResponse> PostItem(AdminUser item)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<AdminUser>();
-        if (items == null)
-            return serviceResponse;
-        
+        var items = await _fileReader.GetList<AdminUser>();
+
         // Set the new id
         if (item.Id == 0)
         {
@@ -108,30 +102,29 @@ public class AdminUserService
         _fileWriter.WriteList(items);
         serviceResponse.ResponseObject = "Item added!";
         serviceResponse.Success = true;
-        
+
         return serviceResponse;
     }
 
-    public ServiceResponse DeleteItem(int id)
+    public async Task<ServiceResponse> DeleteItem(int id)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items =  _fileReader.GetList<AdminUser>();
-        if (items != null)
-        {
-            // Get the specified item
-            var item = items.Find(x => x.Id == id);
-            if (item != null)
-            {
-                // Remove the item from the collection
-                items.Remove(item);
+        var items = await _fileReader.GetList<AdminUser>();
 
-                // Write items to file
-                _fileWriter.WriteList(items);
-                serviceResponse.Success = true;
-            }
+        // Get the specified item
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
+        {
+            // Remove the item from the collection
+            items.Remove(item);
+
+            // Write items to file
+            _fileWriter.WriteList(items);
+            serviceResponse.Success = true;
         }
+
 
         return serviceResponse;
     }

@@ -1,7 +1,6 @@
-﻿@using AzureNamingTool.Helpers
-@using AzureNamingTool.Models
+﻿@using AzureNamingTool.Models
 @using AzureNamingTool.Services
-@using Microsoft.AspNetCore.Html
+@using AzureNamingTool.Helpers
 @inject IToastService toastService
 @inject StateContainer state
 @inject IJSRuntime JsRuntime
@@ -46,13 +45,13 @@
                         {
                             if (!IsCategoryVisible(category))
                                 continue;
-                            <div id="@("multitypecontainer_"+@category)" class="card mb-3">
+                            <div id="@("multitypecontainer_" + category)" class="card mb-3">
                                 <div class="card-header bg-default text-dark">
-                                    <a id="NamingGuidlines" class="link-dark text-decoration-none" data-bs-toggle="collapse" href="@("#multitypesection_"+@category)" role="button" aria-expanded="false" aria-controls="@("multitypesection_"+@category)">
+                                    <a id="NamingGuidlines" class="link-dark text-decoration-none" data-bs-toggle="collapse" href="@("#multitypesection_" + category)" role="button" aria-expanded="false" aria-controls="@("multitypesection_" + category)">
                                         <span class="oi oi-chevron-bottom" aria-hidden="true"></span> @category
                                     </a>
                                 </div>
-                                <div class="collapse show card card-body @theme.ThemeStyle" id="@("multitypesection_"+@category)">
+                                <div class="collapse show card card-body @theme.ThemeStyle" id="@("multitypesection_" + category)">
                                     <ul style="list-style-type: none;word-break: break-word;">
                                         @foreach (var resourceType in ResourceTypeService.GetFilteredResourceTypes(servicesData.ResourceTypes!, category))
                                         {
@@ -62,13 +61,13 @@
                                                 <div class="form-check">
                                                     @if (multiselectedResourceTypes.Contains(resourceType.Id.ToString()))
                                                     {
-                                                        <input class="form-check-input" type="checkbox" checked value="@resourceType.Id" id="@("multitype_"+@resourceType.Id)" @onchange="eventArgs => { OnMultiTypesChange(resourceType.Id.ToString(), eventArgs.Value!); }">
+                                                        <input class="form-check-input" type="checkbox" checked value="@resourceType.Id" id="@("multitype_" + resourceType.Id)" @onchange="eventArgs => { OnMultiTypesChange(resourceType.Id.ToString(), eventArgs.Value!); }">
                                                     }
                                                     else
                                                     {
-                                                        <input class="form-check-input" type="checkbox" value="@resourceType.Id" id="@("multitype_"+@resourceType.Id)" @onchange="eventArgs => { OnMultiTypesChange(resourceType.Id.ToString(), eventArgs.Value!); }">
+                                                        <input class="form-check-input" type="checkbox" value="@resourceType.Id" id="@("multitype_" + resourceType.Id)" @onchange="eventArgs => { OnMultiTypesChange(resourceType.Id.ToString(), eventArgs.Value!); }">
                                                     }
-                                                    @if (!String.IsNullOrEmpty(resourceType.Property))
+                                                    @if (!string.IsNullOrEmpty(resourceType.Property))
                                                     {
                                                         <label class="form-check-label" for="flexCheckDefault">
                                                             @resourceType.Resource - @resourceType.Property (@resourceType.ShortName)
@@ -98,61 +97,56 @@
 </div>
 
 @code {
-    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; } = new();
-    [Parameter] public ThemeInfo theme { get; set; } = new();
-    [Parameter] public string title { get; set; } = String.Empty;
-    [Parameter] public string message { get; set; } = String.Empty;
-    [Parameter] public List<string> multiselectedResourceTypes { get; set; } = new();
+
+    [CascadingParameter]
+    BlazoredModalInstance ModalInstance { get; set; } = new();
+
+    [Parameter]
+    public ThemeInfo theme { get; set; } = new();
+
+    [Parameter]
+    public string title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string message { get; set; } = string.Empty;
+
+    [Parameter]
+    public List<string> multiselectedResourceTypes { get; set; } = new();
 
     private ServicesData servicesData = new();
     private List<string> categories = new();
-    public string filterData { get; set; } = String.Empty;
+    public string filterData { get; set; } = string.Empty;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        SetServicesData();
-        return Task.CompletedTask;
+        await SetServicesData();
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        SetServicesData();
-        return Task.CompletedTask;
+        await SetServicesData();
     }
 
-    private void SetServicesData()
+    private async Task SetServicesData()
     {
-        try
-        {
-            servicesData = ServicesHelper.LoadServicesData(false);
-            if (servicesData != null)
-            {
-                List<ResourceType> filteredtypes = new List<ResourceType>();
-                // Filter out the types w/o the scope
-                foreach (ResourceType type in servicesData.ResourceTypes!)
-                {
-                    filteredtypes.Add(type);
-                }
-                servicesData.ResourceTypes = filteredtypes;
+        servicesData = await ServicesHelper.LoadServicesData(false);
 
-                // Get the list of categories
-                categories = ResourceTypeService.GetTypeCategories(servicesData.ResourceTypes);
-            }
-            else
-            {
-                toastService.ShowError("There was a problem loading the page. Please try again");
-            }
-        }
-        catch (Exception ex)
+        var filteredtypes = new List<ResourceType>();
+        
+        // Filter out the types w/o the scope
+        foreach (var type in servicesData.ResourceTypes!)
         {
-            AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-            toastService.ShowError("There was a problem loading the page. Please try again");
+            filteredtypes.Add(type);
         }
+        servicesData.ResourceTypes = filteredtypes;
+
+    // Get the list of categories
+        categories = ResourceTypeService.GetTypeCategories(servicesData.ResourceTypes);
     }
 
     private void OnMultiTypesChange(string aSelectedId, object aChecked)
     {
-        if ((bool)aChecked)
+        if ((bool) aChecked)
         {
             if (!multiselectedResourceTypes.Contains(aSelectedId))
             {
@@ -176,11 +170,11 @@
 
     public bool IsTypeVisible(ResourceType type)
     {
-        bool visible = true;
+        var visible = true;
 
         if (!string.IsNullOrEmpty(filterData))
         {
-            if ((!type.Resource.Contains(filterData, StringComparison.OrdinalIgnoreCase)) && (!type.ShortName.Contains(filterData, StringComparison.OrdinalIgnoreCase)))
+            if (!type.Resource.Contains(filterData, StringComparison.OrdinalIgnoreCase) && !type.ShortName.Contains(filterData, StringComparison.OrdinalIgnoreCase))
                 visible = false;
         }
         return visible;
@@ -188,15 +182,15 @@
 
     public bool IsCategoryVisible(string category)
     {
-        bool visible = true;
-        bool typevisible = false;
+        var visible = true;
+        var typevisible = false;
 
         if (!string.IsNullOrEmpty(filterData))
         {
-            // Gett all the types for the category
+    // Gett all the types for the category
             @foreach (var type in ResourceTypeService.GetFilteredResourceTypes(servicesData.ResourceTypes!, category))
             {
-                if ((type.Resource.Contains(filterData, StringComparison.OrdinalIgnoreCase)) || (type.ShortName.Contains(filterData, StringComparison.OrdinalIgnoreCase)))
+                if (type.Resource.Contains(filterData, StringComparison.OrdinalIgnoreCase) || type.ShortName.Contains(filterData, StringComparison.OrdinalIgnoreCase))
                 {
                     typevisible = true;
                 }
@@ -205,4 +199,5 @@
         }
         return visible;
     }
+
 }

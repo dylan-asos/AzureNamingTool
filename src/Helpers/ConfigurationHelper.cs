@@ -448,7 +448,7 @@ public class ConfigurationHelper
         if (response.IsSuccessStatusCode)
         {
             result = true;
-            _adminLogService.PostItem(new AdminLogMessage
+            await _adminLogService.PostItem(new AdminLogMessage
             {
                 Title = "INFORMATION",
                 Message = "Generated Name (" + generatedName.ResourceName + ") successfully posted to webhook!"
@@ -456,7 +456,7 @@ public class ConfigurationHelper
         }
         else
         {
-            _adminLogService.PostItem(new AdminLogMessage
+            await _adminLogService.PostItem(new AdminLogMessage
             {
                 Title = "INFORMATION",
                 Message = "Generated Name (" + generatedName.ResourceName + ") not successfully posted to webhook! " +

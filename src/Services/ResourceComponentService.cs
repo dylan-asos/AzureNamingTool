@@ -20,69 +20,56 @@ public class ResourceComponentService
         _fileSystemHelper = fileSystemHelper;
     }
 
-    public ServiceResponse GetItems(bool admin)
+    public async Task<ServiceResponse> GetItems(bool admin)
     {
         ServiceResponse serviceResponse = new();
 
-        var items = _fileReader.GetList<ResourceComponent>();
-        if (items != null)
-        {
-            if (!admin)
-            {
-                serviceResponse.ResponseObject = items.Where(x => x.Enabled).OrderBy(y => y.SortOrder).ToList();
-            }
-            else
-            {
-                serviceResponse.ResponseObject =
-                    items.OrderBy(y => y.SortOrder).ThenByDescending(y => y.Enabled).ToList();
-            }
+        var items = await _fileReader.GetList<ResourceComponent>();
 
-            serviceResponse.Success = true;
+        if (!admin)
+        {
+            serviceResponse.ResponseObject = items.Where(x => x.Enabled).OrderBy(y => y.SortOrder).ToList();
         }
         else
         {
-            serviceResponse.ResponseObject = "Resource Components not found!";
+            serviceResponse.ResponseObject =
+                items.OrderBy(y => y.SortOrder).ThenByDescending(y => y.Enabled).ToList();
         }
+
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse GetItem(int id)
+    public async Task<ServiceResponse> GetItem(int id)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<ResourceComponent>();
-        if (items != null)
+        var items = await _fileReader.GetList<ResourceComponent>();
+
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
         {
-            var item = items.Find(x => x.Id == id);
-            if (item != null)
-            {
-                serviceResponse.ResponseObject = item;
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Resource Component not found!";
-            }
+            serviceResponse.ResponseObject = item;
+            serviceResponse.Success = true;
         }
         else
         {
             serviceResponse.ResponseObject = "Resource Component not found!";
         }
 
+
         return serviceResponse;
     }
 
-    public ServiceResponse PostItem(ResourceComponent item)
+    public async Task<ServiceResponse> PostItem(ResourceComponent item)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<ResourceComponent>();
-        if (items == null) 
-            return serviceResponse;
-        
+        var items = await _fileReader.GetList<ResourceComponent>();
+
         // Set the new id
         if (item.Id == 0)
         {
@@ -184,9 +171,9 @@ public class ResourceComponentService
         // Make sure all the component names are present
         foreach (var name in componentNames)
         {
-            if (newitems.Exists(x => x.Name == name)) 
+            if (newitems.Exists(x => x.Name == name))
                 continue;
-            
+
             // Create a component object 
             ResourceComponent newItem = new()
             {
@@ -217,11 +204,11 @@ public class ResourceComponentService
     ///     This function is used to sync default configuration data with the user's local version
     /// </summary>
     /// <param name="type">string - Type of configuration data to sync</param>
-    public void SyncConfigurationData()
+    public async Task SyncConfigurationData()
     {
         var update = false;
 
-        var serviceResponse = GetItems(true);
+        var serviceResponse = await GetItems(true);
         if (!serviceResponse.Success)
             return;
 
@@ -275,7 +262,7 @@ public class ResourceComponentService
 
             if (update)
             {
-                PostItem(newComponent);
+                await PostItem(newComponent);
             }
         }
     }

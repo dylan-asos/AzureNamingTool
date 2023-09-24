@@ -24,9 +24,9 @@ public class ImportExportController : ControllerBase
     /// <returns>json - JSON configuration file</returns>
     [HttpGet]
     [Route("[action]")]
-    public IActionResult ExportConfiguration(bool includeAdmin = false)
+    public async Task<IActionResult> ExportConfiguration(bool includeAdmin = false)
     {
-        var serviceResponse = _importExportService.ExportConfig(includeAdmin);
+        var serviceResponse = await _importExportService.ExportConfig(includeAdmin);
         
         return serviceResponse.Success 
             ? (IActionResult) Ok(serviceResponse.ResponseObject) 

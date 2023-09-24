@@ -174,11 +174,11 @@
         {
             if (await ConnectivityChecker.VerifyConnectivity())
             {
-                servicesData = ServicesHelper.LoadServicesData(admin);
+                servicesData = await ServicesHelper.LoadServicesData(admin);
                 try
                 {
                     result = await storage.GetAsync<bool>("newsenabled");
-                    newsenabled = result.Success ? result.Value : true;
+                    newsenabled = !result.Success || result.Value;
                 }
                 catch
                 {
@@ -196,7 +196,7 @@
         {
             if ((servicesData != null) || (state._reloadnav))
             {
-                servicesData = ServicesHelper.LoadServicesData(admin);
+                servicesData = await ServicesHelper.LoadServicesData(admin);
                 state.SetNavReload(false);
             }
         }

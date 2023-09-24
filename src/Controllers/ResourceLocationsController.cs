@@ -28,9 +28,9 @@ public class ResourceLocationsController : ControllerBase
     /// </summary>
     /// <returns>json - Current locations data</returns>
     [HttpGet]
-    public IActionResult Get(bool admin = false)
+    public async Task<IActionResult> Get(bool admin = false)
     {
-        var serviceResponse = _resourceLocationService.GetItems(admin);
+        var serviceResponse = await _resourceLocationService.GetItems(admin);
         return serviceResponse.Success 
             ? (IActionResult) Ok(serviceResponse.ResponseObject) 
             : (IActionResult) BadRequest(serviceResponse.ResponseObject);
@@ -43,9 +43,9 @@ public class ResourceLocationsController : ControllerBase
     /// <param name="id">int - Location id</param>
     /// <returns>json - Location data</returns>
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        var serviceResponse = _resourceLocationService.GetItem(id);
+        var serviceResponse = await _resourceLocationService.GetItem(id);
         
         return serviceResponse.Success 
             ? (IActionResult) Ok(serviceResponse.ResponseObject) 
@@ -60,13 +60,13 @@ public class ResourceLocationsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceLocation> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceLocation> items)
     {
         var serviceResponse = _resourceLocationService.PostConfig(items);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Locations added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceLocation");
         return Ok(serviceResponse.ResponseObject);

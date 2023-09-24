@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using AzureNamingTool.Data.SourceRepository;
 using AzureNamingTool.Models;
 
 namespace AzureNamingTool.Helpers;
@@ -6,55 +7,57 @@ namespace AzureNamingTool.Helpers;
 public class FileReader
 {
     private readonly CacheHelper _cacheHelper;
-    private readonly FileSystemHelper _fileSystemHelper;
+    private readonly RepositoryFactory _repositoryFactory;
 
-    public FileReader(CacheHelper cacheHelper, FileSystemHelper fileSystemHelper)
+    public FileReader(CacheHelper cacheHelper, RepositoryFactory repositoryFactory)
     {
         _cacheHelper = cacheHelper;
-        _fileSystemHelper = fileSystemHelper;
+        _repositoryFactory = repositoryFactory;
     }
     
-    public List<T>? GetList<T>()
+    public async Task<List<T>> GetList<T>()
     {
         var items = new List<T>();
 
         // Check if the data is cached
         var data = (string) _cacheHelper.GetCacheObject(typeof(T).Name)!;
         
+        var targetRepository = _repositoryFactory.GetRepository();
+        
         // Load the data from the file system.
         if (string.IsNullOrEmpty(data))
         {
-            data = typeof(T).Name switch
+            var fileName = typeof(T).Name switch
             {
-                nameof(ResourceComponent) => _fileSystemHelper.ReadFile(FileNames.ResourceComponent),
-                nameof(ResourceEnvironment) => _fileSystemHelper.ReadFile(FileNames.ResourceEnvironment),
-                nameof(ResourceLocation) => _fileSystemHelper.ReadFile(FileNames.ResourceLocation),
-                nameof(ResourceOrg) => _fileSystemHelper.ReadFile(FileNames.ResourceOrg),
-                nameof(ResourceProjAppSvc) => _fileSystemHelper.ReadFile(FileNames.ResourceProjAppSvc),
-                nameof(ResourceType) => _fileSystemHelper.ReadFile(FileNames.ResourceType),
-                nameof(ResourceUnitDept) => _fileSystemHelper.ReadFile(FileNames.ResourceUnitDept),
-                nameof(ResourceFunction) => _fileSystemHelper.ReadFile(FileNames.ResourceFunction),
-                nameof(ResourceDelimiter) => _fileSystemHelper.ReadFile(FileNames.ResourceDelimiter),
-                nameof(CustomComponent) => _fileSystemHelper.ReadFile(FileNames.CustomComponent),
-                nameof(AdminLogMessage) => _fileSystemHelper.ReadFile(FileNames.AdminLogMessage),
-                nameof(GeneratedName) => _fileSystemHelper.ReadFile(FileNames.GeneratedName),
-                nameof(AdminUser) => _fileSystemHelper.ReadFile("adminusers.json"),
+                nameof(ResourceComponent) => FileNames.ResourceComponent,
+                nameof(ResourceEnvironment) => FileNames.ResourceEnvironment,
+                nameof(ResourceLocation) => FileNames.ResourceLocation,
+                nameof(ResourceOrg) => FileNames.ResourceOrg,
+                nameof(ResourceProjAppSvc) => FileNames.ResourceProjAppSvc,
+                nameof(ResourceType) => FileNames.ResourceType,
+                nameof(ResourceUnitDept) => FileNames.ResourceUnitDept,
+                nameof(ResourceFunction) => FileNames.ResourceFunction,
+                nameof(ResourceDelimiter) => FileNames.ResourceDelimiter,
+                nameof(CustomComponent) => FileNames.CustomComponent,
+                nameof(AdminLogMessage) => FileNames.AdminLogMessage,
+                nameof(GeneratedName) => FileNames.GeneratedName,
+                nameof(AdminUser) => FileNames.AdminUser,
                 _ => "[]"
             };
+
+            data = await targetRepository.ReadFile(fileName);
             _cacheHelper.SetCacheObject(typeof(T).Name, data);
         }
 
-        if (data != "[]")
-        {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
-            };
-
-            items = JsonSerializer.Deserialize<List<T>>(data, options);
-        }
+        if (data == "[]") 
+            return items;
         
-        return items;
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        return JsonSerializer.Deserialize<List<T>>(data, options) ?? new List<T>();
     }
 }

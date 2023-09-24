@@ -1,3 +1,4 @@
+using AzureNamingTool.Data.SourceRepository;
 using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
 using AzureNamingTool.Services;
@@ -21,6 +22,8 @@ public static class ServicesExtensions
 
         services.AddTransient<FileReader>();
         services.AddTransient<FileWriter>();
+
+        services.AddSingleton<RepositoryFactory>();
         
         services.AddTransient<AdminLogService>();
         services.AddTransient<AdminService>();

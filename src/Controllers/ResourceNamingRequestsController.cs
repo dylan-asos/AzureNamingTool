@@ -29,9 +29,9 @@ public class ResourceNamingRequestsController : ControllerBase
     /// <returns>string - Name generation response</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult RequestNameWithComponents([FromBody] ResourceNameRequestWithComponents request)
+    public async Task<IActionResult> RequestNameWithComponents([FromBody] ResourceNameRequestWithComponents request)
     {
-        var resourceNameRequestResponse = _resourceNamingRequestService.RequestNameWithComponents(request);
+        var resourceNameRequestResponse = await _resourceNamingRequestService.RequestNameWithComponents(request);
         if (resourceNameRequestResponse.Success)
         {
             return Ok(resourceNameRequestResponse);
@@ -70,9 +70,9 @@ public class ResourceNamingRequestsController : ControllerBase
     /// <returns>ValidateNameResponse - Name validation response</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult ValidateName([FromBody] ValidateNameRequest validateNameRequest)
+    public async Task<IActionResult> ValidateName([FromBody] ValidateNameRequest validateNameRequest)
     {
-        var serviceResponse = _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
+        var serviceResponse = await _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
         if (!serviceResponse.Success) 
             return BadRequest("There was a problem validating the name.");
         

@@ -30,9 +30,9 @@ public class ResourceUnitDeptsController : ControllerBase
     /// </summary>
     /// <returns>json - Current units/depts data</returns>
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var serviceResponse = _resourceUnitDeptService.GetItems();
+        var serviceResponse = await _resourceUnitDeptService.GetItems();
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -48,9 +48,9 @@ public class ResourceUnitDeptsController : ControllerBase
     /// <param name="id">int - Unit/Dept id</param>
     /// <returns>json - Unit/Dept data</returns>
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        var serviceResponse = _resourceUnitDeptService.GetItem(id);
+        var serviceResponse = await _resourceUnitDeptService.GetItem(id);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -66,14 +66,14 @@ public class ResourceUnitDeptsController : ControllerBase
     /// <param name="item">ResourceUnitDept (json) - Unit/Dept data</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
-    public IActionResult Post([FromBody] ResourceUnitDept item)
+    public async Task<IActionResult> Post([FromBody] ResourceUnitDept item)
     {
-        var serviceResponse = _resourceUnitDeptService.PostItem(item);
+        var serviceResponse = await _resourceUnitDeptService.PostItem(item);
 
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
             Message = "Resource Unit/Department (" + item.Name + ") added/updated."
@@ -91,13 +91,13 @@ public class ResourceUnitDeptsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceUnitDept> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceUnitDept> items)
     {
         var serviceResponse = _resourceUnitDeptService.PostConfig(items);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Units/Departments added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
         return Ok(serviceResponse.ResponseObject);
@@ -110,18 +110,18 @@ public class ResourceUnitDeptsController : ControllerBase
     /// <param name="id">int - Unit/Dept id</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var serviceResponse = _resourceUnitDeptService.GetItem(id);
+        var serviceResponse = await _resourceUnitDeptService.GetItem(id);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
         var item = (ResourceUnitDept) serviceResponse.ResponseObject!;
-        serviceResponse = _resourceUnitDeptService.DeleteItem(id);
+        serviceResponse = await _resourceUnitDeptService.DeleteItem(id);
         if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
         
-        _adminLogService.PostItem(new AdminLogMessage
+        await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
             Message = "Resource Unit/Department (" + item.Name + ") deleted."

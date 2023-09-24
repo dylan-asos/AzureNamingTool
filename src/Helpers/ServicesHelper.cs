@@ -50,34 +50,34 @@ public class ServicesHelper
     }
 
 
-    public ServicesData LoadServicesData(bool admin)
+    public async Task<ServicesData> LoadServicesData(bool admin)
     {
         ServicesData servicesData = new();
-        var serviceResponse = _resourceComponentService.GetItems(admin);
+        var serviceResponse = await _resourceComponentService.GetItems(admin);
         servicesData.ResourceComponents = (List<ResourceComponent>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceDelimiterService.GetItems(admin);
+        serviceResponse = await _resourceDelimiterService.GetItems(admin);
         servicesData.ResourceDelimiters = (List<ResourceDelimiter>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceEnvironmentService.GetItems();
+        serviceResponse = await _resourceEnvironmentService.GetItems();
         servicesData.ResourceEnvironments = (List<ResourceEnvironment>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceLocationService.GetItems(admin);
+        serviceResponse = await _resourceLocationService.GetItems(admin);
         servicesData.ResourceLocations = (List<ResourceLocation>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceOrgService.GetItems();
+        serviceResponse = await _resourceOrgService.GetItems();
         servicesData.ResourceOrgs = (List<ResourceOrg>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceProjAppSvcService.GetItems();
+        serviceResponse = await _resourceProjAppSvcService.GetItems();
         servicesData.ResourceProjAppSvcs = (List<ResourceProjAppSvc>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceTypeService.GetItems(admin);
+        serviceResponse = await _resourceTypeService.GetItems(admin);
         servicesData.ResourceTypes = (List<ResourceType>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceUnitDeptService.GetItems();
+        serviceResponse = await _resourceUnitDeptService.GetItems();
         servicesData.ResourceUnitDepts = (List<ResourceUnitDept>?) serviceResponse.ResponseObject;
-        serviceResponse = _resourceFunctionService.GetItems();
+        serviceResponse = await _resourceFunctionService.GetItems();
         servicesData.ResourceFunctions = (List<ResourceFunction>?) serviceResponse.ResponseObject;
-        serviceResponse = _customComponentService.GetItems();
+        serviceResponse = await _customComponentService.GetItems();
         servicesData.CustomComponents = (List<CustomComponent>?) serviceResponse.ResponseObject;
-        serviceResponse = _generatedNamesService.GetItems();
+        serviceResponse = await _generatedNamesService.GetItems();
         servicesData.GeneratedNames = (List<GeneratedName>?) serviceResponse.ResponseObject;
-        serviceResponse = _adminLogService.GetItems();
+        serviceResponse = await _adminLogService.GetItems();
         servicesData.AdminLogMessages = (List<AdminLogMessage>?) serviceResponse.ResponseObject;
-        serviceResponse = _adminUserService.GetItems();
+        serviceResponse = await _adminUserService.GetItems();
         servicesData.AdminUsers = (List<AdminUser>?) serviceResponse.ResponseObject;
         return servicesData;
     }

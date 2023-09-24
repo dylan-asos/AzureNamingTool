@@ -23,14 +23,12 @@ public class AdminLogService
     ///     This function returns the Admin log.
     /// </summary>
     /// <returns>List of AdminLogMessages - List of Adming Log messages.</returns>
-    public ServiceResponse GetItems()
+    public async Task<ServiceResponse> GetItems()
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<AdminLogMessage>();
-        if (items == null) 
-            return serviceResponse;
+        var items = await _fileReader.GetList<AdminLogMessage>();
         
         serviceResponse.ResponseObject = items.OrderByDescending(x => x.CreatedOn).ToList();
         serviceResponse.Success = true;
@@ -41,13 +39,10 @@ public class AdminLogService
     /// <summary>
     ///     This function logs the Admin message.
     /// </summary>
-    public void PostItem(AdminLogMessage adminLogMessage)
+    public async Task PostItem(AdminLogMessage adminLogMessage)
     {
         // Log the created name
-        var items = _fileReader.GetList<AdminLogMessage>();
-
-        if (items == null)
-            return;
+        var items = await _fileReader.GetList<AdminLogMessage>();
         
         if (items.Count > 0)
         {

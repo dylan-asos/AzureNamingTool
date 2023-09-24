@@ -474,7 +474,7 @@
                 releasenotesurl = "https://github.com/mspnp/AzureNamingTool/wiki/v" + appversion;
             }
 
-            servicesData = ServicesHelper.LoadServicesData(true);
+            servicesData = await ServicesHelper.LoadServicesData(true);
             var result = await session.GetAsync<bool>("admin");
             admin = (bool)result.Value;
             if (admin)
@@ -697,7 +697,7 @@
                 bool added = await ModalHelper.ShowAddModal(Modal!, servicesData, theme, "bg-navcolor", "Add Admin User", "<p>Add an Admin User.</p>", id, "AdminUser", admin, "");
                 if (added)
                 {
-                    servicesData = ServicesHelper.LoadServicesData(admin);
+                    servicesData = await ServicesHelper.LoadServicesData(admin);
                     state.SetNavReload(true);
                     StateHasChanged();
                 }
@@ -710,7 +710,7 @@
                 confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will delete the Admin User.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
                 if (confirm)
                 {
-                    serviceResponse = AdminUserService.DeleteItem(Convert.ToInt32(id));
+                    serviceResponse = await AdminUserService.DeleteItem(Convert.ToInt32(id));
                     if (serviceResponse.Success)
                     {
                         message.Type = MessageTypesEnum.Success;
@@ -749,12 +749,12 @@
                         toastService.ShowError(message.Message);
                         break;
                 }
-                AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
+                await AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
             }
         }
 
 
-        servicesData = ServicesHelper.LoadServicesData(admin);
+        servicesData = await ServicesHelper.LoadServicesData(admin);
         state.SetNavReload(true);
         StateHasChanged();
 
@@ -803,11 +803,13 @@
         }
     }
 
-    private void SettingChanged(ChangeEventArgs e, string setting)
+    private async Task SettingChanged(ChangeEventArgs e, string setting)
     {
-        message = new ResponseMessage();
-        message.Header = "INFORMATION";
-        message.Type = MessageTypesEnum.INFORMATION;
+        message = new ResponseMessage
+        {
+            Header = "INFORMATION",
+            Type = MessageTypesEnum.INFORMATION
+        };
         try
         {
             if (e.Value != null)
@@ -859,13 +861,12 @@
         }
         catch (Exception ex)
         {
-            AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
+            await AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
             message.Message = "There was a problem updating the setting!";
             message.Header = "ERROR";
         }
 
-        if (message.Message != null)
-        {
+
             switch (message.Type)
             {
                 case MessageTypesEnum.INFORMATION:
@@ -880,11 +881,12 @@
                 case MessageTypesEnum.ERROR:
                     toastService.ShowError(message.Message);
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
-        }
-
-        servicesData = ServicesHelper.LoadServicesData(admin);
+            await AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
+        
+        servicesData = await ServicesHelper.LoadServicesData(admin);
         state.SetNavReload(true);
         StateHasChanged();
     }

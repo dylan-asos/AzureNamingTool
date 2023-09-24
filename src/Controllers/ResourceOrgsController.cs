@@ -31,12 +31,11 @@ public class ResourceOrgsController : ControllerBase
     /// </summary>
     /// <returns>json - Current orgs data</returns>
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        serviceResponse = _resourceOrgService.GetItems();
+        var serviceResponse =
+            // Get list of items
+            await _resourceOrgService.GetItems();
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -52,12 +51,11 @@ public class ResourceOrgsController : ControllerBase
     /// <param name="id">int - Org id</param>
     /// <returns>json - Org data</returns>
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        ServiceResponse serviceResponse = new();
-
-        // Get list of items
-        serviceResponse = _resourceOrgService.GetItem(id);
+        var serviceResponse =
+            // Get list of items
+            await _resourceOrgService.GetItem(id);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -73,20 +71,17 @@ public class ResourceOrgsController : ControllerBase
     /// <param name="item">ResourceOrg (json) - Org data</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
-    public IActionResult Post([FromBody] ResourceOrg item)
+    public async Task<IActionResult> Post([FromBody] ResourceOrg item)
     {
-        ServiceResponse serviceResponse = new();
+        var serviceResponse = await _resourceOrgService.PostItem(item);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Org (" + item.Name + ") added/updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceOrg");
+        return Ok(serviceResponse.ResponseObject);
 
-        serviceResponse = _resourceOrgService.PostItem(item);
-        if (serviceResponse.Success)
-        {
-            _adminLogService.PostItem(new AdminLogMessage
-                {Source = "API", Title = "INFORMATION", Message = "Resource Org (" + item.Name + ") added/updated."});
-            _cacheHelper.InvalidateCacheObject("ResourceOrg");
-            return Ok(serviceResponse.ResponseObject);
-        }
-
-        return BadRequest(serviceResponse.ResponseObject);
     }
 
     // POST api/<ResourceOrgsController>
@@ -97,19 +92,16 @@ public class ResourceOrgsController : ControllerBase
     /// <returns>bool - PASS/FAIL</returns>
     [HttpPost]
     [Route("[action]")]
-    public IActionResult PostConfig([FromBody] List<ResourceOrg> items)
+    public async Task<IActionResult> PostConfig([FromBody] List<ResourceOrg> items)
     {
-        ServiceResponse serviceResponse = new();
-        serviceResponse = _resourceOrgService.PostConfig(items);
-        if (serviceResponse.Success)
-        {
-            _adminLogService.PostItem(new AdminLogMessage
-                {Source = "API", Title = "INFORMATION", Message = "Resource Orgs added/updated."});
-            _cacheHelper.InvalidateCacheObject("ResourceOrg");
-            return Ok(serviceResponse.ResponseObject);
-        }
-
-        return BadRequest(serviceResponse.ResponseObject);
+        var serviceResponse = _resourceOrgService.PostConfig(items);
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Orgs added/updated."});
+        _cacheHelper.InvalidateCacheObject("ResourceOrg");
+        return Ok(serviceResponse.ResponseObject);
     }
 
     // DELETE api/<ResourceOrgsController>/5
@@ -119,26 +111,21 @@ public class ResourceOrgsController : ControllerBase
     /// <param name="id">int - Org id</param>
     /// <returns>bool - PASS/FAIL</returns>
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        ServiceResponse serviceResponse = new();
-        
-        serviceResponse = _resourceOrgService.GetItem(id);
-        if (serviceResponse.Success)
-        {
-            var item = (ResourceOrg) serviceResponse.ResponseObject!;
-            serviceResponse = _resourceOrgService.DeleteItem(id);
-            if (serviceResponse.Success)
-            {
-                _adminLogService.PostItem(new AdminLogMessage
-                    {Source = "API", Title = "INFORMATION", Message = "Resource Org (" + item.Name + ") deleted."});
-                _cacheHelper.InvalidateCacheObject("ResourceOrg");
-                return Ok("Resource Org (" + item.Name + ") deleted.");
-            }
-
+        var serviceResponse = await _resourceOrgService.GetItem(id);
+        if (!serviceResponse.Success) 
             return BadRequest(serviceResponse.ResponseObject);
-        }
-
-        return BadRequest(serviceResponse.ResponseObject);
+        
+        var item = (ResourceOrg) serviceResponse.ResponseObject!;
+        serviceResponse = await _resourceOrgService.DeleteItem(id);
+        if (!serviceResponse.Success) 
+            return BadRequest(serviceResponse.ResponseObject);
+        
+        await _adminLogService.PostItem(new AdminLogMessage
+            {Source = "API", Title = "INFORMATION", Message = "Resource Org (" + item.Name + ") deleted."});
+        _cacheHelper.InvalidateCacheObject("ResourceOrg");
+        
+        return Ok("Resource Org (" + item.Name + ") deleted.");
     }
 }

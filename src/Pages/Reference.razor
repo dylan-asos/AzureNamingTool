@@ -370,49 +370,30 @@
     private string[] filteredscopes = new string[] { "resource group", "resource group & region", "region", "global", "subscription", "tenant" };
     private List<string> categories = new();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        SetServicesData();
-        return Task.CompletedTask;
+        await SetServicesData();
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-
-        SetServicesData();
-        return Task.CompletedTask;
+        await SetServicesData();
     }
 
-    private void SetServicesData()
+    private async Task SetServicesData()
     {
-        try
-        {
-            servicesData = ServicesHelper.LoadServicesData(false);
-            if (servicesData != null)
-            {
-                resourceDelimiter = (ResourceDelimiter)servicesData.ResourceDelimiters![0];
-
-                // Get the list of categories
-                categories = ResourceTypeService.GetTypeCategories(servicesData.ResourceTypes!);
-            }
-            else
-            {
-                toastService.ShowError("There was a problem loading the page. Please try again");
-            }
-        }
-        catch (Exception ex)
-        {
-            AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
-            toastService.ShowError("There was a problem loading the page. Please try again");
-        }
+        servicesData = await ServicesHelper.LoadServicesData(false);
+        resourceDelimiter = servicesData.ResourceDelimiters![0];
+        // Get the list of categories
+        categories = ResourceTypeService.GetTypeCategories(servicesData.ResourceTypes!);
     }
 
     protected string GenerateName(ResourceType type, string shortName, string staticvalues)
     {
         var name = "";
-        if (String.IsNullOrEmpty(staticvalues))
+        if (string.IsNullOrEmpty(staticvalues))
         {
-            foreach (ResourceComponent resourceComponent in servicesData.ResourceComponents!)
+            foreach (var resourceComponent in servicesData.ResourceComponents!)
             {
                 string normalizedcomponentname = GeneralHelper.NormalizeName(resourceComponent.Name, true);
                 // Check if the component is excluded for the resource type

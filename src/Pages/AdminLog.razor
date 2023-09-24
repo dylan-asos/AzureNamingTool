@@ -165,8 +165,7 @@
             {
                 NavigationManager.NavigateTo("/");
             }
-            ServiceResponse serviceResponse = new();
-            serviceResponse = AdminLogService.GetItems();
+            var serviceResponse = await AdminLogService.GetItems();
             if (serviceResponse.Success)
             {
                 if (serviceResponse.ResponseObject != null)
@@ -200,9 +199,9 @@
         {
             LogHelper.PurgeAdminLog();
             toastService.ShowSuccess("Admin Log purged!");
-            AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Admin Log purged." });
+            await AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Admin Log purged." });
             CacheHelper.InvalidateCacheObject("AdminLogMessage");
-            serviceResponse = AdminLogService.GetItems();
+            serviceResponse = await AdminLogService.GetItems();
             if (serviceResponse.Success)
             {
                 if (serviceResponse.ResponseObject != null)

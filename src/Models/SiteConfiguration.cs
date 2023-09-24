@@ -15,5 +15,6 @@
         public bool ConnectivityCheckEnabled { get; set; }
         public string? IdentityHeaderName { get; set; }
         public string? ResourceTypeEditingAllowed { get; set; }
+        public string RepositoryType { get; set; } = "File";
     }
 }

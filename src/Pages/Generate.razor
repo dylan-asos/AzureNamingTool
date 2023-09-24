@@ -112,7 +112,7 @@
                                     <span class="input-group-text" id="addon-wrapping">
                                         <span class="oi oi-magnifying-glass" id="addon-wrapping"></span>
                                     </span>
-                                    <input @bind-value="@selectedResourceTypeDisplayName" @oninput="(EventArgs) => { OnTypeChanged(EventArgs.Value!.ToString()!);}" class="@GetControlStyle()" list="typeslist" id="generatetypes" placeholder="Type to search resource types..." autocomplete="off">
+                                    <input @bind-value="@selectedResourceTypeDisplayName" @oninput="(eventArgs) => { OnTypeChanged(eventArgs.Value!.ToString()!);}" class="@GetControlStyle()" list="typeslist" id="generatetypes" placeholder="Type to search resource types..." autocomplete="off">
                                     <datalist id="typeslist">
                                         @foreach (var type in @ResourceTypeService.GetFilteredResourceTypes(servicesData.ResourceTypes, selectedResourceTypeCategory))
                                         {
@@ -524,29 +524,24 @@
     private List<string> multiselectedResourceTypes = new();
     private string currentuser = String.Empty;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        SetServicesData();
-        return Task.CompletedTask;
+        await SetServicesData();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (resourceDelimiter == null)
-        {
-            SetServicesData();
-        }
-
+        await SetServicesData();
         var currentuservalue = await session.GetAsync<string>("currentuser");
         currentuser = (string)currentuservalue.Value!;
     }
 
-    private void SetServicesData()
+    private async Task SetServicesData()
     {
-        servicesData = ServicesHelper.LoadServicesData(false);
-        List<ResourceType> filteredtypes = new List<ResourceType>();
+        servicesData = await ServicesHelper.LoadServicesData(false);
+        var filteredtypes = new List<ResourceType>();
         // Filter out the types w/o the scope
-        foreach (ResourceType type in servicesData.ResourceTypes!)
+        foreach (var type in servicesData.ResourceTypes!)
         {
             filteredtypes.Add(type);
         }
@@ -573,7 +568,7 @@
 
                 if (!(servicesData != null))
                 {
-                    SetServicesData();
+                    await SetServicesData();
                 }
                 StringBuilder sbNames = new();
                 StringBuilder sbMessage = new();
@@ -717,7 +712,7 @@
 
             catch (Exception ex)
             {
-                AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
+                await AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
                 toastService.ShowError("There was a problem generting the name(s). Please try again");
             }
             finally
@@ -756,7 +751,7 @@
 
         if (!(servicesData != null))
         {
-            SetServicesData();
+            await SetServicesData();
         }
         var parameters = new ModalParameters();
         parameters.Add("theme", theme);
@@ -809,13 +804,13 @@
         componentsVisible = "collapse show";
     }
 
-    private Task OnTypeChanged(string value)
+    private async Task OnTypeChanged(string value)
     {
         try
         {
             if (!(servicesData != null))
             {
-                SetServicesData();
+                await SetServicesData();
             }
             resourceNameRequestResponse = new();
             // Assign the selected value to the Model
@@ -871,7 +866,7 @@
                         }
                     }
 
-                    ValidateForm();
+                    await ValidateForm();
                 }
             }
             else
@@ -882,13 +877,11 @@
         catch (Exception ex)
         {
             toastService.ShowError("There was an error setting the resource type! Please try again.");
-            AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
+            await AdminLogService.PostItem(new AdminLogMessage() { Title = "ERROR", Message = ex.Message });
         }
-
-        return Task.CompletedTask;
     }
 
-    private Task OnComponentChanged(string sender, string value, string key = "")
+    private async Task OnComponentChanged(string sender, string value, string key = "")
     {
         switch (sender)
         {
@@ -927,17 +920,16 @@
                 break;
         }
 
-        ValidateForm();
-        return Task.CompletedTask;
+        await ValidateForm();
     }
 
-    private void OnCustomComponentChanged(ChangeEventArgs e, string parentcomponent)
+    private async Task OnCustomComponentChanged(ChangeEventArgs e, string parentcomponent)
     {
         if (e.Value != null)
         {
-            if (!String.IsNullOrEmpty(e.Value.ToString()))
+            if (!string.IsNullOrEmpty(e.Value.ToString()))
             {
-                OnComponentChanged("cc", e.Value.ToString()!, parentcomponent);
+                await OnComponentChanged("cc", e.Value.ToString()!, parentcomponent);
             }
             else
             {
@@ -945,16 +937,16 @@
                 {
                     selectedCustomComponents[parentcomponent] = String.Empty;
                 }
-                ValidateForm();
+                await ValidateForm();
             }
         }
     }
 
-    private void ValidateForm()
+    private async Task ValidateForm()
     {
         if (!(servicesData != null))
         {
-            SetServicesData();
+            await SetServicesData();
         }
         if ((selectedResourceType != null) || (multiselectedResourceTypes.Count > 0))
         {

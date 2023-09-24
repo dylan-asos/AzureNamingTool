@@ -10,7 +10,7 @@ public class GeneratedNamesService
     private readonly FileWriter _fileWriter;
 
     public GeneratedNamesService(
-        CacheHelper cacheHelper, 
+        CacheHelper cacheHelper,
         FileReader fileReader,
         FileWriter fileWriter)
     {
@@ -23,42 +23,34 @@ public class GeneratedNamesService
     ///     This function gets the generated names log.
     /// </summary>
     /// <returns>List of GeneratedNames - List of generated names</returns>
-    public ServiceResponse GetItems()
+    public async Task<ServiceResponse> GetItems()
     {
         ServiceResponse serviceResponse = new();
-        
-        var items = _fileReader.GetList<GeneratedName>();
-        if (items!= null)
-        {
-            serviceResponse.ResponseObject = items.OrderByDescending(x => x.CreatedOn).ToList();
-            serviceResponse.Success = true;
-        }
+
+        var items = await _fileReader.GetList<GeneratedName>();
+
+        serviceResponse.ResponseObject = items.OrderByDescending(x => x.CreatedOn).ToList();
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse GetItem(int id)
+    public async Task<ServiceResponse> GetItem(int id)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<GeneratedName>();
-        if (items!= null)
+        var items = await _fileReader.GetList<GeneratedName>();
+
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
         {
-            var item = items.Find(x => x.Id == id);
-            if (item!= null)
-            {
-                serviceResponse.ResponseObject = item;
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Generated Name not found!";
-            }
+            serviceResponse.ResponseObject = item;
+            serviceResponse.Success = true;
         }
         else
         {
-            serviceResponse.ResponseObject = "Generated Names not found!";
+            serviceResponse.ResponseObject = "Generated Name not found!";
         }
 
         return serviceResponse;
@@ -68,65 +60,56 @@ public class GeneratedNamesService
     ///     This function logs the generated name.
     /// </summary>
     /// <param name="generatedName">GeneratedName - Generated name and components.</param>
-    public ServiceResponse PostItem(GeneratedName generatedName)
+    public async Task<ServiceResponse> PostItem(GeneratedName generatedName)
     {
         ServiceResponse serviceResponse = new();
 
         // Get the previously generated names
-        var items = _fileReader.GetList<GeneratedName>();
-        if (items!= null)
+        var items = await _fileReader.GetList<GeneratedName>();
+
+        if (items.Count > 0)
         {
-            if (items.Count > 0)
-            {
-                generatedName.Id = items.Max(x => x.Id) + 1;
-            }
-            else
-            {
-                generatedName.Id = 1;
-            }
-
-            items.Add(generatedName);
-
-            // Write items to file
-            _fileWriter.WriteList(items);
-
-            _cacheHelper.InvalidateCacheObject(FileNames.GeneratedName);
-
-            serviceResponse.Success = true;
+            generatedName.Id = items.Max(x => x.Id) + 1;
         }
+        else
+        {
+            generatedName.Id = 1;
+        }
+
+        items.Add(generatedName);
+
+        // Write items to file
+        _fileWriter.WriteList(items);
+        _cacheHelper.InvalidateCacheObject(FileNames.GeneratedName);
+
+        serviceResponse.Success = true;
 
         return serviceResponse;
     }
 
-    public ServiceResponse DeleteItem(int id)
+    public async Task<ServiceResponse> DeleteItem(int id)
     {
         ServiceResponse serviceResponse = new();
 
         // Get list of items
-        var items = _fileReader.GetList<GeneratedName>();
-        if (items!= null)
-        {
-            // Get the specified item
-            var item = items.Find(x => x.Id == id);
-            if (item!= null)
-            {
-                // Remove the item from the collection
-                items.Remove(item);
+        var items = await _fileReader.GetList<GeneratedName>();
 
-                // Write items to file
-                _fileWriter.WriteList(items);
-                serviceResponse.Success = true;
-            }
-            else
-            {
-                serviceResponse.ResponseObject = "Generated Name not found!";
-            }
+        // Get the specified item
+        var item = items.Find(x => x.Id == id);
+        if (item != null)
+        {
+            // Remove the item from the collection
+            items.Remove(item);
+
+            // Write items to file
+            _fileWriter.WriteList(items);
+            serviceResponse.Success = true;
         }
         else
         {
             serviceResponse.ResponseObject = "Generated Name not found!";
         }
-
+        
         return serviceResponse;
     }
 
