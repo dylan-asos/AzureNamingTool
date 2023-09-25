@@ -16,3 +16,35 @@ public static class FileNames
     public const string GeneratedName = "generatednames.json";
     public const string AdminUser = "adminusers.json";
 }
+
+public static class ComponentNames
+{
+    public const string ResourceType = "ResourceType";
+    public const string ResourceOrg = "ResourceOrg";
+    public const string ResourceUnitDept = "ResourceUnitDept";
+    public const string ResourceProjAppSvc = "ResourceProjAppSvc";
+    public const string ResourceEnvironment = "ResourceEnvironment";
+    public const string ResourceLocation = "ResourceLocation";
+    public const string ResourceFunction = "ResourceFunction";
+    public const string ResourceDelimiter = "ResourceDelimiter";
+    public const string CustomComponent = "CustomComponent";
+    public const string AdminLogMessage = "AdminLogMessage";
+    public const string GeneratedName = "GeneratedName";
+    public const string ResourceInstance = "ResourceInstance";
+
+    public static class AsLowerCase
+    {
+        public const string ResourceTypeLowerCase = "resourcetype";
+        public const string ResourceOrgLowerCase = "resourceorg";
+        public const string ResourceUnitDeptLowerCase = "resourceunitdept";
+        public const string ResourceProjAppSvcLowerCase = "resourceprojappsvc";
+        public const string ResourceEnvironmentLowerCase = "resourceenvironment";
+        public const string ResourceLocationLowerCase = "resourcelocation";
+        public const string ResourceFunctionLowerCase = "resourcefunction";
+        public const string ResourceDelimiterLowerCase = "resourcedelimiter";
+        public const string CustomComponentLowerCase = "rustomComponent";
+        public const string AdminLogMessageLowerCase = "adminlogmessage";
+        public const string GeneratedNameLowerCase = "generatedname";
+        public const string ResourceInstanceLowerCase = "resourceinstance";        
+    }
+}

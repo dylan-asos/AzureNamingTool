@@ -11,11 +11,14 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceLocationsController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceLocationService _resourceLocationService;
-    private readonly AdminLogService _adminLogService;
 
-    public ResourceLocationsController(CacheHelper cacheHelper, ResourceLocationService resourceLocationService, AdminLogService adminLogService)
+    public ResourceLocationsController(
+        CacheHelper cacheHelper,
+        ResourceLocationService resourceLocationService,
+        AdminLogService adminLogService)
     {
         _cacheHelper = cacheHelper;
         _resourceLocationService = resourceLocationService;
@@ -31,8 +34,8 @@ public class ResourceLocationsController : ControllerBase
     public async Task<IActionResult> Get(bool admin = false)
     {
         var serviceResponse = await _resourceLocationService.GetItems(admin);
-        return serviceResponse.Success 
-            ? (IActionResult) Ok(serviceResponse.ResponseObject) 
+        return serviceResponse.Success
+            ? (IActionResult) Ok(serviceResponse.ResponseObject)
             : (IActionResult) BadRequest(serviceResponse.ResponseObject);
     }
 
@@ -46,9 +49,9 @@ public class ResourceLocationsController : ControllerBase
     public async Task<IActionResult> Get(int id)
     {
         var serviceResponse = await _resourceLocationService.GetItem(id);
-        
-        return serviceResponse.Success 
-            ? (IActionResult) Ok(serviceResponse.ResponseObject) 
+
+        return serviceResponse.Success
+            ? (IActionResult) Ok(serviceResponse.ResponseObject)
             : (IActionResult) BadRequest(serviceResponse.ResponseObject);
     }
 
@@ -63,9 +66,9 @@ public class ResourceLocationsController : ControllerBase
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceLocation> items)
     {
         var serviceResponse = await _resourceLocationService.PostConfig(items);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Locations added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceLocation");

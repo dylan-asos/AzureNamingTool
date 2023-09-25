@@ -4,8 +4,6 @@ using AzureNamingTool.Models;
 using AzureNamingTool.Services;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace AzureNamingTool.Controllers;
 
 [Route("api/[controller]")]
@@ -13,17 +11,20 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceDelimitersController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceDelimiterService _resourceDelimiterService;
-    private AdminLogService _adminLogService;
 
-    public ResourceDelimitersController(CacheHelper cacheHelper, ResourceDelimiterService resourceDelimiterService, AdminLogService adminLogService)
+    public ResourceDelimitersController(
+        CacheHelper cacheHelper,
+        ResourceDelimiterService resourceDelimiterService,
+        AdminLogService adminLogService)
     {
         _cacheHelper = cacheHelper;
         _resourceDelimiterService = resourceDelimiterService;
         _adminLogService = adminLogService;
     }
-    
+
     // GET api/<ResourceDelimitersController>
     /// <summary>
     ///     This function will return the delimiters data.
@@ -74,7 +75,7 @@ public class ResourceDelimitersController : ControllerBase
         var serviceResponse = await _resourceDelimiterService.PostItem(item);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION", Message = "Resource Delimiter (" + item.Name + ") added/updated."
@@ -96,11 +97,10 @@ public class ResourceDelimitersController : ControllerBase
         var serviceResponse = await _resourceDelimiterService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Delimiters added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceDelimiter");
         return Ok(serviceResponse.ResponseObject);
-
     }
 }

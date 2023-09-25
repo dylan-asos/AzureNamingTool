@@ -11,11 +11,14 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceComponentsController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceComponentService _resourceComponentService;
-    private readonly AdminLogService _adminLogService;
 
-    public ResourceComponentsController(CacheHelper cacheHelper, ResourceComponentService resourceComponentService, AdminLogService adminLogService)
+    public ResourceComponentsController(
+        CacheHelper cacheHelper,
+        ResourceComponentService resourceComponentService,
+        AdminLogService adminLogService)
     {
         _cacheHelper = cacheHelper;
         _resourceComponentService = resourceComponentService;

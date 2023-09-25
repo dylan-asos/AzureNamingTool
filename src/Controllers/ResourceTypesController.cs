@@ -13,15 +13,15 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceTypesController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceTypeService _resourceTypeService;
     private readonly ResourceTypeUpdater _resourceTypeUpdater;
-    private readonly AdminLogService _adminLogService;
 
     public ResourceTypesController(
-        ResourceTypeService resourceTypeService, 
+        ResourceTypeService resourceTypeService,
         ResourceTypeUpdater resourceTypeUpdater,
-        CacheHelper cacheHelper, 
+        CacheHelper cacheHelper,
         AdminLogService adminLogService)
     {
         _resourceTypeService = resourceTypeService;
@@ -38,10 +38,8 @@ public class ResourceTypesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get(bool admin = false)
     {
-        var serviceResponse =
-            // Get list of items
-            await _resourceTypeService.GetItems(admin);
-        
+        var serviceResponse = await _resourceTypeService.GetItems(admin);
+
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -59,10 +57,8 @@ public class ResourceTypesController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        var serviceResponse =
-            // Get list of items
-            await _resourceTypeService.GetItem(id);
-        
+        var serviceResponse = await _resourceTypeService.GetItem(id);
+
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -83,14 +79,14 @@ public class ResourceTypesController : ControllerBase
     {
         var serviceResponse = await _resourceTypeService.PostConfig(items);
 
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
         _cacheHelper.InvalidateCacheObject("ResourceType");
-        return Ok(serviceResponse.ResponseObject);
 
+        return Ok(serviceResponse.ResponseObject);
     }
 
     // POST api/<ResourceTypesController>
@@ -105,12 +101,13 @@ public class ResourceTypesController : ControllerBase
     public async Task<IActionResult> UpdateTypeComponents(string operation, int componentId)
     {
         var serviceResponse = await _resourceTypeUpdater.UpdateTypeComponents(operation, componentId);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Types updated."});
         _cacheHelper.InvalidateCacheObject("ResourceType");
+
         return Ok(serviceResponse.ResponseObject);
     }
 }

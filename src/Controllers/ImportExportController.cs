@@ -16,7 +16,7 @@ public class ImportExportController : ControllerBase
     {
         _importExportService = importExportService;
     }
-    
+
     // GET: api/<ImportExportController>
     /// <summary>
     ///     This function will export the current configuration data (all components) as a single JSON file.
@@ -27,9 +27,9 @@ public class ImportExportController : ControllerBase
     public async Task<IActionResult> ExportConfiguration(bool includeAdmin = false)
     {
         var serviceResponse = await _importExportService.ExportConfig(includeAdmin);
-        
-        return serviceResponse.Success 
-            ? (IActionResult) Ok(serviceResponse.ResponseObject) 
+
+        return serviceResponse.Success
+            ? (IActionResult) Ok(serviceResponse.ResponseObject)
             : (IActionResult) BadRequest(serviceResponse.ResponseObject);
     }
 
@@ -45,9 +45,9 @@ public class ImportExportController : ControllerBase
     public async Task<IActionResult> ImportConfiguration([FromBody] ConfigurationData configData)
     {
         var serviceResponse = await _importExportService.PostConfig(configData);
-        
-        return serviceResponse.Success 
-            ? (IActionResult) Ok(serviceResponse.ResponseObject) 
+
+        return serviceResponse.Success
+            ? (IActionResult) Ok(serviceResponse.ResponseObject)
             : (IActionResult) BadRequest(serviceResponse.ResponseObject);
     }
 }

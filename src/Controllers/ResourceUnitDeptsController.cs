@@ -13,11 +13,12 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceUnitDeptsController : ControllerBase
 {
-    private readonly ResourceUnitDeptService _resourceUnitDeptService;
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
-    private AdminLogService _adminLogService;
+    private readonly ResourceUnitDeptService _resourceUnitDeptService;
 
-    public ResourceUnitDeptsController(ResourceUnitDeptService resourceUnitDeptService, CacheHelper cacheHelper, AdminLogService adminLogService)
+    public ResourceUnitDeptsController(ResourceUnitDeptService resourceUnitDeptService, CacheHelper cacheHelper,
+        AdminLogService adminLogService)
     {
         _resourceUnitDeptService = resourceUnitDeptService;
         _cacheHelper = cacheHelper;
@@ -70,17 +71,17 @@ public class ResourceUnitDeptsController : ControllerBase
     {
         var serviceResponse = await _resourceUnitDeptService.PostItem(item);
 
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
             Message = "Resource Unit/Department (" + item.Name + ") added/updated."
         });
+
         _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
         return Ok(serviceResponse.ResponseObject);
-
     }
 
     // POST api/<ResourceUnitDeptsController>
@@ -94,12 +95,13 @@ public class ResourceUnitDeptsController : ControllerBase
     public async Task<IActionResult> PostConfig([FromBody] List<ResourceUnitDept> items)
     {
         var serviceResponse = await _resourceUnitDeptService.PostConfig(items);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Units/Departments added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
+
         return Ok(serviceResponse.ResponseObject);
     }
 
@@ -113,20 +115,20 @@ public class ResourceUnitDeptsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var serviceResponse = await _resourceUnitDeptService.GetItem(id);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         var item = (ResourceUnitDept) serviceResponse.ResponseObject!;
         serviceResponse = await _resourceUnitDeptService.DeleteItem(id);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
             Message = "Resource Unit/Department (" + item.Name + ") deleted."
         });
-        
+
         _cacheHelper.InvalidateCacheObject("ResourceUnitDept");
         return Ok("Resource Unit/Department (" + item.Name + ") deleted.");
     }

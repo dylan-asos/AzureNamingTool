@@ -4,8 +4,6 @@ using AzureNamingTool.Models;
 using AzureNamingTool.Services;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace AzureNamingTool.Controllers;
 
 [Route("api/[controller]")]
@@ -13,12 +11,14 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceEnvironmentsController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceEnvironmentService _resourceEnvironmentService;
-    private AdminLogService _adminLogService;
 
-    public ResourceEnvironmentsController(CacheHelper cacheHelper,
-        ResourceEnvironmentService resourceEnvironmentService, AdminLogService adminLogService)
+    public ResourceEnvironmentsController(
+        CacheHelper cacheHelper,
+        ResourceEnvironmentService resourceEnvironmentService,
+        AdminLogService adminLogService)
     {
         _cacheHelper = cacheHelper;
         _resourceEnvironmentService = resourceEnvironmentService;
@@ -72,7 +72,7 @@ public class ResourceEnvironmentsController : ControllerBase
         var serviceResponse = await _resourceEnvironmentService.PostItem(item);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
@@ -80,7 +80,6 @@ public class ResourceEnvironmentsController : ControllerBase
         });
         _cacheHelper.InvalidateCacheObject("ResourceEnvironment");
         return Ok(serviceResponse.ResponseObject);
-
     }
 
     // POST api/<ResourceEnvironmentsController>
@@ -96,12 +95,11 @@ public class ResourceEnvironmentsController : ControllerBase
         var serviceResponse = await _resourceEnvironmentService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Environments added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceEnvironment");
         return Ok(serviceResponse.ResponseObject);
-
     }
 
     // DELETE api/<ResourceEnvironmentsController>/5
@@ -114,14 +112,14 @@ public class ResourceEnvironmentsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var serviceResponse = await _resourceEnvironmentService.GetItem(id);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         var item = (ResourceEnvironment) serviceResponse.ResponseObject!;
         serviceResponse = await _resourceEnvironmentService.DeleteItem(id);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",

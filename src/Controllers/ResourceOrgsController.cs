@@ -4,9 +4,6 @@ using AzureNamingTool.Models;
 using AzureNamingTool.Services;
 using Microsoft.AspNetCore.Mvc;
 
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace AzureNamingTool.Controllers;
 
 [Route("api/[controller]")]
@@ -14,11 +11,14 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceOrgsController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceOrgService _resourceOrgService;
-    private readonly AdminLogService _adminLogService;
 
-    public ResourceOrgsController(ResourceOrgService resourceOrgService, CacheHelper cacheHelper, AdminLogService adminLogService)
+    public ResourceOrgsController(
+        ResourceOrgService resourceOrgService,
+        CacheHelper cacheHelper,
+        AdminLogService adminLogService)
     {
         _resourceOrgService = resourceOrgService;
         _cacheHelper = cacheHelper;
@@ -33,9 +33,7 @@ public class ResourceOrgsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var serviceResponse =
-            // Get list of items
-            await _resourceOrgService.GetItems();
+        var serviceResponse = await _resourceOrgService.GetItems();
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -53,9 +51,7 @@ public class ResourceOrgsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        var serviceResponse =
-            // Get list of items
-            await _resourceOrgService.GetItem(id);
+        var serviceResponse = await _resourceOrgService.GetItem(id);
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -74,14 +70,13 @@ public class ResourceOrgsController : ControllerBase
     public async Task<IActionResult> Post([FromBody] ResourceOrg item)
     {
         var serviceResponse = await _resourceOrgService.PostItem(item);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Org (" + item.Name + ") added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceOrg");
         return Ok(serviceResponse.ResponseObject);
-
     }
 
     // POST api/<ResourceOrgsController>
@@ -97,10 +92,11 @@ public class ResourceOrgsController : ControllerBase
         var serviceResponse = await _resourceOrgService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Orgs added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceOrg");
+
         return Ok(serviceResponse.ResponseObject);
     }
 
@@ -114,18 +110,19 @@ public class ResourceOrgsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var serviceResponse = await _resourceOrgService.GetItem(id);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         var item = (ResourceOrg) serviceResponse.ResponseObject!;
         serviceResponse = await _resourceOrgService.DeleteItem(id);
-        if (!serviceResponse.Success) 
+
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Org (" + item.Name + ") deleted."});
         _cacheHelper.InvalidateCacheObject("ResourceOrg");
-        
+
         return Ok("Resource Org (" + item.Name + ") deleted.");
     }
 }

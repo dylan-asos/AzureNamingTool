@@ -1,5 +1,4 @@
 ﻿using AzureNamingTool.Attributes;
-using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
 using AzureNamingTool.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,15 +10,17 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceNamingRequestsController : ControllerBase
 {
-    private readonly ResourceTypeService _resourceTypeService;
     private readonly ResourceNamingRequestService _resourceNamingRequestService;
+    private readonly ResourceTypeService _resourceTypeService;
 
-    public ResourceNamingRequestsController(ResourceTypeService resourceTypeService, ResourceNamingRequestService resourceNamingRequestService)
+    public ResourceNamingRequestsController(
+        ResourceTypeService resourceTypeService,
+        ResourceNamingRequestService resourceNamingRequestService)
     {
         _resourceTypeService = resourceTypeService;
         _resourceNamingRequestService = resourceNamingRequestService;
     }
-    
+
     // POST api/<ResourceNamingRequestsController>
     /// <summary>
     ///     This function will generate a resoure type name for specifed component values. This function requires full
@@ -73,9 +74,9 @@ public class ResourceNamingRequestsController : ControllerBase
     public async Task<IActionResult> ValidateName([FromBody] ValidateNameRequest validateNameRequest)
     {
         var serviceResponse = await _resourceTypeService.ValidateResourceTypeName(validateNameRequest);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest("There was a problem validating the name.");
-        
+
         if (serviceResponse.ResponseObject != null)
         {
             var validateNameResponse = (ValidateNameResponse) serviceResponse.ResponseObject!;

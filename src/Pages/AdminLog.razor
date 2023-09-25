@@ -1,19 +1,14 @@
 ﻿@page "/adminlog"
-@using AzureNamingTool.Helpers
-@using AzureNamingTool.Models
-@using AzureNamingTool.Services
-@using System.IO
-@using BlazorDownloadFile
-@using Microsoft.AspNetCore.Components.Authorization
-@using System.Text.Json
-@using System.Text.Json.Serialization
-@using System.Text
 @inject ILogger<Configuration> Logger
 @inject IJSRuntime JsRuntime
-@inject IConfiguration _config
-@inject StateContainer state
-@inject ProtectedSessionStorage session
-@inject IToastService toastService
+@inject IConfiguration Config
+@inject StateContainer State
+@inject ProtectedSessionStorage Session
+@inject IToastService ToastService
+@using AzureNamingTool.Models
+@using AzureNamingTool.Services
+@using AzureNamingTool.Helpers
+@using System.Globalization
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject CacheHelper CacheHelper
@@ -21,7 +16,7 @@
 @inject AdminLogService AdminLogService
 
 <PageTitle>Azure Naming Tool - Admin Log</PageTitle>
-<div class="card  @theme!.ThemeStyle">
+<div class="card  @Theme!.ThemeStyle">
     <div class="card-body">
         <div style="float:left;">
             <h1>
@@ -29,7 +24,7 @@
             </h1>
         </div>
         <div style="float:right;">
-            <button class="btn btn-secondary" title="Instructions" @onclick="@(e => ModalHelper.ShowInformationModal(Modal!, theme, "bg-navcolor", "Admin Log", String.Empty, "adminloginstructions", admin))">
+            <button class="btn btn-secondary" title="Instructions" @onclick="@(e => ModalHelper.ShowInformationModal(Modal!, Theme, "bg-navcolor", "Admin Log", string.Empty, "adminloginstructions", _admin))">
                 <span class="oi oi-document" aria-hidden="true"></span> Documentation
             </button>
         </div>
@@ -37,7 +32,7 @@
         <div class="mb-3">This page displays a log of Admin/Configuration changes.</div>
 
 
-        @if (!dataLoaded)
+        @if (!_dataLoaded)
         {
             <div class="spinner-border blue" role="status">
                 <span class="sr-only"></span>
@@ -46,7 +41,7 @@
         else
         {
             <div>
-                @if (lstAdminLogMessages.Count > 0)
+                @if (_lstAdminLogMessages.Count > 0)
                 {
                     <div class="mb-3">
                         <button class="btn btn-primary" title="Export Admin Log" @onclick="@(e => OnExportLogClick())">
@@ -62,16 +57,16 @@
                                 <span class="oi oi-chevron-bottom" aria-hidden="true"></span> Filter Data
                             </a>
                         </div>
-                        <div class="collapse show card card-body @theme.ThemeStyle" id="filter">
+                        <div class="collapse show card card-body @Theme.ThemeStyle" id="filter">
                             <div class="form-group row mb-3">
                                 <div style="width:auto;">
-                                    <input class="form-control" type="date" style="width: 150px;" @bind="startdate" @bind:event="oninput" />
+                                    <input class="form-control" type="date" style="width: 150px;" @bind="StartDate" @bind:event="oninput"/>
                                 </div>
                                 <div style="width:auto;padding-top:7px;">
                                     to
                                 </div>
                                 <div style="width:auto;">
-                                    <input class="form-control" type="date" style="width: 150px;" @bind="enddate" @bind:event="oninput" />
+                                    <input class="form-control" type="date" style="width: 150px;" @bind="EndDate" @bind:event="oninput"/>
                                 </div>
                             </div>
                             <div class="form-group row mb-3">
@@ -81,8 +76,8 @@
                                             <span class="oi oi-magnifying-glass" id="addon-wrapping"></span>
                                         </span>
                                         <input class="form-control" type="search" placeholder="Filter by Source, Title, Message"
-                                        @bind="filterData"
-                                        @bind:event="oninput">
+                                               @bind="FilterData"
+                                               @bind:event="oninput">
                                     </div>
                                 </div>
                             </div>
@@ -96,35 +91,35 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table @theme.ThemeStyle">
+                        <table class="table @Theme.ThemeStyle">
                             <thead>
-                                <tr>
-                                    <th scope="col">Created On</th>
-                                    <th scope="col">Source</th>
-                                    <th scope="col">Title</th>
-                                    <th scope="col">Message</th>
-                                </tr>
+                            <tr>
+                                <th scope="col">Created On</th>
+                                <th scope="col">Source</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Message</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                @foreach (AdminLogMessage message in lstAdminLogMessages)
-                                {
-                                    if (!IsVisible(message))
-                                        continue;
-                                    <tr>
-                                        <td class="align-top">
-                                            @message.CreatedOn.ToString()
-                                        </td>
-                                        <td class="align-top">
-                                            @message.Source
-                                        </td>
-                                        <td class="align-top">
-                                            @message.Title
-                                        </td>
-                                        <td class="align-top">
-                                            @message.Message
-                                        </td>
-                                    </tr>
-                                }
+                            @foreach (var message in _lstAdminLogMessages)
+                            {
+                                if (!IsVisible(message))
+                                    continue;
+                                <tr>
+                                    <td class="align-top">
+                                        @message.CreatedOn.ToString(CultureInfo.InvariantCulture)
+                                    </td>
+                                    <td class="align-top">
+                                        @message.Source
+                                    </td>
+                                    <td class="align-top">
+                                        @message.Title
+                                    </td>
+                                    <td class="align-top">
+                                        @message.Message
+                                    </td>
+                                </tr>
+                            }
                             </tbody>
                         </table>
                     </div>
@@ -143,25 +138,27 @@
 @code {
 
     [CascadingParameter]
-    protected ThemeInfo? theme { get; set; }
+    protected ThemeInfo? Theme { get; set; }
+
     [CascadingParameter]
     public IModalService? Modal { get; set; }
-    private bool admin = false;
-    private bool dataLoaded = false;
-    List<AdminLogMessage> lstAdminLogMessages = new();
-    public string filterData { get; set; } = String.Empty;
-    public DateTime startdate { get; set; } = DateTime.Today.AddDays(-30);
-    public DateTime enddate { get; set; } = DateTime.Today;
-    private string currentuser = String.Empty;
+
+    private bool _admin;
+    private bool _dataLoaded;
+    List<AdminLogMessage> _lstAdminLogMessages = new();
+    private string FilterData { get; set; } = string.Empty;
+    private DateTime StartDate { get; set; } = DateTime.Today.AddDays(-30);
+    private DateTime EndDate { get; set; } = DateTime.Today;
+    private string _currentUser = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        currentuser = await IdentityHelper.GetCurrentUser(session);
+        _currentUser = await IdentityHelper.GetCurrentUser(Session);
         if (firstRender)
         {
-            var result = await session.GetAsync<bool>("admin");
-            admin = (bool)result.Value;
-            if (!admin)
+            var result = await Session.GetAsync<bool>("admin");
+            _admin = result.Value;
+            if (!_admin)
             {
                 NavigationManager.NavigateTo("/");
             }
@@ -170,11 +167,11 @@
             {
                 if (serviceResponse.ResponseObject != null)
                 {
-                    lstAdminLogMessages = (List<AdminLogMessage>)serviceResponse.ResponseObject!;
+                    _lstAdminLogMessages = (List<AdminLogMessage>) serviceResponse.ResponseObject!;
                 }
             }
 
-            dataLoaded = true;
+            _dataLoaded = true;
             StateHasChanged();
         }
     }
@@ -192,24 +189,25 @@
 
     private async Task OnPurgeLogClick()
     {
-        ServiceResponse serviceResponse = new();
-        bool confirm = false;
-        confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will purge the Admin Log and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme!);
+        var confirm = await ModalHelper
+            .ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will purge the Admin Log and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", Theme!);
+
         if (confirm)
         {
             LogHelper.PurgeAdminLog();
-            toastService.ShowSuccess("Admin Log purged!");
-            await AdminLogService.PostItem(new AdminLogMessage() { Source = currentuser, Title = "INFORMATION", Message = "Admin Log purged." });
+            ToastService.ShowSuccess("Admin Log purged!");
+            await AdminLogService.PostItem(new AdminLogMessage {Source = _currentUser, Title = "INFORMATION", Message = "Admin Log purged."});
+            
             CacheHelper.InvalidateCacheObject("AdminLogMessage");
-            serviceResponse = await AdminLogService.GetItems();
+            var serviceResponse = await AdminLogService.GetItems();
             if (serviceResponse.Success)
             {
                 if (serviceResponse.ResponseObject != null)
                 {
-                    lstAdminLogMessages = (List<AdminLogMessage>)serviceResponse.ResponseObject!;
+                    _lstAdminLogMessages = (List<AdminLogMessage>) serviceResponse.ResponseObject!;
                 }
             }
-            dataLoaded = true;
+            _dataLoaded = true;
             StateHasChanged();
         }
     }
@@ -221,16 +219,14 @@
 
     public bool IsVisible(AdminLogMessage message)
     {
-        bool visible = true;
-        if (message.CreatedOn < startdate)
+        var visible = !(message.CreatedOn < StartDate);
+
+        if (message.CreatedOn > EndDate + new TimeSpan(23, 59, 59))
             visible = false;
 
-        if (message.CreatedOn > (enddate + new TimeSpan(23, 59, 59)))
-            visible = false;
-
-        if (!string.IsNullOrEmpty(filterData))
+        if (!string.IsNullOrEmpty(FilterData))
         {
-            if ((!message.Source.Contains(filterData, StringComparison.OrdinalIgnoreCase)) && (!message.Title.Contains(filterData, StringComparison.OrdinalIgnoreCase)) && (!message.Message.Contains(filterData, StringComparison.OrdinalIgnoreCase)))
+            if (!message.Source.Contains(FilterData, StringComparison.OrdinalIgnoreCase) && !message.Title.Contains(FilterData, StringComparison.OrdinalIgnoreCase) && !message.Message.Contains(FilterData, StringComparison.OrdinalIgnoreCase))
                 visible = false;
         }
         return visible;
@@ -238,8 +234,8 @@
 
     private void OnResetClick()
     {
-        startdate = DateTime.Today.AddDays(-30);
-        enddate = DateTime.Today;
-        filterData = "";
+        StartDate = DateTime.Today.AddDays(-30);
+        EndDate = DateTime.Today;
+        FilterData = "";
     }
 }

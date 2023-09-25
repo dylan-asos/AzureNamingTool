@@ -11,11 +11,11 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class CustomComponentsController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly CustomComponentService _customComponentService;
     private readonly GeneralHelper _generalHelper;
     private readonly ResourceComponentService _resourceComponentService;
-    private readonly AdminLogService _adminLogService;
 
     public CustomComponentsController(
         CustomComponentService customComponentService,
@@ -39,7 +39,7 @@ public class CustomComponentsController : ControllerBase
     public async Task<IActionResult> Get()
     {
         var serviceResponse = await _customComponentService.GetItems();
-        
+
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -60,7 +60,7 @@ public class CustomComponentsController : ControllerBase
     {
         var serviceResponse = await _customComponentService
             .GetItemsByParentType(_generalHelper.NormalizeName(parenttype, true));
-        
+
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -81,7 +81,7 @@ public class CustomComponentsController : ControllerBase
         var serviceResponse =
             // Get list of items
             await _customComponentService.GetItem(id);
-        
+
         if (serviceResponse.Success)
         {
             return Ok(serviceResponse.ResponseObject);
@@ -102,11 +102,11 @@ public class CustomComponentsController : ControllerBase
         var serviceResponse = await _customComponentService.PostItem(item);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") updated."});
         _cacheHelper.InvalidateCacheObject("CustomComponent");
-        
+
         return Ok(serviceResponse.ResponseObject);
     }
 
@@ -121,9 +121,9 @@ public class CustomComponentsController : ControllerBase
     public async Task<IActionResult> PostConfig([FromBody] List<CustomComponent> items)
     {
         var serviceResponse = await _customComponentService.PostConfig(items);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Components updated."});
         _cacheHelper.InvalidateCacheObject("CustomComponent");
@@ -140,25 +140,26 @@ public class CustomComponentsController : ControllerBase
     [Route("[action]")]
     public async Task<IActionResult> PostConfigWithParentData([FromBody] CustomComponentConfig config)
     {
-        List<ResourceComponent> currentresourcecomponents = new();
-        List<CustomComponent> newcustomcomponents = new();
+        List<ResourceComponent> currentResourceComponents = new();
+        List<CustomComponent> newCustomComponents = new();
+
         // Get the current resource components
         var serviceResponse = await _resourceComponentService.GetItems(true);
 
-        if (!serviceResponse.Success) 
-        return BadRequest(serviceResponse.ResponseObject);
-        
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+
         if (serviceResponse.ResponseObject != null)
         {
-            currentresourcecomponents = serviceResponse.ResponseObject!;
+            currentResourceComponents = serviceResponse.ResponseObject!;
 
             // Loop through the posted components
-            if (config.ParentComponents!= null)
+            if (config.ParentComponents != null)
             {
                 foreach (var thisparentcomponent in config.ParentComponents)
                 {
                     // Check if the posted component exists in the current components
-                    if (!currentresourcecomponents.Exists(x => x.Name == thisparentcomponent.Name))
+                    if (!currentResourceComponents.Exists(x => x.Name == thisparentcomponent.Name))
                     {
                         // Add the custom component
                         ResourceComponent newcustomcomponent = new()
@@ -172,7 +173,7 @@ public class CustomComponentsController : ControllerBase
                         if (serviceResponse.Success)
                         {
                             // Add the new custom component to the list
-                            currentresourcecomponents.Add(newcustomcomponent);
+                            currentResourceComponents.Add(newcustomcomponent);
                         }
                         else
                         {
@@ -183,34 +184,31 @@ public class CustomComponentsController : ControllerBase
             }
         }
 
-        if (config.CustomComponents!= null)
+        if (config.CustomComponents is {Count: > 0})
         {
-            if (config.CustomComponents.Count > 0)
+            // Loop through custom components to make sure the parent exists
+            foreach (var thiscustomcomponent in config.CustomComponents)
             {
-                // Loop through custom components to make sure the parent exists
-                foreach (var thiscustomcomponent in config.CustomComponents)
+                if (currentResourceComponents.Any(x =>
+                        _generalHelper.NormalizeName(x.Name, true) == thiscustomcomponent.ParentComponent))
                 {
-                    if (currentresourcecomponents.Any(x =>
-                            _generalHelper.NormalizeName(x.Name, true) == thiscustomcomponent.ParentComponent))
-                    {
-                        newcustomcomponents.Add(thiscustomcomponent);
-                    }
+                    newCustomComponents.Add(thiscustomcomponent);
                 }
+            }
 
-                // Update the custom component options
-                serviceResponse = await _customComponentService.PostConfig(newcustomcomponents);
-                if (!serviceResponse.Success)
-                {
-                    return BadRequest(serviceResponse.ResponseObject);
-                }
+            // Update the custom component options
+            serviceResponse = await _customComponentService.PostConfig(newCustomComponents);
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.ResponseObject);
             }
         }
 
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Components updated."});
         _cacheHelper.InvalidateCacheObject("CustomComponent");
-        return Ok("Custom Component configuration updated!");
 
+        return Ok("Custom Component configuration updated!");
     }
 
     // DELETE api/<CustomComponentsController>/5
@@ -224,15 +222,15 @@ public class CustomComponentsController : ControllerBase
     {
         var serviceResponse = await _customComponentService.GetItem(id);
 
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         var item = (CustomComponent) serviceResponse.ResponseObject!;
         serviceResponse = await _customComponentService.DeleteItem(id);
 
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Custom Component (" + item.Name + ") deleted."});
         _cacheHelper.InvalidateCacheObject("GeneratedName");

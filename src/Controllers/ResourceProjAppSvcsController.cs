@@ -11,11 +11,14 @@ namespace AzureNamingTool.Controllers;
 [ApiKey]
 public class ResourceProjAppSvcsController : ControllerBase
 {
+    private readonly AdminLogService _adminLogService;
     private readonly CacheHelper _cacheHelper;
     private readonly ResourceProjAppSvcService _resourceProjAppSvcService;
-    private AdminLogService _adminLogService;
 
-    public ResourceProjAppSvcsController(ResourceProjAppSvcService resourceProjAppSvcService, CacheHelper cacheHelper, AdminLogService adminLogService)
+    public ResourceProjAppSvcsController(
+        ResourceProjAppSvcService resourceProjAppSvcService,
+        CacheHelper cacheHelper,
+        AdminLogService adminLogService)
     {
         _resourceProjAppSvcService = resourceProjAppSvcService;
         _cacheHelper = cacheHelper;
@@ -67,18 +70,16 @@ public class ResourceProjAppSvcsController : ControllerBase
     public async Task<IActionResult> Post([FromBody] ResourceProjAppSvc item)
     {
         var serviceResponse = await _resourceProjAppSvcService.PostItem(item);
-        if (serviceResponse.Success)
-        {
-            await _adminLogService.PostItem(new AdminLogMessage
-            {
-                Source = "API", Title = "INFORMATION",
-                Message = "Resource Project/App/Service (" + item.Name + ") added/updated."
-            });
-            _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-            return Ok(serviceResponse.ResponseObject);
-        }
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
 
-        return BadRequest(serviceResponse.ResponseObject);
+        await _adminLogService.PostItem(new AdminLogMessage
+        {
+            Source = "API", Title = "INFORMATION",
+            Message = "Resource Project/App/Service (" + item.Name + ") added/updated."
+        });
+        _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
+        return Ok(serviceResponse.ResponseObject);
     }
 
     // POST api/<ResourceProjAppSvcsController>
@@ -94,12 +95,12 @@ public class ResourceProjAppSvcsController : ControllerBase
         var serviceResponse = await _resourceProjAppSvcService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Projects/Apps/Services added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-        return Ok(serviceResponse.ResponseObject);
 
+        return Ok(serviceResponse.ResponseObject);
     }
 
     // DELETE api/<ResourceProjAppSvcsController>/5
@@ -112,24 +113,22 @@ public class ResourceProjAppSvcsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var serviceResponse = await _resourceProjAppSvcService.GetItem(id);
-        if (serviceResponse.Success)
-        {
-            var item = (ResourceProjAppSvc) serviceResponse.ResponseObject!;
-            serviceResponse = await _resourceProjAppSvcService.DeleteItem(id);
-            if (serviceResponse.Success)
-            {
-                await _adminLogService.PostItem(new AdminLogMessage
-                {
-                    Source = "API", Title = "INFORMATION",
-                    Message = "Resource Project/App/Service (" + item.Name + ") deleted."
-                });
-                _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
-                return Ok("Resource Project/App/Service (" + item.Name + ") deleted.");
-            }
-
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        }
 
-        return BadRequest(serviceResponse.ResponseObject);
+        var item = (ResourceProjAppSvc) serviceResponse.ResponseObject!;
+        serviceResponse = await _resourceProjAppSvcService.DeleteItem(id);
+
+        if (!serviceResponse.Success)
+            return BadRequest(serviceResponse.ResponseObject);
+
+        await _adminLogService.PostItem(new AdminLogMessage
+        {
+            Source = "API", Title = "INFORMATION",
+            Message = "Resource Project/App/Service (" + item.Name + ") deleted."
+        });
+        _cacheHelper.InvalidateCacheObject("ResourceProjAppSvc");
+
+        return Ok("Resource Project/App/Service (" + item.Name + ") deleted.");
     }
 }

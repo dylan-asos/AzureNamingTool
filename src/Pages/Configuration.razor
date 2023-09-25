@@ -5,17 +5,14 @@
 @using System.IO
 @using AzureNamingTool.Shared.Modals;
 @using BlazorDownloadFile
-@using Microsoft.AspNetCore.Components.Authorization
 @using System.Text.Json
-@using System.Text.Json.Serialization
 @using System.Text
 @using System.Reflection;
 @inject ILogger<Configuration> Logger
 @inject IJSRuntime JsRuntime
-@inject IConfiguration _config
-@inject StateContainer state
-@inject ProtectedSessionStorage session
-@inject IToastService toastService
+@inject StateContainer State
+@inject ProtectedSessionStorage Session
+@inject IToastService ToastService
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject GeneralHelper GeneralHelper
@@ -465,7 +462,7 @@
 
             <div class="mb-3">
                 <h4>Component Configuration</h4>
-                @if (servicesData.ResourceComponents!.Where(x => x.IsCustom == true).Count() > 0)
+                @if (servicesData.ResourceComponents!.Where(x => x.IsCustom == true).Any())
                 {
                     <div class="card">
                         <h5 class="card-header bg-secondary text-white">
@@ -1929,11 +1926,11 @@
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        currentuser = await IdentityHelper.GetCurrentUser(session);
+        currentuser = await IdentityHelper.GetCurrentUser(Session);
         if (firstRender)
         {
-            var result = await session.GetAsync<bool>("admin");
-            admin = (bool)result.Value;
+            var result = await Session.GetAsync<bool>("admin");
+            admin = result.Value;
             servicesData = await ServicesHelper.LoadServicesData(admin);
 
             // Get the list of categories
@@ -1941,7 +1938,7 @@
             dataLoaded = true;
 
             // Determine if the connectivity notification has been dismissed
-            var resultConnectivityAlertShown = await session.GetAsync<bool>("connectivityalertshown");
+            var resultConnectivityAlertShown = await Session.GetAsync<bool>("connectivityalertshown");
             connectivityalertshown = resultConnectivityAlertShown.Success ? resultConnectivityAlertShown.Value : false;
 
             // Configuration File Check
@@ -1950,7 +1947,7 @@
             {
 
                 // Determine if the version notification has been dismissed
-                var resultVersionAlert = await session.GetAsync<bool>("versionalert-" + appversion + "-shown");
+                var resultVersionAlert = await Session.GetAsync<bool>("versionalert-" + appversion + "-shown");
                 versionalertshown = resultVersionAlert.Success ? resultVersionAlert.Value : false;
                 if (!versionalertshown)
                 {
@@ -1958,11 +1955,11 @@
                     if (String.IsNullOrEmpty(versionalert))
                     {
                         versionalertshown = true;
-                        await session.SetAsync("versionalert-" + appversion + "-shown", true);
+                        await Session.SetAsync("versionalert-" + appversion + "-shown", true);
                     }
                 }
 
-                var resultConfigurationFileAlert = await session.GetAsync<bool>("configurationfilealertshown");
+                var resultConfigurationFileAlert = await Session.GetAsync<bool>("configurationfilealertshown");
                 configurationfilealertshown = resultConfigurationFileAlert.Success ? resultConfigurationFileAlert.Value : false;
 
                 // Check connectivity
@@ -1981,7 +1978,7 @@
                             }
                             // Display a notification of the files requiring updating
                             ModalHelper.ShowInformationModal(Modal!, theme, "bg-navcolor", "ATTENTION", versionmessage, "", admin);
-                            await session.SetAsync("configurationfilealertshown", true);
+                            await Session.SetAsync("configurationfilealertshown", true);
                         }
                     }
                 }
@@ -2033,7 +2030,7 @@
                 try
                 {
                     ServiceResponse serviceResponse;
-                    JsonSerializerOptions options = new JsonSerializerOptions
+                    var options = new JsonSerializerOptions
                         {
                             PropertyNameCaseInsensitive = true
                         };
@@ -2168,7 +2165,7 @@
                                     if (confirm)
                                     {
                                         servicesData = await ServicesHelper.LoadServicesData(admin);
-                                        state.SetNavReload(true);
+                                        State.SetNavReload(true);
                                         StateHasChanged();
                                     }
                                     break;
@@ -2180,7 +2177,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -2201,7 +2198,7 @@
                                             {
                                                 message.Type = MessageTypesEnum.Success;
                                                 message.Message = resourceComponent.Name + " deleted!";
-                                                state.SetNavReload(true);
+                                                State.SetNavReload(true);
                                             }
                                             else
                                             {
@@ -2452,7 +2449,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -2494,7 +2491,7 @@
                                         if (response)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -2629,7 +2626,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -2671,7 +2668,7 @@
                                         if (response)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -2799,7 +2796,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -2972,7 +2969,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3014,7 +3011,7 @@
                                         if (response)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3149,7 +3146,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3191,7 +3188,7 @@
                                         if (response)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3320,7 +3317,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3473,7 +3470,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3516,7 +3513,7 @@
                                         if (response)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3652,7 +3649,7 @@
                                         if (response)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3670,7 +3667,7 @@
                                         if (confirm)
                                         {
                                             servicesData = await ServicesHelper.LoadServicesData(admin);
-                                            state.SetNavReload(true);
+                                            State.SetNavReload(true);
                                             StateHasChanged();
                                         }
                                     }
@@ -3983,33 +3980,33 @@
                     switch (message.Type)
                     {
                         case MessageTypesEnum.INFORMATION:
-                            toastService.ShowInfo(message.Message);
+                            ToastService.ShowInfo(message.Message);
                             break;
                         case MessageTypesEnum.Success:
-                            toastService.ShowSuccess(message.Message);
+                            ToastService.ShowSuccess(message.Message);
                             break;
                         case MessageTypesEnum.WARNING:
-                            toastService.ShowWarning(message.Message);
+                            ToastService.ShowWarning(message.Message);
                             break;
                         case MessageTypesEnum.ERROR:
-                            toastService.ShowError(message.Message);
+                            ToastService.ShowError(message.Message);
                             break;
                     }
 
                     // Get the current user, if any
-                    string currentuser = await IdentityHelper.GetCurrentUser(session);
+                    string currentuser = await IdentityHelper.GetCurrentUser(Session);
                     await AdminLogService.PostItem(new AdminLogMessage() { Title = message.Type.ToString(), Message = message.Message, Source = currentuser });
                 }
             }
             else
             {
-                toastService.ShowError("There was an error with teh request. Please try again");
+                ToastService.ShowError("There was an error with teh request. Please try again");
             }
         }
         else
         {
             servicesData = await ServicesHelper.LoadServicesData(admin);
-            toastService.ShowError("There was an error with teh request. Please try again");
+            ToastService.ShowError("There was an error with teh request. Please try again");
         }
     }
 
@@ -4106,7 +4103,7 @@
 
     private async Task OnConfigurationAlertDismissed()
     {
-        await session.SetAsync("versionalert-" + appversion + "-shown", true);
+        await Session.SetAsync("versionalert-" + appversion + "-shown", true);
         if (dismissalert)
         {
             ConfigurationHelper.DismissVersionAlert();
@@ -4114,7 +4111,7 @@
     }
     private async Task OnConnectivtyAlertDismissed()
     {
-        await session.SetAsync("connectivityalertshown", true);
+        await Session.SetAsync("connectivityalertshown", true);
     }
 
     private void OnRefreshLocationsCheckboxClicked(ChangeEventArgs e)

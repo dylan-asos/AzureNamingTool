@@ -18,7 +18,7 @@ public class ResourceFunctionsController : ControllerBase
     private readonly ResourceFunctionService _resourceFunctionService;
 
     public ResourceFunctionsController(
-        CacheHelper cacheHelper, 
+        CacheHelper cacheHelper,
         ResourceFunctionService resourceFunctionService,
         AdminLogService adminLogService)
     {
@@ -72,9 +72,9 @@ public class ResourceFunctionsController : ControllerBase
     public async Task<IActionResult> Post([FromBody] ResourceFunction item)
     {
         var serviceResponse = await _resourceFunctionService.PostItem(item);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",
@@ -82,7 +82,6 @@ public class ResourceFunctionsController : ControllerBase
         });
         _cacheHelper.InvalidateCacheObject("ResourceFunction");
         return Ok(serviceResponse.ResponseObject);
-
     }
 
     // POST api/<ResourceFunctionsController>
@@ -98,7 +97,7 @@ public class ResourceFunctionsController : ControllerBase
         var serviceResponse = await _resourceFunctionService.PostConfig(items);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
             {Source = "API", Title = "INFORMATION", Message = "Resource Functions added/updated."});
         _cacheHelper.InvalidateCacheObject("ResourceFunction");
@@ -115,14 +114,14 @@ public class ResourceFunctionsController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var serviceResponse = await _resourceFunctionService.GetItem(id);
-        if (!serviceResponse.Success) 
+        if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         var item = (ResourceFunction) serviceResponse.ResponseObject!;
         serviceResponse = await _resourceFunctionService.DeleteItem(id);
         if (!serviceResponse.Success)
             return BadRequest(serviceResponse.ResponseObject);
-        
+
         await _adminLogService.PostItem(new AdminLogMessage
         {
             Source = "API", Title = "INFORMATION",

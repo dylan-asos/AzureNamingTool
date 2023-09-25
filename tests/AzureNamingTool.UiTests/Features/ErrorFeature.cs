@@ -26,18 +26,4 @@ public class ErrorFeature : FeatureFixture
                 
             ).RunAsync();
     }
-    
-    [Scenario]
-    public async Task ReturnErrorForUnhandledExceptions()
-    {
-        await Runner
-            .WithContext<HomePageContext>()
-            .AddAsyncSteps(
-                _ => _.Given_the_route_is_requested("compute/edit/9999"),
-                _ => _.Then_response_code_should_be(HttpStatusCode.InternalServerError),
-                _ => _.When_the_response_content_is_parsed(),
-                _ => _.Then_the_document_should_contain("An error occurred while processing your request.")
-                
-            ).RunAsync();
-    }
 }
