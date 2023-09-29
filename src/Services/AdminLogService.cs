@@ -10,7 +10,7 @@ public class AdminLogService
     private readonly ILogger<AdminLogService> _logger;
 
     public AdminLogService(
-        FileReader reader, 
+        FileReader reader,
         FileWriter fileWriter,
         ILogger<AdminLogService> logger)
     {
@@ -18,7 +18,7 @@ public class AdminLogService
         _fileWriter = fileWriter;
         _logger = logger;
     }
-    
+
     /// <summary>
     ///     This function returns the Admin log.
     /// </summary>
@@ -29,7 +29,7 @@ public class AdminLogService
 
         // Get list of items
         var items = await _fileReader.GetList<AdminLogMessage>();
-        
+
         serviceResponse.ResponseObject = items.OrderByDescending(x => x.CreatedOn).ToList();
         serviceResponse.Success = true;
 
@@ -43,7 +43,7 @@ public class AdminLogService
     {
         // Log the created name
         var items = await _fileReader.GetList<AdminLogMessage>();
-        
+
         if (items.Count > 0)
         {
             adminLogMessage.Id = items.Max(x => x.Id) + 1;

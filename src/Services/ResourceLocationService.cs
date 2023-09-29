@@ -266,7 +266,7 @@ public class ResourceLocationService
         {
             serviceResponse.ResponseObject = "Refresh Resource Locations not found!";
         }
-        
+
         return serviceResponse;
     }
 }

@@ -30,7 +30,7 @@ public class ResourceTypeUpdater
 
         var component = _generalHelper.NormalizeName(resourceComponent.Name, false);
         serviceResponse = await _resourceTypeService.GetItems();
-        
+
         if (serviceResponse.Success)
         {
             if (serviceResponse.ResponseObject == null)
@@ -69,7 +69,7 @@ public class ResourceTypeUpdater
                         {
                             currentValues.Add(component);
                             currentType.Exclude = string.Join(",", currentValues.ToArray());
-                            await  _resourceTypeService.PostItem(currentType);
+                            await _resourceTypeService.PostItem(currentType);
                         }
 
                         break;

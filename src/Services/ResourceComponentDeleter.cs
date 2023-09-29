@@ -64,7 +64,7 @@ public class ResourceComponentDeleter
 
         components.RemoveAll(x =>
             x.ParentComponent == _generalHelper.NormalizeName(item.Name, true));
-        
+
         await _fileWriter.WriteList(components);
 
         // Remove the item from the collection

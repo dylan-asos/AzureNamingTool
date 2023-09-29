@@ -7,13 +7,13 @@ public class AdminService
 {
     private readonly SiteConfiguration _config;
     private readonly ConfigurationHelper _configurationHelper;
-    private readonly ValidationHelper _validationHelper;
     private readonly EncryptionHelper _encryptionHelper;
+    private readonly ValidationHelper _validationHelper;
 
     public AdminService(
-        ValidationHelper validationHelper, 
+        ValidationHelper validationHelper,
         ConfigurationHelper configurationHelper,
-        SiteConfiguration config, 
+        SiteConfiguration config,
         EncryptionHelper encryptionHelper)
     {
         _validationHelper = validationHelper;
@@ -80,7 +80,7 @@ public class AdminService
             ResponseObject = identityHeaderName,
             Success = true
         };
-        
+
         return serviceResponse;
     }
 }
