@@ -1,0 +1,81 @@
+﻿@using AzureNamingTool.Models
+<div id="compontentslegendcontainer" class="card mb-3" style="width:auto;">
+    <div class="card-header bg-default text-dark">
+        <a id="ComponentsLegendLink" class="link-dark text-decoration-none" data-bs-toggle="collapse" href="#componentslegend" role="button" aria-expanded="false" aria-controls="componentslegend">
+            <span class="oi oi-chevron-bottom" aria-hidden="true"></span> Actions Legend
+        </a>
+    </div>
+    <div class="collapse card card-body @Theme.ThemeStyle" id="componentslegend">
+        <table class="table">
+            <tbody>
+            <tr>
+                <td class="w-25">
+                    <button type="button" class="btn btn-primary btn-dummy" title="Move up" style="min-width:42px;">
+                        <span class="oi oi-arrow-thick-top" aria-hidden="true"></span>
+                    </button>
+                </td>
+                <td>
+                    Move the item up in the order.
+                </td>
+            </tr>
+            <tr>
+                <td class="w-25">
+                    <button type="button" class="btn btn-primary btn-dummy" title="Move down" style="min-width:42px;">
+                        <span class="oi oi-arrow-thick-bottom" aria-hidden="true"></span>
+                    </button>
+                </td>
+                <td>
+                    Move the item down in the order.
+                </td>
+            </tr>
+            <tr>
+                <td class="w-25">
+                    <button type="button" class="btn btn-success btn-dummy" title="Enable">
+                        <span class="oi oi-plus" aria-hidden="true"></span>
+                    </button>
+
+                </td>
+                <td>
+                    Enable the item.
+                </td>
+            </tr>
+            <tr>
+                <td class="w-25">
+                    <button type="button" class="btn btn-dark btn-dummy" title="Disable">
+                        <span class="oi oi-ban" aria-hidden="true"></span>
+                    </button>
+                </td>
+                <td>
+                    Disable the item.
+                </td>
+            </tr>
+            <tr>
+                <td class="w-25">
+                    <button type="button" class="btn btn-secondary btn-dummy" title="Edit">
+                        <span class="oi oi-pencil" aria-hidden="true"></span>
+                    </button>
+                </td>
+                <td>
+                    Edit the item.
+                </td>
+            </tr>
+            <tr>
+                <td class="w-25">
+                    <button type="button" class="btn btn-danger btn-dummy" title="Delete">
+                        <span class="oi oi-x" aria-hidden="true"></span>
+                    </button>
+                </td>
+                <td>
+                    Delete the item.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+
+    [ParameterAttribute]
+    public ThemeInfo Theme { get; set; } = new();
+}
