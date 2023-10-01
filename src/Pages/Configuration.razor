@@ -12,8 +12,8 @@
 @using AzureNamingTool.Services
 @using AzureNamingTool.Helpers
 @using AzureNamingTool.Shared.Modals
-@using AzureNamingTool.Shared.Instructions
 @using ResourceLocation = AzureNamingTool.Models.ResourceLocation
+@using AzureNamingTool.Shared.Instructions
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject GeneralHelper GeneralHelper
@@ -84,8 +84,8 @@
             </div>
         </div>
     }
-    
-    <ActionLegend Theme="@theme" />
+
+    <ActionLegend Theme="@theme"/>
 }
 
 @if (!dataLoaded)
@@ -97,168 +97,148 @@
 else
 {
     <div class="mb-3">
-    @if (servicesData != null)
-    {
-        <h4>Base Configuration</h4>
 
-        <div class="card">
-            <h5 class="card-header text-white bg-secondary text-white">
-                <a id="ResourceComponent" class="link-light text-decoration-none" data-bs-toggle="collapse" style="display:block;" href="#components" role="button" aria-expanded="false" aria-controls="components">
-                    <span class="oi oi-chevron-bottom" aria-hidden="true"></span> Components
-                </a>
-            </h5>
-            <div class="collapse card card-body @theme.ThemeStyle" id="components">
-                <div class="card mb-3">
-                    <div class="card card-header bg-default text-dark" style="font-weight:bold;">
-                        Current Components
-                    </div>
-                    <div class="card card-body @theme.ThemeStyle">
-                        <p>The current Components.</p>
-                        @if (admin)
-                        {
-                            <div>
-                                <button type="button" class="btn btn-success" @onclick="@(e => FormAction("ResourceComponent", 0, "add"))" title="Add Component">
-                                    <span class="oi oi-plus" aria-hidden="true"></span> Add Component
-                                </button>
-                            </div>
-                        }
-                        <div class="table-responsive">
-                            <table class="table @theme.ThemeStyle">
-                                <thead>
-                                <tr>
-                                    <th>Name</th>
+    <h4>Base Configuration</h4>
+
+    <div class="card">
+        <h5 class="card-header text-white bg-secondary text-white">
+            <a id="ResourceComponent" class="link-light text-decoration-none" data-bs-toggle="collapse" style="display:block;" href="#components" role="button" aria-expanded="false" aria-controls="components">
+                <span class="oi oi-chevron-bottom" aria-hidden="true"></span> Components
+            </a>
+        </h5>
+        <div class="collapse card card-body @theme.ThemeStyle" id="components">
+            <div class="card mb-3">
+                <div class="card card-header bg-default text-dark" style="font-weight:bold;">
+                    Current Components
+                </div>
+                <div class="card card-body @theme.ThemeStyle">
+                    <p>The current Components.</p>
+                    @if (admin)
+                    {
+                        <div>
+                            <button type="button" class="btn btn-success" @onclick="@(e => FormAction("ResourceComponent", 0, "add"))" title="Add Component">
+                                <span class="oi oi-plus" aria-hidden="true"></span> Add Component
+                            </button>
+                        </div>
+                    }
+                    <div class="table-responsive">
+                        <table class="table @theme.ThemeStyle">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                @if (admin)
+                                {
+                                    <th>Actions</th>
+                                }
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var item in servicesData.ResourceComponents!)
+                            {
+                                <tr class="@GeneralHelper.SetTextEnabledClass(item.Enabled)">
+                                    <td class="w-50">
+                                        @item.DisplayName
+                                        @if (item.IsCustom)
+                                        {
+                                            <span>
+                                                (CUSTOM)
+                                            </span>
+                                        }
+                                    </td>
                                     @if (admin)
                                     {
-                                        <th>Actions</th>
-                                    }
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach (var item in servicesData.ResourceComponents!)
-                                {
-                                    <tr class="@GeneralHelper.SetTextEnabledClass(item.Enabled)">
-                                        <td class="w-50">
-                                            @item.DisplayName
+                                        <td>
+                                            <button type="button" class="btn btn-primary" style="min-width:42px;" @onclick="@(e => FormAction("ResourceComponent", item.Id, "up"))" title="Move up">
+                                                <span class="oi oi-arrow-thick-top" aria-hidden="true"></span>
+                                            </button>
+                                            <span> </span>
+                                            <button type="button" class="btn btn-primary" style="min-width:42px;" @onclick="@(e => FormAction("ResourceComponent", item.Id, "down"))" title="Move down">
+                                                <span class="oi oi-arrow-thick-bottom" aria-hidden="true"></span>
+                                            </button>
+
+                                            <span> </span>
+                                            <button type="button" class="btn btn-secondary" @onclick="@(e => FormAction("ResourceComponent", item.Id, "edit"))" title="Edit">
+                                                <span class="oi oi-pencil" aria-hidden="true"></span>
+                                            </button>
+                                            @if (item.Enabled)
+                                            {
+                                                <span> </span>
+                                                <button type="button" class="btn btn-dark" @onclick="@(e => FormAction("ResourceComponent", item.Id, "disable"))" title="Disable">
+                                                    <span class="oi oi-ban" aria-hidden="true"></span>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span> </span>
+                                                <button type="button" class="btn btn-success" @onclick="@(e => FormAction("ResourceComponent", item.Id, "enable"))" title="Enable">
+                                                    <span class="oi oi-plus" aria-hidden="true"></span>
+                                                </button>
+                                            }
+
                                             @if (item.IsCustom)
                                             {
-                                                <span>
-                                                    (CUSTOM)
-                                                </span>
+                                                <span> </span>
+                                                <button type="button" class="btn btn-danger" @onclick="@(e => FormAction("ResourceComponent", item.Id, "delete"))" title="Delete">
+                                                    <span class="oi oi-x" aria-hidden="true"></span>
+                                                </button>
                                             }
                                         </td>
-                                        @if (admin)
-                                        {
-                                            <td>
-                                                <button type="button" class="btn btn-primary" style="min-width:42px;" @onclick="@(e => FormAction("ResourceComponent", item.Id, "up"))" title="Move up">
-                                                    <span class="oi oi-arrow-thick-top" aria-hidden="true"></span>
-                                                </button>
-                                                <span> </span>
-                                                <button type="button" class="btn btn-primary" style="min-width:42px;" @onclick="@(e => FormAction("ResourceComponent", item.Id, "down"))" title="Move down">
-                                                    <span class="oi oi-arrow-thick-bottom" aria-hidden="true"></span>
-                                                </button>
-
-                                                <span> </span>
-                                                <button type="button" class="btn btn-secondary" @onclick="@(e => FormAction("ResourceComponent", item.Id, "edit"))" title="Edit">
-                                                    <span class="oi oi-pencil" aria-hidden="true"></span>
-                                                </button>
-                                                @if (item.Enabled)
-                                                {
-                                                    <span> </span>
-                                                    <button type="button" class="btn btn-dark" @onclick="@(e => FormAction("ResourceComponent", item.Id, "disable"))" title="Disable">
-                                                        <span class="oi oi-ban" aria-hidden="true"></span>
-                                                    </button>
-                                                }
-                                                else
-                                                {
-                                                    <span> </span>
-                                                    <button type="button" class="btn btn-success" @onclick="@(e => FormAction("ResourceComponent", item.Id, "enable"))" title="Enable">
-                                                        <span class="oi oi-plus" aria-hidden="true"></span>
-                                                    </button>
-                                                }
-
-                                                @if (item.IsCustom)
-                                                {
-                                                    <span> </span>
-                                                    <button type="button" class="btn btn-danger" @onclick="@(e => FormAction("ResourceComponent", item.Id, "delete"))" title="Delete">
-                                                        <span class="oi oi-x" aria-hidden="true"></span>
-                                                    </button>
-                                                }
-                                            </td>
-                                        }
-                                    </tr>
-                                }
-                                </tbody>
-                            </table>
+                                    }
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @if (admin)
+            {
+                <div class="card mb-3">
+                    <div class="card-header bg-default text-dark">
+                        <a class="text-decoration-none text-dark" data-bs-toggle="collapse" style="display:block;font-weight:bold;" href="#componentsconfig" role="button" aria-expanded="false" aria-controls="componentsconfig">
+                            <span class="oi oi-chevron-bottom" aria-hidden="true"></span> Configuration
+                        </a>
+                    </div>
+                    <div class="collapse card card-body @theme.ThemeStyle" id="componentsconfig">
+                        <div class="card  w-auto mb-3">
+                            <div class="card card-header bg-default text-dark" style="font-weight:bold;">
+                                Export the current Components Configuration
+                            </div>
+                            <div class="card card-body @theme.ThemeStyle">
+                                <p>
+                                    Click <strong>Export</strong> to export the current Components Configuration.
+                                </p>
+                                <p>
+                                    <button type="button" class="btn btn-primary" @onclick=@(e => FormAction("ResourceComponent", 0, "download")) title="Export">
+                                        <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Export
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="card  w-auto mb-3">
+                            <div class="card card-header bg-default text-dark" style="font-weight:bold;">
+                                Reset the Components Configuration
+                            </div>
+                            <div class="card card-body @theme.ThemeStyle">
+                                <p>
+                                    Click <strong>Reset</strong> to reset the Components Configuration back to the default values at the time of installation.
+                                </p>
+                                <p>
+                                    <strong>NOTE:</strong> This will reset the current Components Configuration and cannot be undone!
+                                </p>
+                                <p>
+                                    <button type="button" class="btn btn-danger" @onclick=@(e => FormAction("ResourceComponent", 0, "reset")) title="Reset">
+                                        <span class="oi oi-loop-circular" aria-hidden="true"></span> Reset
+                                    </button>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
-                @if (admin)
-                {
-                    <div class="card mb-3">
-                        <div class="card-header bg-default text-dark">
-                            <a class="text-decoration-none text-dark" data-bs-toggle="collapse" style="display:block;font-weight:bold;" href="#componentsconfig" role="button" aria-expanded="false" aria-controls="componentsconfig">
-                                <span class="oi oi-chevron-bottom" aria-hidden="true"></span> Configuration
-                            </a>
-                        </div>
-                        <div class="collapse card card-body @theme.ThemeStyle" id="componentsconfig">
-                            <div class="card  w-auto mb-3">
-                                <div class="card card-header bg-default text-dark" style="font-weight:bold;">
-                                    Export the current Components Configuration
-                                </div>
-                                <div class="card card-body @theme.ThemeStyle">
-                                    <p>
-                                        Click <strong>Export</strong> to export the current Components Configuration.
-                                    </p>
-                                    <p>
-                                        <button type="button" class="btn btn-primary" @onclick=@(e => FormAction("ResourceComponent", 0, "download")) title="Export">
-                                            <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Export
-                                        </button>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="card  w-auto mb-3">
-                                <div class="card card-header bg-default text-dark" style="font-weight:bold;">
-                                    Reset the Components Configuration
-                                </div>
-                                <div class="card card-body @theme.ThemeStyle">
-                                    <p>
-                                        Click <strong>Reset</strong> to reset the Components Configuration back to the default values at the time of installation.
-                                    </p>
-                                    <p>
-                                        <strong>NOTE:</strong> This will reset the current Components Configuration and cannot be undone!
-                                    </p>
-                                    <p>
-                                        <button type="button" class="btn btn-danger" @onclick=@(e => FormAction("ResourceComponent", 0, "reset")) title="Reset">
-                                            <span class="oi oi-loop-circular" aria-hidden="true"></span> Reset
-                                        </button>
-                                    </p>
-                                </div>
-                            </div>
-                            <!--<div class="card">
-                                <div class="card card-header bg-default" style="font-weight:bold;">
-                                    Import Components Configuration
-                                </div>
-                                <div class="card card-body">
-                                    <p>
-                                        Enter the new Components Configuration JSON below and click <strong>Import</strong> to import the Components Configuration.</p><p><strong>NOTE:</strong> This will update the existing Components Configuration and cannot be undone!
-                                    </p>
-                                    <p>
-                                        <textarea title="Configuration" class="form-control" rows="8" type="text" @onchange="@(ui => { SetFormValue("newComponentConfig", (string) ui.Value); })">@newComponentConfig</textarea>
-                                    </p>
-                                    <p>
-                                        <button type="button" class="btn btn-success" @onclick="@(e => FormAction("ResourceComponent", 0, "update"))" title="Import">
-                                            <span class="oi oi-data-transfer-upload" aria-hidden="true"></span> Import
-                                        </button>
-                                    </p>
-                                </div>
-                            </div>
-                            -->
-                        </div>
-                    </div>
-                }
-            </div>
+            }
         </div>
-    }
+    </div>
+
 
     @if (servicesData!.ResourceDelimiters != null)
     {
@@ -390,7 +370,7 @@ else
 
     <div class="mb-3">
     <h4>Component Configuration</h4>
-    @if (servicesData.ResourceComponents!.Where(x => x.IsCustom).Any())
+    @if (servicesData.ResourceComponents!.Any(x => x.IsCustom))
     {
         <div class="card">
             <h5 class="card-header bg-secondary text-white">
@@ -1769,31 +1749,6 @@ else
 
                 </div>
             </div>
-
-            @* <div class="card">
-            <h5 class="card-header text-white bg-secondary">
-            <a class="link-light text-decoration-none" data-bs-toggle="collapse" style="display:block;" href="#policy" role="button" aria-expanded="false" aria-controls="policy">
-            Policy
-            </a>
-            </h5>
-            <div class="collapse card card-body @theme.ThemeStyle" id="policy">
-            <div class="card">
-            <div class="card card-header bg-default text-dark" style="font-weight:bold;">
-            Export Azure Policy Definition
-            </div>
-            <div class="card card-body @theme.ThemeStyle">
-            <p>
-            Click <strong>Export Azure Policy Definition</strong> to export an Azure Policy definition to use within your subscription.
-            </p>
-            <p>
-            <button type="button" class="btn btn-primary" @onclick=@(e => FormAction("Policy",0,"download")) title="Export Azure Policy Definition">
-            <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Export Azure Policy Definition
-            </button>
-            </p>
-            </div>
-            </div>
-            </div>
-            </div>*@
         </div>
     }
 }
@@ -1870,7 +1825,7 @@ else
 
     // Determine if the connectivity notification has been dismissed
             var resultConnectivityAlertShown = await Session.GetAsync<bool>("connectivityalertshown");
-            connectivityalertshown = resultConnectivityAlertShown.Success ? resultConnectivityAlertShown.Value : false;
+            connectivityalertshown = resultConnectivityAlertShown.Success && resultConnectivityAlertShown.Value;
 
     // Configuration File Check
     // Determine if the installed version of the configuration files are up to date
@@ -1878,7 +1833,7 @@ else
             {
     // Determine if the version notification has been dismissed
                 var resultVersionAlert = await Session.GetAsync<bool>("versionalert-" + appversion + "-shown");
-                versionalertshown = resultVersionAlert.Success ? resultVersionAlert.Value : false;
+                versionalertshown = resultVersionAlert.Success && resultVersionAlert.Value;
                 if (!versionalertshown)
                 {
                     versionalert = ConfigurationHelper.GetVersionAlert();
@@ -1898,16 +1853,16 @@ else
                     if (!configurationfilealertshown)
                     {
     // Get a list of any configurations that are out of date
-                        var versiondata = await ConfigurationHelper.VerifyConfigurationFileVersionData();
-                        if (versiondata.Count > 0)
+                        var versionData = await ConfigurationHelper.VerifyConfigurationFileVersionData();
+                        if (versionData.Count > 0)
                         {
-                            var versionmessage = "";
-                            foreach (var message in versiondata)
+                            var versionMessage = "";
+                            foreach (var message in versionData)
                             {
-                                versionmessage += message;
+                                versionMessage += message;
                             }
     // Display a notification of the files requiring updating
-                            ModalHelper.ShowInformationModal(Modal!, theme, "bg-navcolor", "ATTENTION", versionmessage, "", admin);
+                            ModalHelper.ShowInformationModal(Modal!, theme, "bg-navcolor", "ATTENTION", versionMessage, "", admin);
                             await Session.SetAsync("configurationfilealertshown", true);
                         }
                     }
@@ -1926,24 +1881,25 @@ else
         StateHasChanged();
     }
 
-    public bool IsTypeVisible(ResourceType type)
+    private bool IsTypeVisible(ResourceType type)
     {
         var visible = true;
 
-        if (!string.IsNullOrEmpty(filterData))
-        {
-            if (!type.Resource.Contains(filterData, StringComparison.OrdinalIgnoreCase) && !type.ShortName.Contains(filterData, StringComparison.OrdinalIgnoreCase))
-                visible = false;
-        }
+        if (string.IsNullOrEmpty(filterData))
+            return visible;
+
+        if (!type.Resource.Contains(filterData, StringComparison.OrdinalIgnoreCase) && !type.ShortName.Contains(filterData, StringComparison.OrdinalIgnoreCase))
+            visible = false;
+
         return visible;
     }
 
-    private async Task FormAction(string type, long id, string action, string parentcomponent = "")
+    private async Task FormAction(string type, long id, string action, string parentComponent = "")
     {
         message = new ResponseMessage();
         var confirm = false;
         var response = false;
-        var workingmodaloptions = new ModalOptions
+        var workingModalOptions = new ModalOptions
         {
             HideCloseButton = true,
             UseCustomLayout = true
@@ -1955,7 +1911,7 @@ else
             return;
         }
 
-        var workingmodal = Modal.Show<WorkingModal>("Working", workingmodaloptions);
+        var workingModal = Modal.Show<WorkingModal>("Working", workingModalOptions);
         try
         {
             var options = new JsonSerializerOptions
@@ -1964,21 +1920,21 @@ else
             };
 
     // Get the matching resource component for the item being configured
-            ResourceComponent thisresourceComponent = new();
+            ResourceComponent thisResourceComponent = new();
             if (type != "ResourceComponent")
             {
                 if (type == "CustomComponent")
                 {
-                    if (!string.IsNullOrEmpty(parentcomponent))
+                    if (!string.IsNullOrEmpty(parentComponent))
                     {
-                        thisresourceComponent = servicesData.ResourceComponents!
+                        thisResourceComponent = servicesData.ResourceComponents!
                             .Find(x => GeneralHelper.NormalizeName(x.Name, true)
-                                       == GeneralHelper.NormalizeName(parentcomponent, true))!;
+                                       == GeneralHelper.NormalizeName(parentComponent, true))!;
                     }
                 }
                 else
                 {
-                    thisresourceComponent = servicesData.ResourceComponents!.Find(x => x.Name == type)!;
+                    thisResourceComponent = servicesData.ResourceComponents!.Find(x => x.Name == type)!;
                 }
             }
 
@@ -1991,28 +1947,28 @@ else
                     await HandleResourceDelimiter(id, action, options);
                     break;
                 case "ResourceEnvironment":
-                    await HandleResourceEnvironment(id, action, thisresourceComponent, options);
+                    await HandleResourceEnvironment(id, action, thisResourceComponent, options);
                     break;
                 case "ResourceFunction":
-                    await HandleResourceFunction(id, action, thisresourceComponent, options);
+                    await HandleResourceFunction(id, action, thisResourceComponent, options);
                     break;
                 case "ResourceLocation":
-                    await HandleResourceLocation(id, action, thisresourceComponent, options);
+                    await HandleResourceLocation(id, action, thisResourceComponent, options);
                     break;
                 case "ResourceOrg":
-                    await HandleResourceOrg(id, action, thisresourceComponent, options);
+                    await HandleResourceOrg(id, action, thisResourceComponent, options);
                     break;
                 case "ResourceProjAppSvc":
-                    await HandleResourceProjAppSvv(id, action, thisresourceComponent, options);
+                    await HandleResourceProjAppSvv(id, action, thisResourceComponent, options);
                     break;
                 case "ResourceType":
                     await HandleResourceType(id, action, options);
                     break;
                 case "ResourceUnitDept":
-                    await HandleResourceUnitDept(id, action, thisresourceComponent, options);
+                    await HandleResourceUnitDept(id, action, thisResourceComponent, options);
                     break;
                 case "CustomComponent":
-                    await HandleCustomComponent(id, action, parentcomponent, thisresourceComponent, options);
+                    await HandleCustomComponent(id, action, parentComponent, thisResourceComponent, options);
                     break;
                 case "Global":
                     await HandleGlobal(action, options);
@@ -2022,7 +1978,6 @@ else
                     break;
             }
 
-    // Reset cache items
             CacheHelper.InvalidateCacheObject(type);
             servicesData = await ServicesHelper.LoadServicesData(admin);
         }
@@ -2034,9 +1989,8 @@ else
         }
         finally
         {
-            workingmodal.Close();
+            workingModal.Close();
         }
-
 
         if (!string.IsNullOrEmpty(message.Message))
         {
@@ -2057,9 +2011,11 @@ else
                     break;
             }
 
-    // Get the current user, if any
-            var currentuser = await IdentityHelper.GetCurrentUser(Session);
-            await AdminLogService.PostItem(new AdminLogMessage {Title = message.Type.ToString(), Message = message.Message, Source = currentuser});
+            var currentUser = await IdentityHelper.GetCurrentUser(Session);
+            await AdminLogService.PostItem(new AdminLogMessage
+            {
+                Title = message.Type.ToString(), Message = message.Message, Source = currentUser
+            });
         }
     }
 
@@ -2073,7 +2029,7 @@ else
 
                 var stream = new MemoryStream();
                 var writer = new StreamWriter(stream);
-                writer.Write(serviceResponse.ResponseObject);
+                writer.Write(policyjson);
                 await writer.FlushAsync();
                 stream.Position = 0;
 
@@ -2166,7 +2122,6 @@ else
                         }
                     }
                 }
-
 
                 break;
         }
@@ -2625,27 +2580,24 @@ else
 
                 break;
             case "update":
-                if (newUnitDeptConfig != null)
+                confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
+                    "<div class=\"my-4\">This will update the current Units/Depts Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>",
+                    "bg-danger", theme);
+                if (confirm)
                 {
-                    confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
-                        "<div class=\"my-4\">This will update the current Units/Depts Configuration and cannot be undone!</div><div class=\"my-4\">Are you sure?</div>",
-                        "bg-danger", theme);
-                    if (confirm)
+                    serviceResponse = await ResourceUnitDeptService.PostConfig(
+                        JsonSerializer.Deserialize<List<ResourceUnitDept>>(newUnitDeptConfig, options)!);
+                    if (serviceResponse.Success)
                     {
-                        serviceResponse = await ResourceUnitDeptService.PostConfig(
-                            JsonSerializer.Deserialize<List<ResourceUnitDept>>(newUnitDeptConfig, options)!);
-                        if (serviceResponse.Success)
-                        {
-                            message.Type = MessageTypesEnum.Success;
-                            message.Message = "Units/Depts configuration update succeeded!";
-                            newFunctionConfig = string.Empty;
-                        }
-                        else
-                        {
-                            message.Type = MessageTypesEnum.ERROR;
-                            message.Message = "Units/Depts configuration update failed!";
-                            message.MessageDetails = serviceResponse.ResponseMessage;
-                        }
+                        message.Type = MessageTypesEnum.Success;
+                        message.Message = "Units/Depts configuration update succeeded!";
+                        newFunctionConfig = string.Empty;
+                    }
+                    else
+                    {
+                        message.Type = MessageTypesEnum.ERROR;
+                        message.Message = "Units/Depts configuration update failed!";
+                        message.MessageDetails = serviceResponse.ResponseMessage;
                     }
                 }
 
@@ -4153,9 +4105,9 @@ else
 
     private void OnRefreshLocationsCheckboxClicked(ChangeEventArgs e)
     {
-        if (e.Value == null) 
+        if (e.Value == null)
             return;
-        
+
         refreshlocationshortnames = bool.Parse(e.Value.ToString()!);
         if (refreshlocationshortnames)
         {
@@ -4165,9 +4117,9 @@ else
 
     private void OnRefreshTypesCheckboxClicked(ChangeEventArgs e)
     {
-        if (e.Value == null) 
+        if (e.Value == null)
             return;
-        
+
         refreshtypeshortnames = bool.Parse(e.Value.ToString()!);
         if (refreshtypeshortnames)
         {
