@@ -7,6 +7,7 @@
 @using Microsoft.AspNetCore.Html
 @using Microsoft.Extensions.Logging
 @using System.Reflection;
+@using Microsoft.OpenApi.Validations.Rules
 @inject IJSRuntime JsRuntime
 @inject StateContainer state
 @inject ProtectedSessionStorage session
@@ -70,7 +71,7 @@
                             <div class="mb-3">
                                 <strong>Current version:</strong> @appversion (<a href="@releasenotesurl" target="_blank">Release Notes</a>)
                             </div>
-                            @if (!String.IsNullOrEmpty(versionalert))
+                            @if (!string.IsNullOrEmpty(versionalert))
                             {
                                 <div class="alert alert-warning" role="alert">
                                     <div>
@@ -78,7 +79,7 @@
                                     </div>
                                 </div>
                             }
-                            @if ((currentuser == "GlobalAdmin") && (environmentvariables!= null))
+                            @if (currentuser == "GlobalAdmin")
                             {
                                 <div class="card mb-3" style="width:auto;">
                                     <div class="card-header bg-default text-dark">
@@ -482,19 +483,16 @@
                 currentapikey = EncryptionHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
                 // Determine if the version notification has been dismissed
                 var resultVersionAlert = await session.GetAsync<bool>("versionalert-" + appversion + "-shown");
-                versionalertshown = resultVersionAlert.Success ? resultVersionAlert.Value : false;
+                versionalertshown = resultVersionAlert.Success && resultVersionAlert.Value;
                 versionalert = ConfigurationHelper.GetVersionAlert(true);
                 duplicatenamesallowed = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("DuplicateNamesAllowed"));
                 connectivitycheckenabled = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("ConnectivityCheckEnabled"));
                 resourcetypeeditingallowed = Convert.ToBoolean(ConfigurationHelper.GetAppSetting("ResourceTypeEditingAllowed"));
                 currentgenerationwebhook = ConfigurationHelper.GetAppSetting("GenerationWebhook", true);
                 currentidentityheadername = ConfigurationHelper.GetAppSetting("IdentityHeaderName", true);
-                if (identityProviderDetails != null)
+                if (!string.IsNullOrEmpty(identityProviderDetails.CurrentIdentityProvider))
                 {
-                    if (!String.IsNullOrEmpty(identityProviderDetails.CurrentIdentityProvider))
-                    {
-                        currentidentityprovider = identityProviderDetails.CurrentIdentityProvider;
-                    }
+                    currentidentityprovider = identityProviderDetails.CurrentIdentityProvider;
                 }
                 environmentvariables = ConfigurationHelper.GetEnvironmentVariables();
             }
@@ -508,9 +506,11 @@
 
     private async void AdminFormAction(string action, int id = 0)
     {
-        message = new ResponseMessage();
-        message.Header = "INFORMATION";
-        message.Type = MessageTypesEnum.INFORMATION;
+        message = new ResponseMessage
+        {
+            Header = "INFORMATION",
+            Type = MessageTypesEnum.INFORMATION
+        };
         ServiceResponse serviceResponse = new();
         bool redirect = false;
         bool confirm = false;
@@ -520,162 +520,25 @@
         {
             case "login":
                 // Check the password
-                if (currentpassword == EncryptionHelper.DecryptString(SiteConfiguration.AdminPassword!, SiteConfiguration.SaltKey!))
-                {
-                    state.SetAdmin(true);
-                    await session.SetAsync("admin", true);
-                    await session.SetAsync("currentuser", "GlobalAdmin");
-                    // Load the current API Key
-                    currentapikey = EncryptionHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
-                    message.Type = MessageTypesEnum.INFORMATION;
-                    message.Header = "INFORMATION";
-                    message.Message = "Global Admin logged in.";
-                    admin = true;
-                    redirect = true;
-                }
-                else
-                {
-                    state.SetAdmin(false);
-                    await session.SetAsync("admin", false);
-                    message.Type = MessageTypesEnum.ERROR;
-                    message.Header = "ERROR";
-                    message.Message = "Login failed!";
-                }
+                redirect = await DoLogin();
                 break;
             case "logout":
-                state.SetAdmin(false);
-                await session.SetAsync("admin", false);
-                message.Type = MessageTypesEnum.INFORMATION;
-                message.Header = "INFORMATION";
-                message.Message = "User Logged out.";
-                redirect = true;
+                redirect = await DoLogout();
                 break;
             case "password":
-                confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the Global Admin Password.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
-                if (confirm)
-                {
-                    // Set the new Global admin password
-                    serviceResponse = AdminService.UpdatePassword(newpassword);
-                    if (serviceResponse.Success)
-                    {
-                        message.Type = MessageTypesEnum.Success;
-                        message.Header = "SUCCESS";
-                        message.Message = "Global Admin Password updated!";
-                    }
-                    else
-                    {
-                        message.Type = MessageTypesEnum.ERROR;
-                        message.Header = "ERROR";
-                        message.Message = "There was a problem updating the Global Admin Password!";
-                    }
-                }
-                else
-                {
-                    displaymessage = false;
-                }
+                displaymessage = await ChangePassword();
                 break;
             case "identityheadernamesave":
-                confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the Identity Header Name.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
-                if (confirm)
-                {
-                    serviceResponse = AdminService.UpdateIdentityHeaderName(currentidentityheadername);
-                    if (serviceResponse.Success)
-                    {
-                        message.Type = MessageTypesEnum.Success;
-                        message.Header = "SUCCESS";
-                        message.Message = "Identity Header Name updated!";
-                    }
-                    else
-                    {
-                        message.Type = MessageTypesEnum.ERROR;
-                        message.Header = "ERROR";
-                        message.Message = "There was a problem updating the Identity Header Name!";
-                    }
-                }
-                else
-                {
-                    displaymessage = false;
-                }
+                displaymessage = await ChangeIdentityHeader();
                 break;
             case "apikeysave":
-                confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the API Key.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
-                if (confirm)
-                {
-                    serviceResponse = AdminService.UpdateApiKey(currentapikey);
-                    if (serviceResponse.Success)
-                    {
-                        message.Type = MessageTypesEnum.Success;
-                        message.Header = "SUCCESS";
-                        message.Message = "API Key updated!";
-                    }
-                    else
-                    {
-                        message.Type = MessageTypesEnum.ERROR;
-                        message.Header = "ERROR";
-                        message.Message = "There was a problem updating the API Key!";
-                    }
-                }
-                else
-                {
-                    displaymessage = false;
-                }
+                displaymessage = await ChangeApiKey();
                 break;
             case "apikeygenerate":
-                confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will generate a new API Key.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
-                if (confirm)
-                {
-                    serviceResponse = AdminService.GenerateApiKey();
-                    if (serviceResponse.Success)
-                    {
-                        if (serviceResponse.ResponseObject != null)
-                        {
-                            currentapikey = serviceResponse.ResponseObject!;
-                            message.Type = MessageTypesEnum.Success;
-                            message.Header = "SUCCESS";
-                            message.Message = "API Key updated!";
-                        }
-                        else
-                        {
-                            message.Type = MessageTypesEnum.ERROR;
-                            message.Header = "ERROR";
-                            message.Message = "There was a problem generating the API Key!";
-                        }
-                    }
-                    else
-                    {
-                        message.Type = MessageTypesEnum.ERROR;
-                        message.Header = "ERROR";
-                        message.Message = "There was a problem generating the API Key!";
-                    }
-                }
-                else
-                {
-                    displaymessage = false;
-                }
+                displaymessage = await GenerateApiKey();
                 break;
             case "generationwebhooksave":
-                confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION", "<div class=\"my-4\">This will update the Generation Webhook.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger", theme);
-                if (confirm)
-                {
-                    if (!String.IsNullOrEmpty(currentgenerationwebhook))
-                    {
-                        if (!Uri.IsWellFormedUriString(currentgenerationwebhook, UriKind.Absolute))
-                        {
-                            message.Header = "ERROR";
-                            message.Type = MessageTypesEnum.ERROR;
-                            message.Message = "You must enter a valid URL!";
-                            break;
-                        }
-                    }
-                    ConfigurationHelper.SetAppSetting("GenerationWebhook", currentgenerationwebhook, true);
-                    message.Type = MessageTypesEnum.Success;
-                    message.Header = "SUCCESS";
-                    message.Message = "Generation Webhook configuration saved!";
-                }
-                else
-                {
-                    displaymessage = false;
-                }
+                displaymessage = await GenerateWebHook();
                 break;
             case "clearcache":
                 CacheHelper.ClearAllCache();
@@ -730,7 +593,7 @@
                 break;
         }
 
-        if ((message.Message != null) && (displaymessage))
+        if (displaymessage)
         {
             if (!string.IsNullOrEmpty(message.Message))
             {
@@ -760,16 +623,215 @@
 
         if (redirect)
         {
-            if (admin)
+            NavigationManager.NavigateTo(admin ? NavigationManager.Uri : "/", true);
+        }
+
+    }
+
+    private async Task<bool> GenerateWebHook()
+    {
+        bool displaymessage = true;
+        var confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
+            "<div class=\"my-4\">This will update the Generation Webhook.</div><div class=\"my-4\">Are you sure?</div>",
+            "bg-danger", theme);
+        
+        if (confirm)
+        {
+            if (!String.IsNullOrEmpty(currentgenerationwebhook))
             {
-                NavigationManager.NavigateTo(NavigationManager.Uri, true);
+                if (!Uri.IsWellFormedUriString(currentgenerationwebhook, UriKind.Absolute))
+                {
+                    message.Header = "ERROR";
+                    message.Type = MessageTypesEnum.ERROR;
+                    message.Message = "You must enter a valid URL!";
+                    return displaymessage;
+                }
+            }
+
+            ConfigurationHelper.SetAppSetting("GenerationWebhook", currentgenerationwebhook, true);
+            message.Type = MessageTypesEnum.Success;
+            message.Header = "SUCCESS";
+            message.Message = "Generation Webhook configuration saved!";
+        }
+        else
+        {
+            displaymessage = false;
+        }
+
+        return displaymessage;
+    }
+
+    private async Task<bool> GenerateApiKey()
+    {
+        bool displaymessage = true;
+        
+        var confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
+            "<div class=\"my-4\">This will generate a new API Key.</div><div class=\"my-4\">Are you sure?</div>",
+            "bg-danger", theme);
+        if (confirm)
+        {
+            var serviceResponse = AdminService.GenerateApiKey();
+            if (serviceResponse.Success)
+            {
+                if (serviceResponse.ResponseObject != null)
+                {
+                    currentapikey = serviceResponse.ResponseObject!;
+                    message.Type = MessageTypesEnum.Success;
+                    message.Header = "SUCCESS";
+                    message.Message = "API Key updated!";
+                }
+                else
+                {
+                    message.Type = MessageTypesEnum.ERROR;
+                    message.Header = "ERROR";
+                    message.Message = "There was a problem generating the API Key!";
+                }
             }
             else
             {
-                NavigationManager.NavigateTo("/", true);
+                message.Type = MessageTypesEnum.ERROR;
+                message.Header = "ERROR";
+                message.Message = "There was a problem generating the API Key!";
             }
         }
+        else
+        {
+            displaymessage = false;
+        }
 
+        return displaymessage;
+    }
+
+    private async Task<bool> ChangeApiKey()
+    {
+        bool displaymessage = true;
+        var confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
+            "<div class=\"my-4\">This will update the API Key.</div><div class=\"my-4\">Are you sure?</div>", "bg-danger",
+            theme);
+        if (confirm)
+        {
+            var serviceResponse = AdminService.UpdateApiKey(currentapikey);
+            if (serviceResponse.Success)
+            {
+                message.Type = MessageTypesEnum.Success;
+                message.Header = "SUCCESS";
+                message.Message = "API Key updated!";
+            }
+            else
+            {
+                message.Type = MessageTypesEnum.ERROR;
+                message.Header = "ERROR";
+                message.Message = "There was a problem updating the API Key!";
+            }
+        }
+        else
+        {
+            displaymessage = false;
+        }
+
+        return displaymessage;
+    }
+
+    private async Task<bool> ChangeIdentityHeader()
+    {
+        bool displaymessage = true;
+        bool confirm;
+        ServiceResponse serviceResponse;
+        confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
+            "<div class=\"my-4\">This will update the Identity Header Name.</div><div class=\"my-4\">Are you sure?</div>",
+            "bg-danger", theme);
+        if (confirm)
+        {
+            serviceResponse = AdminService.UpdateIdentityHeaderName(currentidentityheadername);
+            if (serviceResponse.Success)
+            {
+                message.Type = MessageTypesEnum.Success;
+                message.Header = "SUCCESS";
+                message.Message = "Identity Header Name updated!";
+            }
+            else
+            {
+                message.Type = MessageTypesEnum.ERROR;
+                message.Header = "ERROR";
+                message.Message = "There was a problem updating the Identity Header Name!";
+            }
+        }
+        else
+        {
+            displaymessage = false;
+        }
+
+        return displaymessage;
+    }
+
+    private async Task<bool> ChangePassword()
+    {
+        var displaymessage = true;
+        var confirm = await ModalHelper.ShowConfirmationModal(Modal!, "ATTENTION",
+            "<div class=\"my-4\">This will update the Global Admin Password.</div><div class=\"my-4\">Are you sure?</div>",
+            "bg-danger", theme);
+        if (confirm)
+        {
+    // Set the new Global admin password
+            var serviceResponse = AdminService.UpdatePassword(newpassword);
+            if (serviceResponse.Success)
+            {
+                message.Type = MessageTypesEnum.Success;
+                message.Header = "SUCCESS";
+                message.Message = "Global Admin Password updated!";
+            }
+            else
+            {
+                message.Type = MessageTypesEnum.ERROR;
+                message.Header = "ERROR";
+                message.Message = "There was a problem updating the Global Admin Password!";
+            }
+        }
+        else
+        {
+            displaymessage = false;
+        }
+
+        return displaymessage;
+    }
+
+    private async Task<bool> DoLogout()
+    {
+        state.SetAdmin(false);
+        await session.SetAsync("admin", false);
+        message.Type = MessageTypesEnum.INFORMATION;
+        message.Header = "INFORMATION";
+        message.Message = "User Logged out.";
+        var redirect = true;
+        return redirect;
+    }
+
+    private async Task<bool> DoLogin()
+    {
+        bool redirect = false;
+        if (currentpassword == EncryptionHelper.DecryptString(SiteConfiguration.AdminPassword!, SiteConfiguration.SaltKey!))
+        {
+            state.SetAdmin(true);
+            await session.SetAsync("admin", true);
+            await session.SetAsync("currentuser", "GlobalAdmin");
+    // Load the current API Key
+            currentapikey = EncryptionHelper.DecryptString(SiteConfiguration.ApiKey!, SiteConfiguration.SaltKey!);
+            message.Type = MessageTypesEnum.INFORMATION;
+            message.Header = "INFORMATION";
+            message.Message = "Global Admin logged in.";
+            admin = true;
+            redirect = true;
+        }
+        else
+        {
+            state.SetAdmin(false);
+            await session.SetAsync("admin", false);
+            message.Type = MessageTypesEnum.ERROR;
+            message.Header = "ERROR";
+            message.Message = "Login failed!";
+        }
+
+        return redirect;
     }
 
     private void SetFormValue(string type, string value)

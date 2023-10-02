@@ -48,7 +48,7 @@ public class FileReader
             _cacheHelper.SetCacheObject(typeof(T).Name, data);
         }
 
-        if (data == "[]") 
+        if (data is "" or "[]") 
             return items;
         
         var options = new JsonSerializerOptions

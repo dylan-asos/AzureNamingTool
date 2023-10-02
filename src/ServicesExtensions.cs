@@ -1,3 +1,6 @@
+using Azure.Core;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using AzureNamingTool.Data.SourceRepository;
 using AzureNamingTool.Helpers;
 using AzureNamingTool.Models;
@@ -11,6 +14,17 @@ public static class ServicesExtensions
     {
         services.AddSingleton<StateContainer>();
         services.AddSingleton<CacheHelper>();
+        services.AddSingleton<RepositoryFactory>();
+        services.AddSingleton<TokenCredential>(provider => new DefaultAzureCredential());
+        
+        services.AddSingleton<BlobServiceClient>(provider =>
+        {
+            var siteConfiguration = provider.GetService<SiteConfiguration>();
+            var credential = provider.GetService<TokenCredential>();
+            return new BlobServiceClient(new Uri($"https://{siteConfiguration.StorageAccountName}.blob.core.windows.net"),
+                credential);
+        });
+        
         services.AddTransient<ConfigurationHelper>();
         services.AddTransient<FileSystemHelper>();
         services.AddTransient<GeneralHelper>();
@@ -22,8 +36,6 @@ public static class ServicesExtensions
 
         services.AddTransient<FileReader>();
         services.AddTransient<FileWriter>();
-
-        services.AddSingleton<RepositoryFactory>();
         
         services.AddTransient<AdminLogService>();
         services.AddTransient<AdminService>();
@@ -47,7 +59,7 @@ public static class ServicesExtensions
         services.AddTransient<ResourceComponentDeleter>();
         services.AddTransient<HttpContentDownloader>();
         services.AddTransient<GithubConnectivityChecker>();
-
+        
         services.AddTransient<SiteConfiguration>(provider =>
         {
             var config = new ConfigurationBuilder()
@@ -60,6 +72,7 @@ public static class ServicesExtensions
                 AdminPassword = config["AdminPassword"],
                 ApiKey = config["ApiKey"],
                 AppTheme = config["AppTheme"],
+                StorageAccountName = config["StorageAccountName"],
                 ConnectivityCheckEnabled = Convert.ToBoolean(config["ConnectivityCheckEnabled"]),
                 DevMode = Convert.ToBoolean(config["DevMode"]),
                 DismissedAlerts = config["DismissedAlerts"],
@@ -67,6 +80,7 @@ public static class ServicesExtensions
                 GenerationWebhook = config["GenerationWebhook"],
                 IdentityHeaderName = config["IdentityHeaderName"],
                 ResourceTypeEditingAllowed = config["ResourceTypeEditingAllowed"],
+                RepositoryType = config["RepositoryType"],
                 SaltKey = config["SaltKey"]
             };
 
