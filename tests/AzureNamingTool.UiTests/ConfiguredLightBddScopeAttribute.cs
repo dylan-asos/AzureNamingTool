@@ -43,16 +43,16 @@ public class ConfiguredLightBddScopeAttribute : LightBddScopeAttribute
             var client = application.CreateClient();
             return client;
         });
-        
+
         var derivedTypes = Assembly.GetExecutingAssembly()
             .GetTypes()
             .Where(t => t is {IsClass: true, IsAbstract: false} && t.IsSubclassOf(typeof(ContextBase)));
-        
+
         foreach (var derivedType in derivedTypes)
         {
             services.AddScoped(derivedType);
         }
-        
+
         return services.BuildServiceProvider();
     }
 }

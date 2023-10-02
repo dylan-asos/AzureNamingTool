@@ -14,16 +14,16 @@ namespace AzureNamingTool.UiTests.Features;
 public class ErrorFeature : FeatureFixture
 {
     [Scenario]
-    public async Task ReturnNotFound404ResponseForUnknownRoute()
+    public async Task ReturnsNotFoundView_ForUnknownRoute()
     {
         await Runner
             .WithContext<HomePageContext>()
             .AddAsyncSteps(
                 _ => _.Given_request_route_that_doesnt_exist(),
-                _ => _.Then_response_code_should_be(HttpStatusCode.NotFound),
+                _ => _.Then_response_code_should_be(HttpStatusCode.OK),
                 _ => _.When_the_response_content_is_parsed(),
-                _ => _.Then_the_document_should_contain("Sorry, couldn't find that.")
-                
+                _ => _.Then_the_document_should_contain(
+                    "Whoa, it looks like that page went and r-u-n-n-o-f-t! Try again!")
             ).RunAsync();
     }
 }

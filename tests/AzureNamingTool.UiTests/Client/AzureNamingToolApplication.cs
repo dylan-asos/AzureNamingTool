@@ -23,7 +23,7 @@ public class AzureNamingToolApplication : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(services =>
         {
-            services.AddSingleton<StateContainer>(provider => new StateContainer()
+            services.AddSingleton<StateContainer>(provider => new StateContainer
             {
                 Verified = true,
                 Password = true,
