@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using AzureNamingTool.UiTests.Contexts;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios;
-using LightBDD.NUnit3;
+using LightBDD.XUnit2;
 
 namespace AzureNamingTool.UiTests.Features;
 

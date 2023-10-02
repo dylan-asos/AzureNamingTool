@@ -43,6 +43,7 @@ public class GeneralHelper
     {
         var returnType = new string[3];
         returnType[0] = type;
+        
         // Make sure it is a full resource type name
         if (type.Contains('('))
         {
@@ -54,16 +55,14 @@ public class GeneralHelper
             // trim any details out of the value
             if (returnType[0].Contains(" -"))
             {
-                returnType[1] = returnType[0].Substring(0, returnType[0].IndexOf(" -")).Trim();
+                returnType[1] = returnType[0].Substring(0, returnType[0].IndexOf(" -", StringComparison.Ordinal)).Trim();
             }
 
-            // trim any details out of the value
-            if (type.Contains("(") && type.Contains(")"))
+            // trim any details out of the values
+            if (type.Contains('(') && type.Contains(')'))
             {
-                {
-                    var intstart = type.IndexOf("(") + 1;
-                    returnType[2] = string.Concat(type.Substring(intstart).TakeWhile(x => x != ')'));
-                }
+                var startPosition = type.IndexOf("(", StringComparison.Ordinal) + 1;
+                returnType[2] = string.Concat(type.Substring(startPosition).TakeWhile(x => x != ')'));
             }
         }
 

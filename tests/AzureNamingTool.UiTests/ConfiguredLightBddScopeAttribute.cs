@@ -6,11 +6,9 @@ using AzureNamingTool.UiTests.Client;
 using AzureNamingTool.UiTests.Contexts;
 using LightBDD.Core.Configuration;
 using LightBDD.Extensions.DependencyInjection;
-using LightBDD.NUnit3;
+using LightBDD.XUnit2;
 using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
 
-[assembly: Parallelizable(ParallelScope.None)]
 [assembly: ConfiguredLightBddScope]
 
 namespace AzureNamingTool.UiTests;

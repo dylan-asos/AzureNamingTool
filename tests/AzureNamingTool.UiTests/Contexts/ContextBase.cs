@@ -111,7 +111,7 @@ public abstract class ContextBase
         return Task.CompletedTask;
     }
 
-    protected Task When_search_for_element_by_id(string id)
+    public Task When_search_for_element_by_id(string id)
     {
         _foundElement = GetDocument().All
             .FirstOrDefault(m => m.Id == id);
@@ -119,7 +119,7 @@ public abstract class ContextBase
         return Task.CompletedTask;
     }
 
-    protected Task When_search_for_element_by_class(string className)
+    public Task When_search_for_element_by_class(string className)
     {
         _foundElement = GetDocument().All
             .FirstOrDefault(m => m.ClassName == className);
