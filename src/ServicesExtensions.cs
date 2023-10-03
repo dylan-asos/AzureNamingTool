@@ -24,7 +24,7 @@ public static class ServicesExtensions
             return new BlobServiceClient(new Uri($"https://{siteConfiguration.StorageAccountName}.blob.core.windows.net"),
                 credential);
         });
-        
+                
         services.AddTransient<ConfigurationHelper>();
         services.AddTransient<FileSystemHelper>();
         services.AddTransient<GeneralHelper>();

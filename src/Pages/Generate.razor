@@ -74,15 +74,15 @@
                         </h5>
                         <div class="card card-body @theme.ThemeStyle">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="generateselect" id="singleselect" value="single" checked @onclick="@(e => OnGenerateModeChange("single"))">
+                                <input class="form-check-input" type="radio" name="generateselect" id="singleselect" value="single" checked @onclick="@(() => OnGenerateModeChange("single"))">
                                 <label class="form-check-label" for="singleselect">
-                                    <strong>Generate Single Resouce Type Name</strong><br />This option will allow the generation of a single resource type name using the selected components.
+                                    <strong>Generate Single Resource Type Name</strong><br />This option will allow the generation of a single resource type name using the selected components.
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="generateselect" id="multiselect" value="multi" @onclick="@(e => OnGenerateModeChange("multi"))">
                                 <label class="form-check-label" for="multiselect">
-                                    <strong>Generate Multiple Resource Type Names</strong><br />This option will allow the generatation of names for multiple resource types using the selected components. <span class="warning-message">All components will be required.</span>
+                                    <strong>Generate Multiple Resource Type Names</strong><br />This option will allow the generation of names for multiple resource types using the selected components. <span class="warning-message">All components will be required.</span>
                                 </label>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                                     <span class="input-group-text" id="addon-wrapping">
                                         <span class="oi oi-magnifying-glass" id="addon-wrapping"></span>
                                     </span>
-                                    <input @bind-value="@selectedResourceTypeCategory" @oninput="(EventArgs) => { OnCategoryChanged(EventArgs.Value!.ToString()!);}" class="@GetControlStyle()" list="categorieslist" id="generatecategories" placeholder="Type to filter by category..." autocomplete="off">
+                                    <input @bind-value="@selectedResourceTypeCategory" @oninput="(eventArgs) => { OnCategoryChanged(eventArgs.Value!.ToString()!);}" class="@GetControlStyle()" list="categorieslist" id="generatecategories" placeholder="Type to filter by category..." autocomplete="off">
                                     <datalist id="categorieslist">
                                         @foreach (var category in @categories)
                                         {
@@ -426,14 +426,6 @@
                                 }
                             }
 
-                            @*<div class="card mb-3">
-                    <h5 class="card-header bg-default text-dark">
-                    Delimiter (Configured by site administrator)
-                    </h5>
-                    <div class="card card-body @theme.ThemeStyle">
-                    @resourceDelimiter.Name: @resourceDelimiter.Delimiter
-                    </div>
-                    </div>*@
                             <div class="mb-3">
                                 <br />
                                 <button class="btn btn-success" type="submit" title="Generate" disabled=@boolFormDisabled>
@@ -533,7 +525,7 @@
     {
         await SetServicesData();
         var currentuservalue = await session.GetAsync<string>("currentuser");
-        currentuser = (string)currentuservalue.Value!;
+        currentuser = currentuservalue.Value!;
     }
 
     private async Task SetServicesData()

@@ -17,6 +17,6 @@
         public string? ResourceTypeEditingAllowed { get; set; }
         public string? RepositoryType { get; set; } = "File";
         
-        public string? StorageAccountName { get; set; } 
+        public string? StorageAccountName { get; set; }
     }
 }
