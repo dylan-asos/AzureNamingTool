@@ -3,7 +3,7 @@ using AzureNamingTool.Helpers;
 
 namespace AzureNamingTool.Data.SourceRepository;
 
-internal class FileBasedNamingConventionRepository : INamingConventionRepository
+public class FileBasedNamingConventionRepository : INamingConventionRepository
 {
     private readonly FileSystemHelper _fileSystemHelper;
 

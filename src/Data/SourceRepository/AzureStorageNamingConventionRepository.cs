@@ -4,13 +4,13 @@ using Azure.Storage.Blobs;
 
 namespace AzureNamingTool.Data.SourceRepository;
 
-internal class AzureStorageNamingConventionRepository : INamingConventionRepository
+public class AzureStorageNamingConventionRepository : INamingConventionRepository
 {
     private const string BlobContainerName = "aznamingtool";
 
     private readonly BlobServiceClient _blobServiceClient;
 
-    public AzureStorageNamingConventionRepository(BlobServiceClient blobServiceClient)
+    internal AzureStorageNamingConventionRepository(BlobServiceClient blobServiceClient)
     {
         _blobServiceClient = blobServiceClient;
     }
