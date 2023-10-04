@@ -194,7 +194,7 @@
         }
         else
         {
-            if ((servicesData != null) || (state._reloadnav))
+            if (state._reloadnav)
             {
                 servicesData = await ServicesHelper.LoadServicesData(admin);
                 state.SetNavReload(false);

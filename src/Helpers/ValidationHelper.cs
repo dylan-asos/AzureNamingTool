@@ -5,7 +5,7 @@ using AzureNamingTool.Services;
 
 namespace AzureNamingTool.Helpers;
 
-public class ValidationHelper
+public partial class ValidationHelper
 {
     private readonly ResourceComponentService _resourceComponentService;
     private readonly GeneralHelper _generalHelper;
@@ -18,9 +18,9 @@ public class ValidationHelper
 
     public bool ValidatePassword(string text)
     {
-        var hasNumber = new Regex(@"[0-9]+");
-        var hasUpperChar = new Regex(@"[A-Z]+");
-        var hasMinimum8Chars = new Regex(@".{8,}");
+        var hasNumber = NumericRegex();
+        var hasUpperChar = HasUpperCharacterRegex();
+        var hasMinimum8Chars = HasMinimumEightCharsRegex();
 
         var isValidated = hasNumber.IsMatch(text) && hasUpperChar.IsMatch(text) && hasMinimum8Chars.IsMatch(text);
 
@@ -36,40 +36,34 @@ public class ValidationHelper
         var serviceResponse =
             await _resourceComponentService.GetItems(true);
 
-        if (serviceResponse.Success)
+        if (!serviceResponse.Success) 
+            return valid;
+
+        if (serviceResponse.ResponseObject == null) 
+            return valid;
+        
+        var resourceComponents = (List<ResourceComponent>) serviceResponse.ResponseObject!;
+                
+        // Check if it's a custom component
+        if (type == "CustomComponent")
         {
-            if (serviceResponse.ResponseObject != null)
+            if (parentComponent!= null)
             {
-                var resourceComponents = (List<ResourceComponent>) serviceResponse.ResponseObject!;
-
-                if (resourceComponents != null)
-                {
-                    // Check if it's a custom component
-                    if (type == "CustomComponent")
-                    {
-                        if (parentComponent!= null)
-                        {
-                            resourceComponent = resourceComponents.Find(x =>
-                                _generalHelper.NormalizeName(x.Name, true) ==
-                                _generalHelper.NormalizeName(parentComponent, true))!;
-                        }
-                    }
-                    else
-                    {
-                        resourceComponent = resourceComponents.Find(x => x.Name == type)!;
-                    }
-
-                    if (resourceComponent!= null)
-                    {
-                        // Check if the name mathces the length requirements for the component
-                        if (value.Length >= Convert.ToInt32(resourceComponent.MinLength) &&
-                            value.Length <= Convert.ToInt32(resourceComponent.MaxLength))
-                        {
-                            valid = true;
-                        }
-                    }
-                }
+                resourceComponent = resourceComponents.Find(x =>
+                    _generalHelper.NormalizeName(x.Name, true) ==
+                    _generalHelper.NormalizeName(parentComponent, true))!;
             }
+        }
+        else
+        {
+            resourceComponent = resourceComponents.Find(x => x.Name == type)!;
+        }
+                    
+        // Check if the name matches the length requirements for the component
+        if (value.Length >= Convert.ToInt32(resourceComponent.MinLength) &&
+            value.Length <= Convert.ToInt32(resourceComponent.MaxLength))
+        {
+            valid = true;
         }
 
         return valid;
@@ -247,4 +241,13 @@ public class ValidationHelper
         var match = regx.Match(value);
         return match.Success;
     }
+
+    [GeneratedRegex("[0-9]+")]
+    private static partial Regex NumericRegex();
+    
+    [GeneratedRegex("[A-Z]+")]
+    private static partial Regex HasUpperCharacterRegex();
+    
+    [GeneratedRegex(".{8,}")]
+    private static partial Regex HasMinimumEightCharsRegex();
 }
