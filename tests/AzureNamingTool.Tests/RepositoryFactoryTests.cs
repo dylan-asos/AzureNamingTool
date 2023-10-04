@@ -8,6 +8,8 @@ namespace AzureNamingTool.Tests;
 
 public class RepositoryFactoryTests
 {
+    private const string ConnectionString = "UseDevelopmentStorage=true";
+    
     [Fact]
     public void GetRepository_ReturnsAzureStorageRepository_WhenSiteConfigurationIsAzureStorage()
     {
@@ -15,7 +17,7 @@ public class RepositoryFactoryTests
 
         var factory = new RepositoryFactory(new SiteConfiguration {RepositoryType = input},
             new FileSystemHelper(),
-            new BlobServiceClient("UseDevelopmentStorage=true"));
+            new BlobServiceClient(ConnectionString));
 
         var result = factory.GetRepository();
 
@@ -29,7 +31,7 @@ public class RepositoryFactoryTests
 
         var factory = new RepositoryFactory(new SiteConfiguration {RepositoryType = input},
             new FileSystemHelper(),
-            new BlobServiceClient("UseDevelopmentStorage=true"));
+            new BlobServiceClient(ConnectionString));
 
         var result = factory.GetRepository();
 
